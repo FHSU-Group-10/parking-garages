@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 3500;
 
 // MIDDLEWARE
 // Handle url-encoded form data
@@ -19,3 +20,5 @@ app.all('*', (req, res) => {
   res.json({ message: '404 Not Found' });
   // TODO an HTML version
 });
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
