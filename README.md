@@ -1,4 +1,4 @@
-![GitHub contributors](https://img.shields.io/github/contributors/justin-henley/parking-garage?style=for-the-badge)
+![GitHub contributors](https://img.shields.io/github/contributors/FHSU-Group-10/parking-garages?style=for-the-badge)
 
 # Network of Automated Parking Garages - FHSU F2022 CSCI441 VA Group 10
 
