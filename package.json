@@ -34,7 +34,9 @@
   },
   "homepage": "https://github.com/FHSU-Group-10/parking-garages#readme",
   "dependencies": {
-    "express": "^4.18.1"
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"
