@@ -1,10 +1,13 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/justin-henley/parking-garage?style=for-the-badge)
 
-# Network of Automated Parking Garages
+# Network of Automated Parking Garages - FHSU F2022 CSCI441 VA Group 10
 
-Project website: https://fhsu-csci-675-group-10.onrender.com
+Links:
 
-A joint effort by:
+- Project website: https://fhsu-csci-675-group-10.onrender.com
+- Live Backend: https://parking-garages.onrender.com/
+
+Group Members:
 
 - [Dustin Threet]()
 - [Hannah Carr]()
