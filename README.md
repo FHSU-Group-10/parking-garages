@@ -2,13 +2,15 @@
 
 # Network of Automated Parking Garages - FHSU F2022 CSCI441 VA Group 10
 
-Links:
+## Links:
 
 - Project website: https://fhsu-csci-675-group-10.onrender.com
 - Live Backend: https://parking-garages.onrender.com/
 - Dev Branch Site: https://dev-garages.onrender.com/
 
-Group Members:
+Note: Deploys are automatic but slow (~5 minutes)
+
+## Group Members:
 
 - [Dustin Threet]()
 - [Hannah Carr]()
