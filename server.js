@@ -95,12 +95,7 @@ async function start () {
   app.get(VIEW_URL_PATH, async (req, res, next) => {
     try {
       let name = removeBase(req.path,VIEW_BASE,true);
-      let opfile = path.join(VIEW_PATH, name.trim());
-      
-      if (opfile.slice(-5).toLowerCase() !== '.html') opfile+= '.html';
-      
-      
-      res.type(getMimeType(opfile))
+     
       res.sendFile(path.join(appRoot,`/public/view/${name}.html`), (err)=>{
         if (err) {
           res.sendFile(path.join(appRoot,`/public/view/not-found.html`));
