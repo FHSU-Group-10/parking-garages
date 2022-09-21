@@ -101,8 +101,13 @@ async function start () {
       
       
       res.type(getMimeType(opfile))
-      res.sendFile(path.join(appRoot,`/public/view/${name}.html`));
+      res.sendFile(path.join(appRoot,`/public/view/${name}.html`), (err)=>{
+        if (err) {
+          res.sendFile(path.join(appRoot,`/public/view/not-found.html`));
+        }
+      });
     } catch (e) {
+      res.sendFile(path.join(appRoot,`/public/view/not-found.html`));
       console.error('{0}-[{1}]: (try) {2}', req.method, req.path, e);
       try {
         if (e.code === 'ENOENT') {
