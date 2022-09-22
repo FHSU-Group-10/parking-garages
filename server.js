@@ -67,15 +67,18 @@ function removeBase (uri, base, noLeadingSlash) {
 
 
 async function start () {
+  // bases for each sub directory
+  // eg. public/images
   const IMG_BASE = '/images';
   const SCRIPT_BASE = '/script';
   const VIEW_BASE = '/view';
   
-  
+
+  // full paths to each sub directory in public
   const IMG_URL_PATH = new RegExp(`${IMG_BASE}\..*`,'i');
   const SCRIPT_URL_PATH = new RegExp(`${SCRIPT_BASE}\..*`,'i');
   const VIEW_URL_PATH = new RegExp(`${VIEW_BASE}\..*`,'i');
-  
+
   
   app.get(SCRIPT_URL_PATH, async (req, res, next) => {
     try {
@@ -98,11 +101,10 @@ async function start () {
      
       res.sendFile(path.join(appRoot,`/public/view/${name}.html`), (err)=>{
         if (err) {
-          res.sendFile(path.join(appRoot,`/public/view/not-found.html`));
+          res.redirect('/view/not-found');
         }
       });
     } catch (e) {
-      res.sendFile(path.join(appRoot,`/public/view/not-found.html`));
       console.error('{0}-[{1}]: (try) {2}', req.method, req.path, e);
       try {
         if (e.code === 'ENOENT') {
@@ -114,14 +116,6 @@ async function start () {
   
 }
 
-// ROUTES
-// app.use('/', require('./routes/index'));
-// app.use('/demo', require('./routes/demo'));
-// app.use('/register', require('./routes/index'));
-
-// app.get('^$|/register', (req, res) => {
-//   res.status(200).sendFile(path.join(appRoot+'/public/view/register.html'));
-// });
 
 async function initialize () {
  await start();
@@ -129,10 +123,11 @@ async function initialize () {
 
 initialize();
 
-// Universal 404 page
+// Redirect to locator page
+// the locator page will serve as the home page
 app.all('*', (req, res) => {
-  // Send response as JSON
-  res.status(404).json({ message: '404 Not Found' });
+  // Redirect to the locator page
+  res.redirect(`/view/locator`)
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
