@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Park Lite Login</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,47 +24,60 @@
   .background {
     background-color: black;
   }
+  
+  .card {
+    border: none;
+  }
+
+  .page-gradient {
+    /*background-image:*/
+    /*    linear-gradient(90deg, rgba(94,78,167,0.6418768190870099) 18%, rgba(9,9,121,0.7903362028405112) 77%);*/
+    background-image:
+        linear-gradient(90deg, rgba(9,9,121,0.7903362028405112) 18%, rgba(94,78,167,0.6418768190870099) 77%);
+    
+    background-size: cover;
+  }
+  
 </style>
 
 <body class="background">
-<section class="h-100 gradient-form" style="background-color: #eee;">
+<section class="h-100 gradient-form" style="background-color: black;">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-xl-10">
         <div class="card rounded-3 text-black">
-          <div class="row g-0">
+          <div class="row g-0 page-gradient">
             <div class="col-lg-6">
               <div class="card-body p-md-5 mx-md-4">
                 
                 <div class="text-center">
-                  <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/lotus.webp"
-                       style="width: 185px;" alt="logo">
-                  <h4 class="mt-1 mb-5 pb-1">We are The Lotus Team</h4>
+                  <h4 class="mt-1 mb-5 pb-1">Park Lite Login</h4>
                 </div>
                 
                 <form>
-                  <p>Please login to your account</p>
-                  
                   <div class="form-outline mb-4">
-                    <input type="email" id="form2Example11" class="form-control"
-                           placeholder="Phone number or email address" />
-                    <label class="form-label" for="form2Example11">Username</label>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">@</span>
+                      <input type="text" class="form-control" placeholder="Username">
+                    </div>
                   </div>
                   
                   <div class="form-outline mb-4">
-                    <input type="password" id="form2Example22" class="form-control" />
-                    <label class="form-label" for="form2Example22">Password</label>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                      <input type="text" class="form-control" placeholder="Password">
+                    </div>
                   </div>
                   
                   <div class="text-center pt-1 mb-5 pb-1">
-                    <button class="btn btn-primary btn-block fa-lg gradient-custom-2 mb-3" type="button">Log
+                    <button class="btn btn-primary btn-block gradient-custom-2 mb-3" type="button">Log
                       in</button>
                     <a class="text-muted" href="#!">Forgot password?</a>
                   </div>
                   
                   <div class="d-flex align-items-center justify-content-center pb-4">
                     <p class="mb-0 me-2">Don't have an account?</p>
-                    <button type="button" class="btn btn-outline-danger">Create new</button>
+                    <button type="button" class="btn btn-success">Create new</button>
                   </div>
                 
                 </form>
