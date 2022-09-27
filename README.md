@@ -22,4 +22,4 @@ To use on your machine:
 - Ensure you have installed node and npm
 - Open a terminal in the repository
 - Run "npm install" once
-- To run locally, use "npm run dev" and open localhost:3000 in your browser
+- To run locally, use "npm run dev" and open localhost:3500 in your browser
