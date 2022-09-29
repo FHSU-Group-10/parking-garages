@@ -6,7 +6,7 @@
 
 /**
  * Search for available spaces - single reservation
- *
+ * @async
  * @param {} location -
  * @param {} startDateTime -
  * @param {} endDateTime -
@@ -19,7 +19,7 @@
  * Postconditions:
  *  - None
  */
-const searchSpace = (location, startDateTime, endDateTime) => {
+const searchSpace = async (location, startDateTime, endDateTime) => {
   // TODO
   return [];
 };
@@ -27,6 +27,7 @@ const searchSpace = (location, startDateTime, endDateTime) => {
 /**
  * Reserve a single space
  *
+ * @async
  * @param {} garageId -
  * @param {} startDateTime -
  * @param {} endDateTime -
@@ -42,7 +43,7 @@ const searchSpace = (location, startDateTime, endDateTime) => {
  * Postconditions:
  *  - A reservation is created in the system matching the given characteristics
  */
-const reserveSpace = (garageId, startDateTime, endDateTime, customerId, vehicle = null) => {
+const reserveSpace = async (garageId, startDateTime, endDateTime, customerId, vehicle = null) => {
   // TODO
   return {};
 };
@@ -52,6 +53,7 @@ const reserveSpace = (garageId, startDateTime, endDateTime, customerId, vehicle 
 /**
  * Search for available spaces - Permanent Spot
  *
+ * @async
  * @param {} location -
  * @param {} startDate -
  * @param {} endDate -
@@ -70,7 +72,7 @@ const reserveSpace = (garageId, startDateTime, endDateTime, customerId, vehicle 
  * Postconditions:
  *  - None
  */
-const searchGuaranteedSpot = (location, startDate, endDate, startTime, endTime, frequency) => {
+const searchGuaranteedSpace = async (location, startDate, endDate, startTime, endTime, frequency) => {
   // TODO
   return [];
 };
@@ -78,6 +80,7 @@ const searchGuaranteedSpot = (location, startDate, endDate, startTime, endTime, 
 /**
  * Reserve a permanent space
  *
+ * @async
  * @param {} garageId -
  * @param {} startDate -
  * @param {} endDate -
@@ -97,7 +100,10 @@ const searchGuaranteedSpot = (location, startDate, endDate, startTime, endTime, 
  *  - frequency is one of Daily, Weekly, or Monthly
  *  - customerId is not null
  */
-const reserveGuaranteedSpace = (garageId, startDate, endDate, startTime, endTime, frequency, customerId, vehicle = null) => {
+const reserveGuaranteedSpace = async (garageId, startDate, endDate, startTime, endTime, frequency, customerId, vehicle = null) => {
   // TODO
   return {};
 };
+
+// Export functions
+module.exports = { searchSpace, reserveSpace, searchGuaranteedSpace, reserveGuaranteedSpace };
