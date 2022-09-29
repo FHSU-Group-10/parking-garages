@@ -17,20 +17,21 @@ describe('Search for a single space', () => {
 
     res = {
       json: (json) => {
-        res.json = json;
+        res.body = json;
         return res;
       },
       status: (statusCode) => {
         res.status = statusCode;
         return res;
       },
+      body: null,
     };
   });
 
   test('Incomplete query fails', async () => {
     const results = await reservationController.searchSpace(req, res);
     expect(results.status).toBe(400);
-    expect(results.json).toEqual({ message: 'Incomplete query' });
+    expect(results.body).toEqual({ message: 'Incomplete query' });
   });
 
   test('Complete query succeeds', async () => {
@@ -41,7 +42,7 @@ describe('Search for a single space', () => {
     };
     const results = await reservationController.searchSpace(req, res);
     expect(results.status).toBe(200);
-    expect(results.json).toEqual(['garage1', 'garage2']);
+    expect(results.body).toEqual(['garage1', 'garage2']);
   });
 
   test('Starting datetime must be before ending datetime', async () => {
@@ -52,7 +53,7 @@ describe('Search for a single space', () => {
     };
     const results = await reservationController.searchSpace(req, res);
     expect(results.status).toBe(400);
-    expect(results.json).toEqual({ message: 'Start datetime must be earlier than end datetime' });
+    expect(results.body).toEqual({ message: 'Start datetime must be earlier than end datetime' });
   });
 });
 
@@ -75,20 +76,21 @@ describe('Search for a guaranteed space', () => {
 
     res = {
       json: (json) => {
-        res.json = json;
+        res.body = json;
         return res;
       },
       status: (status) => {
         res.status = status;
         return res;
       },
+      body: null,
     };
   });
 
   test('Incomplete query fails', async () => {
     const results = await reservationController.searchGuaranteedSpace(req, res);
     expect(results.status).toBe(400);
-    expect(results.json).toEqual({ message: 'Incomplete query' });
+    expect(results.body).toEqual({ message: 'Incomplete query' });
   });
 
   test('Complete query succeeds', async () => {
@@ -102,7 +104,7 @@ describe('Search for a guaranteed space', () => {
     };
     const results = await reservationController.searchGuaranteedSpace(req, res);
     expect(results.status).toBe(200);
-    expect(results.json).toEqual(['garage1', 'garage2']);
+    expect(results.body).toEqual(['garage1', 'garage2']);
   });
 });
 
@@ -124,20 +126,21 @@ describe('Reserve a single space', () => {
 
     res = {
       json: (json) => {
-        res.json = json;
+        res.body = json;
         return res;
       },
       status: (status) => {
         res.status = status;
         return res;
       },
+      body: null,
     };
   });
 
   test('Incomplete request fails', async () => {
     const reservation = await reservationController.reserveSpace(req, res);
     expect(reservation.status).toBe(400);
-    expect(reservation.json).toEqual({ message: 'Incomplete request' });
+    expect(reservation.body).toEqual({ message: 'Incomplete request' });
   });
 
   test('Complete request succeeds', async () => {
@@ -150,7 +153,7 @@ describe('Reserve a single space', () => {
     };
     const reservation = await reservationController.reserveSpace(req, res);
     expect(reservation.status).toBe(200);
-    expect(reservation.json).toEqual({ message: 'Reservation complete!' });
+    expect(reservation.body).toEqual({ message: 'Reservation complete!' });
   });
 });
 
@@ -175,19 +178,21 @@ describe('Reserve a guaranteed space', () => {
 
     res = {
       json: (json) => {
-        res.json = json;
+        res.body = json;
         return res;
       },
       status: (status) => {
         res.status = status;
         return res;
       },
+      body: null,
     };
   });
 
   test('Incomplete request fails', async () => {
     const reservation = await reservationController.reserveGuaranteedSpace(req, res);
-    expect(reservation).toEqual({ status: 400, json: { message: 'Incomplete request' } });
+    expect(reservation.status).toBe(400);
+    expect(reservation.body).toEqual({ message: 'Incomplete request' });
   });
 
   test('Complete request succeeds', async () => {
@@ -203,6 +208,6 @@ describe('Reserve a guaranteed space', () => {
     };
     const reservation = await reservationController.reserveGuaranteedSpace(req, res);
     expect(reservation.status).toBe(200);
-    expect(reservation.json).toEqual({ message: 'Reservation complete!' });
+    expect(reservation.body).toEqual({ message: 'Reservation complete!' });
   });
 });
