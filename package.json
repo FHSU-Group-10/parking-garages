@@ -43,6 +43,7 @@
     "mime": "^3.0.0",
     "mime-types": "^2.1.35",
     "morgan": "^1.10.0",
+    "supertest": "^6.2.4",
     "winston": "^3.8.2"
   },
   "devDependencies": {
