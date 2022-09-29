@@ -28,68 +28,146 @@
   .card {
     border: none;
   }
-
-  .page-gradient {
-    /*background-image:*/
-    /*    linear-gradient(90deg, rgba(94,78,167,0.6418768190870099) 18%, rgba(9,9,121,0.7903362028405112) 77%);*/
-    background-image:
-        linear-gradient(90deg, rgba(9,9,121,0.7903362028405112) 18%, rgba(94,78,167,0.6418768190870099) 77%);
-    
-    background-size: cover;
+  
+  .forgot-password:hover {
+    color: white !important;
   }
   
+  
+  .gradient-custom {
+    /* fallback for old browsers */
+    background: #6a11cb;
+    
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+    
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))
+  }
+
+  @media only screen and (max-width: 1080px) {
+    #fadeshow1 {
+      display: none;
+    }
+  }
+
+  @media only screen and (min-width: 1081px) {
+    #fadeshow2 {
+      display: none;
+    }
+  }
+  
+  
+  @media (min-width: 768px) {
+    .gradient-form {
+      height: 100vh !important;
+    }
+  }
+  @media (min-width: 769px) {
+    .gradient-custom-2 {
+      border-top-right-radius: .3rem;
+      border-bottom-right-radius: .3rem;
+    }
+  }
+
 </style>
 
 <body class="background">
-<section class="h-100 gradient-form" style="background-color: black;">
+<section id="fadeshow2" class="vh-100 gradient-custom">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card bg-dark text-white" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
+            
+            <div class="mb-md-5 mt-md-4 pb-5">
+  
+              <h2 class="fw-bold mb-2 text-uppercase">Login</h2>
+              <p class="text-white-50 mb-5">Please enter your login and password!</p>
+              
+              <div class="form-outline form-white mb-4">
+                <div class="input-group mb-3">
+                  <span class="input-group-text park-lite-form-style">@</span>
+                  <input type="text" class="form-control park-lite-form-style" placeholder="Username">
+                </div>
+              </div>
+              
+              <div class="form-outline form-white mb-4">
+                <div class="input-group mb-3">
+                  <span class="input-group-text park-lite-form-style"><i  class="fa fa-eye-slash park-lite-form-style" aria-hidden="true"></i></span>
+                  <input  type="password" class="form-control park-lite-form-style" placeholder="Password">
+                </div>
+              </div>
+  
+              <div class="text-center pt-1 mb-5 pb-1">
+                <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="#!">Forgot password?</a></p>
+                <button class="btn btn-outline-info btn-lg px-5" type="submit">Login</button>
+              </div>
+            
+            </div>
+            
+            <div>
+              <p class="mb-0">Don't have an account? <a href="#!" class="text-white-50 fw-bold">Sign Up</a>
+              </p>
+            </div>
+          
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fadeshow1" class="vh-100 gradient-custom">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-xl-10">
-        <div class="card rounded-3 text-black">
-          <div class="row g-0 page-gradient">
+        <div class="card bg-dark rounded-3 text-white">
+          <div class="row g-0">
             <div class="col-lg-6">
               <div class="card-body p-md-5 mx-md-4">
                 
                 <div class="text-center">
-                  <h4 class="mt-1 mb-5 pb-1">Park Lite Login</h4>
+                  <h2 class="fw-bold mb-2 text-uppercase">Login</h2>
+                  <p class="text-white-50 mb-5">Please enter your login and password!</p>
                 </div>
                 
                 <form>
+                  <p>Please login to your account</p>
+                  
                   <div class="form-outline mb-4">
                     <div class="input-group mb-3">
-                      <span class="input-group-text">@</span>
-                      <input type="text" class="form-control" placeholder="Username">
+                      <span class="input-group-text park-lite-form-style">@</span>
+                      <input type="text" class="form-control park-lite-form-style" placeholder="Username">
                     </div>
                   </div>
                   
                   <div class="form-outline mb-4">
                     <div class="input-group mb-3">
-                      <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
-                      <input type="text" class="form-control" placeholder="Password">
+                      <span class="input-group-text park-lite-form-style"><i  class="fa fa-eye-slash park-lite-form-style" aria-hidden="true"></i></span>
+                      <input  type="password" class="form-control park-lite-form-style" placeholder="Password">
                     </div>
                   </div>
                   
                   <div class="text-center pt-1 mb-5 pb-1">
-                    <button class="btn btn-primary btn-block gradient-custom-2 mb-3" type="button">Log
-                      in</button>
-                    <a class="text-muted" href="#!">Forgot password?</a>
+                    <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="#!">Forgot password?</a></p>
+                    <button class="btn btn-outline-info btn-lg px-5" type="submit">Login</button>
                   </div>
                   
                   <div class="d-flex align-items-center justify-content-center pb-4">
-                    <p class="mb-0 me-2">Don't have an account?</p>
-                    <button type="button" class="btn btn-success">Create new</button>
+                    <p class="mb-0">Don't have an account? <a href="#!" class="text-white-50 fw-bold">Sign Up</a>
+                    </p>
                   </div>
                 
                 </form>
               
               </div>
             </div>
-            <div class="col-lg-6 d-flex align-items-center gradient-custom-2">
-              <div class="text-white px-3 py-4 p-md-5 mx-md-4">
-                <h4 class="mb-4">We are more than just a company</h4>
-                <p class="small mb-0">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                  exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <div class="col-lg-6 d-flex justify-content-center align-items-center gradient-custom-2" style="background: black !important;" >
+              <div class="col-lg-6 d-flex justify-content-center align-items-center gradient-custom-2 right-div">
+                <div class="text-white px-3 py-4 p-md-5 mx-md-4">
+                  <img src="../images/parking-sign-small.jpg" alt="Girl in a jacket" width="400" height="600">
+                </div>
               </div>
             </div>
           </div>
