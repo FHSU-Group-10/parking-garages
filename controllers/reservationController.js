@@ -213,7 +213,6 @@ const datetimeSqlToJs = (sqlDatetime) => {
   timeParts[1]--;
   // Create new time in UTC
   const jsDatetime = new Date(Date.UTC(...timeParts));
-  console.log(sqlDatetime, jsDatetime);
   return jsDatetime;
 };
 
