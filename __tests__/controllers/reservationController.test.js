@@ -212,4 +212,25 @@ describe('Reservation Controller', () => {
       expect(reservation.body).toEqual({ message: 'Reservation complete!' });
     });
   });
+
+  // reservationController.datetimeJsToSql()
+  describe('Convert between JS Date and SQL DateTime', () => {
+    test('JS Date to SQL Datetime', () => {
+      // Declared as UTC for timezone-independent checks
+      const jsDatetime = new Date(Date.UTC(1991, 3, 11, 9, 25, 0)); // Months are 0-11 Jan-Dec
+      const sqlDatetime = reservationController.datetimeJsToSql(jsDatetime);
+      expect(sqlDatetime).toBe('1991-04-11 09:25:00');
+    });
+
+    test('SQL Datetime to JS Date', () => {
+      // Create a JS Date in UTC
+      const jsDatetime = new Date(Date.UTC(1991, 3, 11, 9, 25, 0));
+      // Convert to SQL DateTime
+      const sqlDatetime = reservationController.datetimeJsToSql(jsDatetime);
+      expect(sqlDatetime).toBe('1991-04-11 09:25:00');
+      // Convert back to JS Date
+      const result = reservationController.datetimeSqlToJs(sqlDatetime);
+      expect(result).toEqual(jsDatetime);
+    });
+  });
 });

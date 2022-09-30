@@ -10,8 +10,8 @@
  *
  * @async
  * @param {} location - The location around which the user is searching for parking
- * @param {} startDateTime - The desired starting time of the reservation
- * @param {} endDateTime - The desired ending time of the reservation
+ * @param {Date} startDateTime - The desired starting time of the reservation
+ * @param {Date} endDateTime - The desired ending time of the reservation
  * @returns {} an array of reservation options
  *
  * Preconditions:
@@ -189,5 +189,33 @@ const reserveGuaranteedSpace = async (req, res) /*(garageId, startDate, endDate,
   return res.status(200).json(reservation);
 };
 
+/**
+ * Convert a JS Date timestamp into a UTC SQL DateTime
+ *
+ * @param {Date} jsDatetime - A JS Date timestamp
+ * @returns {String} - The time converted to UTC as a SQL-style DateTime string
+ */
+const datetimeJsToSql = (jsDatetime) => {
+  const sqlDatetime = jsDatetime.toISOString().slice(0, 19).replace('T', ' ');
+  return sqlDatetime;
+};
+
+/**
+ * Convert a UTC SQL DateTime into a JS Date timestamp
+ *
+ * @param {String} sqlDatetime - A UTC SQL-style DateTime string
+ * @returns {Date} - The time converted to a Date object in the server's timezone
+ */
+const datetimeSqlToJs = (sqlDatetime) => {
+  // Split sql datetime into parts to recreate as UTC
+  const timeParts = sqlDatetime.split(/[- :]/);
+  // Decrement month. Date months are 0-11 Jan-Dec
+  timeParts[1]--;
+  // Create new time in UTC
+  const jsDatetime = new Date(Date.UTC(...timeParts));
+  console.log(sqlDatetime, jsDatetime);
+  return jsDatetime;
+};
+
 // Export functions
-module.exports = { searchSpace, reserveSpace, searchGuaranteedSpace, reserveGuaranteedSpace };
+module.exports = { searchSpace, reserveSpace, searchGuaranteedSpace, reserveGuaranteedSpace, datetimeJsToSql, datetimeSqlToJs };
