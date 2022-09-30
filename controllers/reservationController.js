@@ -21,7 +21,7 @@
  * Postconditions:
  *  - None
  */
-const searchSpace = async (req, res) /*(location, startDateTime, endDateTime)*/ => {
+const searchSpace = async (req, res) => {
   // TODO
   // Get arguments from request url query
   const location = req.query.location;
@@ -53,11 +53,11 @@ const searchSpace = async (req, res) /*(location, startDateTime, endDateTime)*/ 
  * POST request
  *
  * @async
- * @param {} garageId -
- * @param {} startDateTime -
- * @param {} endDateTime -
- * @param {} customerId -
- * @param {} vehicle -
+ * @param {} garageId - The ID of the garage in which to reserve a space
+ * @param {Date} startDateTime - The desired starting time of the reservation
+ * @param {Date} endDateTime - The desired ending time of the reservation
+ * @param {} customerId - The ID of the customer the reservation is made for
+ * @param {} vehicle - The vehicle plate details for the vehicle the reservation is made for
  * @returns {} reservation details
  *
  * Preconditions:
@@ -68,7 +68,7 @@ const searchSpace = async (req, res) /*(location, startDateTime, endDateTime)*/ 
  * Postconditions:
  *  - A reservation is created in the system matching the given characteristics
  */
-const reserveSpace = async (req, res) /*(garageId, startDateTime, endDateTime, customerId, vehicle = null)*/ => {
+const reserveSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
   const garageId = req.body.garageId;
@@ -98,12 +98,12 @@ const reserveSpace = async (req, res) /*(garageId, startDateTime, endDateTime, c
  * GET request
  *
  * @async
- * @param {} location -
- * @param {} startDate -
- * @param {} endDate -
- * @param {} startTime -
- * @param {} endTime -
- * @param {} frequency -
+ * @param {} location - The location around which the user is searching for parking
+ * @param {Date} startDate - The desired starting date of the reservation
+ * @param {Date} endDate - The desired ending date of the reservation
+ * @param {} startTime - The desired starting time of the reservation
+ * @param {} endTime - The desired ending time of the reservation
+ * @param {String} frequency - The frequency of the reservation
  * @returns {}  an array of reservation options
  *
  * Preconditions:
@@ -116,7 +116,7 @@ const reserveSpace = async (req, res) /*(garageId, startDateTime, endDateTime, c
  * Postconditions:
  *  - None
  */
-const searchGuaranteedSpace = async (req, res) /*(location, startDate, endDate, startTime, endTime, frequency)*/ => {
+const searchGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from url query
   const location = req.query.location;
@@ -144,14 +144,14 @@ const searchGuaranteedSpace = async (req, res) /*(location, startDate, endDate, 
  * POST request
  *
  * @async
- * @param {} garageId -
- * @param {} startDate -
- * @param {} endDate -
- * @param {} startTime -
- * @param {} endTime -
- * @param {} frequency -
- * @param {} customerId -
- * @param {} vehicle -
+ * @param {} garageId - The ID of the garage in which to reserve a space
+ * @param {Date} startDate - The desired starting date of the reservation
+ * @param {Date} endDate - The desired ending date of the reservation
+ * @param {} startTime - The desired starting time of the reservation
+ * @param {} endTime - The desired ending time of the reservation
+ * @param {String} frequency - The frequency of the reservation
+ * @param {} customerId - The ID of the customer the reservation is made for
+ * @param {} vehicle - The vehicle plate details for the vehicle the reservation is made for
  * @returns {} reservation details
  *
  * Preconditions:
@@ -163,7 +163,7 @@ const searchGuaranteedSpace = async (req, res) /*(location, startDate, endDate, 
  *  - frequency is one of Daily, Weekly, or Monthly
  *  - customerId is not null
  */
-const reserveGuaranteedSpace = async (req, res) /*(garageId, startDate, endDate, startTime, endTime, frequency, customerId, vehicle = null)*/ => {
+const reserveGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
   const garageId = req.body.garageId;
