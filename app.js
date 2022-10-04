@@ -28,6 +28,8 @@ app.use(express.json());
 
 // API ROUTES
 app.use('/reserve', require('./routes/api/reserve'));
+
+app.use('/garage', require('./routes/api/garage'));
 app.use('/pricing', require('./routes/api/pricing'));
 
 // serve our images
