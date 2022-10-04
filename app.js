@@ -28,6 +28,7 @@ app.use(express.json());
 
 // API ROUTES
 app.use('/reserve', require('./routes/api/reserve'));
+app.use('/pricing', require('./routes/api/pricing'));
 
 // serve our images
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
