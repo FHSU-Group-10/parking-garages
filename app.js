@@ -28,9 +28,10 @@ app.use(express.json());
 
 // API ROUTES
 app.use('/reserve', require('./routes/api/reserve'));
-
+app.use('/user', require('./routes/api/user'));
 app.use('/garage', require('./routes/api/garage'));
 app.use('/pricing', require('./routes/api/pricing'));
+
 
 // serve our images
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
@@ -93,6 +94,7 @@ async function start() {
       console.log(e);
     }
   });
+  
 
   app.get(VIEW_URL_PATH, async (req, res, next) => {
     try {
