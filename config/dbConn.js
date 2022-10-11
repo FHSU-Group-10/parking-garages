@@ -15,6 +15,7 @@ const connectDB = async () => {
     // Send a sample query
     const [results, metadata] = await sequelize.query("SELECT * FROM users LIMIT 1");
     console.log(results);
+    return sequelize;
   } catch (error) {
     console.error('Failed to connect to DB. ', error);
   }
