@@ -9,10 +9,14 @@
  * GET request
  *
  * @async
- * @param {} location - The location around which the user is searching for parking
+ * @param {String} street - The street address around which the user is searching for parking
+ * @param {String} city -
+ * @param {String} state -
+ * @param {String} zip -
  * @param {Date} startDateTime - The desired starting time of the reservation
  * @param {Date} endDateTime - The desired ending time of the reservation
- * @returns {} an array of reservation options
+ * @param {Number} reservationTypeId - The type of reservation
+ * @returns {[Object]} - an array of reservation options
  *
  * Preconditions:
  *  - Set of valid garages known to the system is not empty
@@ -24,12 +28,16 @@
 const searchSpace = async (req, res) => {
   // TODO
   // Get arguments from request url query
-  const location = req.query.location;
-  const startDateTime = req.query.startDateTime;
-  const endDateTime = req.query.endDateTime;
+  const street = req.query.street || null;
+  const city = req?.query?.city || null;
+  const state = req?.query?.state || null;
+  const zip = req?.query?.zip || null;
+  const startDateTime = req?.query?.startDateTime || null;
+  const endDateTime = req?.query?.endDateTime || null;
+  const reservationTypeId = req?.query?.reservationTypeId || null;
 
   // Return early if any arguments are missing
-  if (!(location && startDateTime && endDateTime)) {
+  if (!(street && city && state && zip && startDateTime && endDateTime && reservationTypeId)) {
     return res.status(400).json({ message: 'Incomplete query' });
   }
 
@@ -39,7 +47,10 @@ const searchSpace = async (req, res) => {
   if (startDateTime >= endDateTime) {
     return res.status(400).json({ message: 'Start datetime must be earlier than end datetime' });
   }
-  // TODO check against current time precondition
+  // Check against current time precondition
+  if (startDateTime < Date.now()) {
+    return res.status(400).json({ message: 'Start date time cannot be earlier than the current time' });
+  }
 
   // TODO Find matching available garages
   const results = ['garage1', 'garage2'];
@@ -53,12 +64,16 @@ const searchSpace = async (req, res) => {
  * POST request
  *
  * @async
- * @param {} garageId - The ID of the garage in which to reserve a space
- * @param {Date} startDateTime - The desired starting time of the reservation
- * @param {Date} endDateTime - The desired ending time of the reservation
- * @param {} customerId - The ID of the customer the reservation is made for
- * @param {} vehicle - The vehicle plate details for the vehicle the reservation is made for
- * @returns {} reservation details
+ * @param {Number} memberId - ID number of the member the reservation is for
+ * @param {Number} reservationTypeId - The type of reservation
+ * @param {Number} vehicleId - The vehicle the reservation is for
+ * @param {Number} garageId - The garage the reservation is for
+ * @param {Date} startDateTime - When the reservation starts
+ * @param {Date} endDateTime - When the reservation ends
+ * @param {Number} spotNumber - The parking spot assigned to the reservation
+ * @param {Number} reservationStatusId - The status of the reservation
+ * @param {Boolean} extraGrace - Whether the user is given an extra grace period after the reservation end time has passed
+ * @returns {Object} - reservation details
  *
  * Preconditions:
  *  - garageId is not null
@@ -71,18 +86,29 @@ const searchSpace = async (req, res) => {
 const reserveSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
-  const garageId = req.body.garageId;
-  const startDateTime = req.body.startDateTime;
-  const endDateTime = req.body.endDateTime;
-  const customerId = req.body.customerId;
-  const vehicle = req.body.vehicle;
+  const memberId = req?.body?.memberId;
+  const reservationTypeId = req?.body?.reservationTypeId;
+  const vehicleId = req?.body?.vehicleId;
+  const garageId = req?.body?.garageId;
+  const startDateTime = req?.body?.startDateTime;
+  const endDateTime = req?.body?.endDateTime;
+  const spotNumber = req?.body?.spotNumber;
+  const reservationStatusId = req?.body?.reservationStatusId;
+  const extraGrace = req?.body?.extraGrace;
 
   // Return early if any arguments missing (vehicles optional)
-  if (!(garageId && startDateTime && endDateTime && customerId)) {
+  if (!(memberId && reservationTypeId && vehicleId && garageId && startDateTime && endDateTime)) {
+    // && spotNumber && reservationStatusId && extraGrace*/)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
 
-  // TODO check preconditions
+  // Check preconditions
+  if (startDateTime >= endDateTime) {
+    return res.status(400).json({ message: 'Start datetime must be earlier than end datetime' });
+  }
+  if (startDateTime < Date.now()) {
+    return res.status(400).json({ message: 'Start date time cannot be earlier than the current time' });
+  }
 
   // TODO create the reservation in the DB
   const reservation = { message: 'Reservation complete!' };
@@ -116,6 +142,7 @@ const reserveSpace = async (req, res) => {
  * Postconditions:
  *  - None
  */
+/* 
 const searchGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from url query
@@ -138,7 +165,7 @@ const searchGuaranteedSpace = async (req, res) => {
 
   return res.status(200).json(results);
 };
-
+ */
 /**
  * Reserve a permanent space
  * POST request
@@ -163,6 +190,7 @@ const searchGuaranteedSpace = async (req, res) => {
  *  - frequency is one of Daily, Weekly, or Monthly
  *  - customerId is not null
  */
+/* 
 const reserveGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
@@ -188,7 +216,7 @@ const reserveGuaranteedSpace = async (req, res) => {
   // TODO return the reservation details after successful creation
   return res.status(200).json(reservation);
 };
-
+ */
 /**
  * Convert a JS Date timestamp into a UTC SQL DateTime
  *
@@ -217,4 +245,4 @@ const datetimeSqlToJs = (sqlDatetime) => {
 };
 
 // Export functions
-module.exports = { searchSpace, reserveSpace, searchGuaranteedSpace, reserveGuaranteedSpace, datetimeJsToSql, datetimeSqlToJs };
+module.exports = { searchSpace, reserveSpace, datetimeJsToSql, datetimeSqlToJs };
