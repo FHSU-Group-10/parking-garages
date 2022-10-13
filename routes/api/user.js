@@ -23,11 +23,11 @@ router.route('/login').post(async (req, res, next) => {
         // return to user
         res.status(200).json(results);
     } catch (error) {
-        // log and handle error
-        console.dir(error);
         res.status(500).json(error);
     }
 });
+
+router.route('/register').post(User.register)
 
 
 module.exports = router;
