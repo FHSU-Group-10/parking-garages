@@ -1,7 +1,18 @@
+/**
+ * All functions pertaining to the User model / class.
+ * <pre>
+ *     History:
+ *          2022 10 09 - Dustin.Threet - create
+ *          2022 10 09 - Dustin.Threet - functionality to login as user.
+ *          2022 10 12 - Dustin.Threet - added ability to register new account.
+ *          2022 10 16 - Dustin.Threet - hashing password on register, changed findorcreate to just create for the hashing of passwords.
+ */
+
 const _ = require("lodash");
 const Db = require('./models/user');
 const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
+const bcrypt = require("bcrypt");
 
 const login = async(req, res) => {
     try {
@@ -24,7 +35,7 @@ const login = async(req, res) => {
         user =  (user || {}).dataValues;
         
         if (user) {
-            const password_valid = (password === user.PW); // TODO: change to bcrypt.compare(req.body.password, user.PW) once hashing has started
+            const password_valid = await bcrypt.compare(password,user.PW); 
             if (password_valid) {
                 return res.status(200).json({token: 'success'}); // TODO: change to login token
             } else {
@@ -48,7 +59,7 @@ const test = async (req, res) => {
             let [created_user, created] = await Users.findOrCreate({
                 where: {
                     USERNAME: req.body.username,
-                    PW: req.body.password,
+                    PW: await bcrypt.hash(req.body.password),
                     FIRST_NAME: req.body.first_name,
                     LAST_NAME: req.body.last_name,
                     EMAIL: req.body.email,
@@ -58,10 +69,8 @@ const test = async (req, res) => {
             });
             // separating dataValues from return set
             created_user = (created_user || {}).dataValues;
-        
-            if (!created) throw 'Username already in use.'
-        
-        
+            // cleanup PW, do not want to send this back to the UI
+            delete created_user.PW;
             resolve((200).json(created_user));
         }catch (ex) {
             console.dir(ex); // log error
@@ -91,24 +100,36 @@ const register = async (req, res) => {
         
         // fetch DB models, connect to DB
         let {Users} = await getModels();
+    
+        let existing_user = await Users.findOne({
+            where: {
+                USERNAME: {
+                    [Op.like]: req.body.username
+                }
+            }
+        });
+    
+        if (existing_user) throw 'Username already in use.'
+    
+        const salt = await bcrypt.genSalt(10);
+        
+        const hashed_pw = await bcrypt.hash(req.body.password, salt);
 
-        let [created_user, created] = await Users.findOrCreate({
-           where: {
+        let created_user = await Users.create({
                USERNAME: req.body.username,
-               PW: req.body.password,
+               PW: hashed_pw,
                FIRST_NAME: req.body.first_name,
                LAST_NAME: req.body.last_name,
                EMAIL: req.body.email,
                PHONE: req.body.phone,
                IS_OPERATOR: req.body.is_operator || false
-           }
         });
         // separating dataValues from return set
         created_user = (created_user || {}).dataValues;
-
-        if (!created) throw 'Username already in use.'
-
-
+    
+        // delete PW since we do not want to send this back to the UI.
+        delete created_user.PW;
+        
        return res.status(200).json(created_user);
     }catch (ex) {
         console.dir(ex); // log error
