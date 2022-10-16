@@ -35,7 +35,7 @@ const login = async(req, res) => {
         user =  (user || {}).dataValues;
         
         if (user) {
-            const password_valid = await bcrypt.compare(password,user.PW); // TODO: change to bcrypt.compare(req.body.password, user.PW) once hashing has started
+            const password_valid = await bcrypt.compare(password,user.PW); 
             if (password_valid) {
                 return res.status(200).json({token: 'success'}); // TODO: change to login token
             } else {
