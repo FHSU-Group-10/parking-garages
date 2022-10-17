@@ -38,55 +38,6 @@
     <link rel="stylesheet" href="../css/search.css" />
   </head>
 
-  <style>
-    .background {
-      background-color: black;
-    }
-
-    .card {
-      border: none;
-    }
-
-    .forgot-password:hover {
-      color: white !important;
-    }
-
-    .gradient-custom {
-      /* fallback for old browsers */
-      background: #6a11cb;
-
-      /* Chrome 10-25, Safari 5.1-6 */
-      background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
-
-      /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-      background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
-    }
-
-    @media only screen and (max-width: 1080px) {
-      #fadeshow1 {
-        display: none;
-      }
-    }
-
-    @media only screen and (min-width: 1081px) {
-      #fadeshow2 {
-        display: none;
-      }
-    }
-
-    @media (min-width: 768px) {
-      .gradient-form {
-        height: 100vh !important;
-      }
-    }
-    @media (min-width: 769px) {
-      .gradient-custom-2 {
-        border-top-right-radius: 0.3rem;
-        border-bottom-right-radius: 0.3rem;
-      }
-    }
-  </style>
-
   <body class="background gradient-custom" ng-app="pageApp" ng-controller="pageCtrl as vm">
     <div id="app">
       <!-- Modal -->
@@ -269,9 +220,7 @@
               <span class="input-group-text">:</span>
               <select class="form-select w-auto datetime-minute" ng-model="vm.searchForm.to.minute">
                 <option value="00">00</option>
-                <option value="15">15</option>
                 <option value="30">30</option>
-                <option value="45">45</option>
               </select>
             </div>
           </fieldset>

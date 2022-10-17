@@ -3,6 +3,54 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+.background {
+  background-color: black;
+}
+
+.card {
+  border: none;
+}
+
+.forgot-password:hover {
+  color: white !important;
+}
+
+.gradient-custom {
+  /* fallback for old browsers */
+  background: #6a11cb;
+
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+}
+
+@media only screen and (max-width: 1080px) {
+  #fadeshow1 {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 1081px) {
+  #fadeshow2 {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .gradient-form {
+    height: 100vh !important;
+  }
+}
+@media (min-width: 769px) {
+  .gradient-custom-2 {
+    border-top-right-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+  }
+}
+
 #app {
   width: 90vw;
   margin: 1em auto;
