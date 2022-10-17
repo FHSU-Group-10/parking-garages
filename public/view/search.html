@@ -98,7 +98,44 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <h2>Garage: {{vm.form.location}}</h2>
+              <table class="table reservationDetails">
+                <tbody>
+                  <tr>
+                    <th>Garage:</th>
+                    <td>Parkalot</td>
+                  </tr>
+                  <tr>
+                    <th>Location:</th>
+                    <td><a href="https://www.google.com/maps/dir/?api=1&destination=24.0,32.0">Directions</a></td>
+                  </tr>
+                  <tr>
+                    <th>From:</th>
+                    <td>14:30 10/31/2022</td>
+                  </tr>
+                  <tr ng-if="!vm.searchForm.isMonthly">
+                    <th>To:</th>
+                    <td>16:00 10/31/2022</td>
+                  </tr>
+                  <tr>
+                    <th>Type:</th>
+                    <td style="text-transform: capitalize">{{vm.searchForm.type}}</td>
+                  </tr>
+                  <tr>
+                    <th>Vehicle:</th>
+                    <td>
+                      <select name="useVehicle" id="useVehicle">
+                        <option value="123">My Honda</option>
+                        <option value="456">Her Subaru</option>
+                        <option value="other">Choose later</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Total Price:</th>
+                    <td>$35.75</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -156,7 +193,7 @@
               <span class="input-group-text">Date</span>
               <input type="date" class="form-control" ng-model="vm.form.from.date" />
             </div>
-            <div class="input-group datetime-time" id="from-time">
+            <div class="input-group datetime-time" id="from-time" ng-if="!vm.searchForm.isMonthly">
               <span class="input-group-text">Time</span>
               <select class="form-select datetime-hour" ng-model="vm.searchForm.from.hour">
                 <option value="00">00</option>
