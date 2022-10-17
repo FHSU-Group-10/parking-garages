@@ -156,7 +156,7 @@
     // TODO replace with real data
     const fakeGarages = [
       {
-        description: 'Garage 1',
+        description: 'ParkingSpaceX',
         address: 'Main Street',
         lat: 0,
         lon: 0,
@@ -164,7 +164,7 @@
         rate: 'hour',
       },
       {
-        description: 'Garage 2',
+        description: 'GarageBrand',
         address: 'Broad Street',
         lat: 1,
         lon: 1,
@@ -172,7 +172,7 @@
         rate: '30 min',
       },
       {
-        description: 'Garage 3',
+        description: 'AllsPark',
         address: 'Wall Street',
         lat: -1,
         lon: 1,
