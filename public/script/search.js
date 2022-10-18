@@ -1,28 +1,11 @@
 (function (window) {
   function pageCtrl($scope, $http, $document, $window) {
-    // Conversion Library
+    // LIBRARIES
+
+    // Unit conversion Library
     const convert = $window.convert;
     // Time conversion library
-    const luxon = $window.luxon;
-    const DateTime = luxon.DateTime;
-
-    // TODO Converts the time specified by the user to the garage's local timezone
-    // Necessary because user local timezone may be different, and reservations should be set in the garage's zone
-    const toGarageTZ = (userDatetime, garageTimezone) => {
-      // Break up the user-specified local time
-      const datetime = {
-        year: userDatetime.getFullYear(),
-        month: 1 + userDatetime.getMonth(),
-        day: userDatetime.getDate(),
-        hour: userDatetime.getHours(),
-        minute: userDatetime.getMinutes(),
-      };
-      // Turn that into the same time, but in the timezone of the garage
-      // So that if I reserve a garage at 10pm, that means 10pm at the garage, not 10pm wherever I am
-      const garageDatetime = DateTime.fromObject(datetime, { zone: garageTimezone });
-      // Return as a JS Date object
-      return garageDatetime.toJSDate();
-    };
+    const DateTime = $window.luxon.DateTime;
 
     // DATA
     let map, userMarker, radiusCircle;
@@ -39,23 +22,6 @@
       radius: 0,
       unit: 'miles',
       useGeo: false,
-    };
-
-    // TODO handles checking form fields
-    const isFormValid = () => {
-      const allFields =
-        (searchForm.location || searchForm.useGeo) &&
-        searchForm.radius &&
-        searchForm.radiusUnit &&
-        searchForm.type &&
-        searchForm.from.date &&
-        searchForm.from.hour &&
-        searchForm.from.minute &&
-        searchForm.to.date &&
-        searchForm.to.hour &&
-        searchForm.to.minute;
-
-      return allFields;
     };
 
     // Form fields
@@ -100,36 +66,7 @@
       directionsLink: null,
     };
 
-    // Create map, user marker, and array of garage markers
-    map = L.map('map').setView([user.lat, user.lon], user.zoom);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    // Wraps geolocation in a promise
-    function getPosition(options) {
-      return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
-    }
-
-    // Get coords from user location
-    const getGeolocate = async () => {
-      try {
-        const position = await getPosition();
-        return { lat: position.coords.latitude, lon: position.coords.longitude, display_name: 'Your location' };
-      } catch (e) {
-        console.error(e.message);
-      }
-    };
-
-    // Get coords from search string
-    const getCoords = async (searchString) => {
-      const res = await fetch(location.protocol + '//nominatim.openstreetmap.org/search?format=json&q=' + searchString);
-      const json = await res.json();
-
-      // Return if nothing was found
-      return json[0];
-    };
+    // EVENT HANDLERS
 
     // Handles search form submission
     const handleSearch = async (e) => {
@@ -184,6 +121,77 @@
       reserveOptions.totalPrice = chosenGarage.totalPrice || '$1,000';
     };
 
+    // FUNCTIONS
+
+    // Checks if all form fields are provided
+    const isFormValid = () => {
+      const allFields =
+        (searchForm.location || searchForm.useGeo) &&
+        searchForm.radius &&
+        searchForm.radiusUnit &&
+        searchForm.type &&
+        searchForm.from.date &&
+        searchForm.from.hour &&
+        searchForm.from.minute &&
+        searchForm.to.date &&
+        searchForm.to.hour &&
+        searchForm.to.minute;
+
+      return allFields;
+    };
+
+    const setInitialMap = () => {
+      // Create map, user marker, and array of garage markers
+      map = L.map('map').setView([user.lat, user.lon], user.zoom);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+    };
+
+    // Converts the time specified by the user to the garage's local timezone
+    // Necessary because user local timezone may be different, and reservations should be set in the garage's zone
+    const toGarageTZ = (userDatetime, garageTimezone) => {
+      // Break up the user-specified local time
+      const datetime = {
+        year: userDatetime.getFullYear(),
+        month: 1 + userDatetime.getMonth(),
+        day: userDatetime.getDate(),
+        hour: userDatetime.getHours(),
+        minute: userDatetime.getMinutes(),
+      };
+      // Turn that into the same time, but in the timezone of the garage
+      // So that if I reserve a garage at 10pm, that means 10pm at the garage, not 10pm wherever I am
+      const garageDatetime = DateTime.fromObject(datetime, { zone: garageTimezone });
+      // Return as a JS Date object
+      return garageDatetime.toJSDate();
+    };
+
+    // Wraps geolocation in a promise
+    function getPosition(options) {
+      return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
+    }
+
+    // Get coords from user location
+    const getGeolocate = async () => {
+      try {
+        const position = await getPosition();
+        return { lat: position.coords.latitude, lon: position.coords.longitude, display_name: 'Your location' };
+      } catch (e) {
+        console.error(e.message);
+      }
+    };
+
+    // Get coords from search string
+    const getCoords = async (searchString) => {
+      const res = await fetch(location.protocol + '//nominatim.openstreetmap.org/search?format=json&q=' + searchString);
+      const json = await res.json();
+
+      // Return if nothing was found
+      return json[0];
+    };
+
+    // Sets isMonthly flag on search to hide certain fields
     const checkType = () => {
       searchForm.isMonthly = searchForm.type == 'monthly';
     };
@@ -274,6 +282,9 @@
         rate: 'day',
       },
     ];
+
+    // Set the map
+    setInitialMap();
 
     // Return anything needed in the html
     return {
