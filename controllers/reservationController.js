@@ -6,7 +6,7 @@
 
 /**
  * Search for available spaces - single reservation
- * GET request
+ * POST request
  *
  * @async
  * @param {} location - The location around which the user is searching for parking
@@ -115,12 +115,12 @@ const reserveSpace = async (req, res) => {
   const endDateTime = req.body.endDateTime;
   const customerId = req.body.customerId;
   const vehicle = req.body.vehicle;
-
+  /* 
   // Return early if any arguments missing (vehicles optional)
   if (!(garageId && startDateTime && endDateTime && customerId)) {
     return res.status(400).json({ message: "Incomplete request" });
   }
-
+ */
   // TODO check preconditions
 
   // TODO create the reservation in the DB
@@ -134,7 +134,7 @@ const reserveSpace = async (req, res) => {
 
 /**
  * Search for available spaces - Permanent Spot
- * GET request
+ * POST request
  *
  * @async
  * @param {} location - The location around which the user is searching for parking
@@ -164,20 +164,58 @@ const searchGuaranteedSpace = async (req, res) => {
   const startTime = req.query.startTime;
   const endTime = req.query.endTime;
   const frequency = req.query.frequency;
-
+  /* 
   // Return early if any arguments are missing
   if (
     !(location && startDate && endDate && startTime && endTime && frequency)
   ) {
     return res.status(400).json({ message: "Incomplete query" });
-  }
+  } */
 
   // TODO Check preconditions
 
   // TODO Find matching available garages
-  const results = ["garage1", "garage2"];
+  const fakeGarages = [
+    {
+      garageId: 101,
+      description: "ParkingSpaceX",
+      lat: 0,
+      lon: 0,
+      timezone: "America/New_York",
+      price: 16.75,
+      rate: "hour",
+    },
+    {
+      garageId: 102,
+      description: "GarageBrand",
+      lat: 1,
+      lon: 1,
+      timezone: "America/New_York",
+      price: 12.5,
+      rate: "30 min",
+    },
+    {
+      garageId: 103,
+      description: "AllsPark",
+      lat: -1,
+      lon: 1,
+      timezone: "America/New_York",
+      price: 10,
+      rate: "day",
+    },
+    {
+      garageId: 104,
+      description: "SeeSpotPark",
+      lat: -1,
+      lon: 1,
+      timezone: "America/New_York",
+      price: 10,
+      rate: "day",
+    },
+  ];
 
-  return res.status(200).json(results);
+  // TODO Return results
+  return res.status(200).json(fakeGarages);
 };
 
 /**
@@ -215,7 +253,7 @@ const reserveGuaranteedSpace = async (req, res) => {
   const frequency = req.body.frequency;
   const customerId = req.body.customerId;
   const vehicle = req.body.vehicle;
-
+  /* 
   // Return early if any args missing (vehicle optional)
   if (
     !(
@@ -229,7 +267,7 @@ const reserveGuaranteedSpace = async (req, res) => {
     )
   ) {
     return res.status(400).json({ message: "Incomplete request" });
-  }
+  } */
 
   // TODO check preconditions
 
@@ -239,6 +277,8 @@ const reserveGuaranteedSpace = async (req, res) => {
   // TODO return the reservation details after successful creation
   return res.status(200).json(reservation);
 };
+
+// TIME CONVERSIONS
 
 /**
  * Convert a JS Date timestamp into a UTC SQL DateTime

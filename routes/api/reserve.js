@@ -4,18 +4,15 @@ const router = express.Router();
 const reservationController = require("../../controllers/reservationController");
 
 // Search
-router.route("/search").post(reservationController.searchSpace);
+router.route("/search/single").post(reservationController.searchSpace);
+router
+  .route("/search/guaranteed")
+  .post(reservationController.searchGuaranteedSpace);
 
 // Single space
-router
-  .route("/single")
-  .get(reservationController.searchSpace)
-  .post(reservationController.reserveSpace);
+router.route("/single").post(reservationController.reserveSpace);
 
 // Guaranteed space
-router
-  .route("/guaranteed")
-  .get(reservationController.searchGuaranteedSpace)
-  .post(reservationController.reserveGuaranteedSpace);
+router.route("/guaranteed").post(reservationController.reserveGuaranteedSpace);
 
 module.exports = router;
