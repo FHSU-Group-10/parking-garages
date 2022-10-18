@@ -135,7 +135,43 @@
       );
 
       reserveOptions.type = searchForm.type;
+      reserveOptions.isMonthly = searchForm.isMonthly;
       reserveOptions.totalPrice = chosenGarage.totalPrice || "$1,000";
+    };
+
+    // Submits the reservation to the backend
+    const handleSubmitReservation = async () => {
+      try {
+        if (reserveOptions.isMonthly) {
+          // Monthly reservation
+          res = await $http({
+            method: "POST",
+            url: "/reserve/guaranteed",
+            data: {
+              ...reserveOptions,
+            },
+          });
+        } else {
+          // Single reservation
+          res = await $http({
+            method: "POST",
+            url: "/reserve/single",
+            data: {
+              ...reserveOptions,
+            },
+          });
+        }
+
+        console.log(res);
+      } catch (err) {
+        dialog(err.message);
+      }
+
+      // Modal is closed automatically by html
+      // Show status alert
+      alert("Reservation successful!");
+
+      $window.location.reload();
     };
 
     // FUNCTIONS
@@ -226,7 +262,33 @@
       searchForm.isMonthly = searchForm.type == "monthly";
     };
 
-    // TODO bring in real data
+    // Get garage results from backend
+    const getGarages = async () => {
+      let res;
+
+      if (searchForm.isMonthly) {
+        // Monthly reservation
+        res = await $http({
+          method: "POST",
+          url: "/reserve/search/guaranteed",
+          data: {
+            name: "testData",
+          },
+        });
+      } else {
+        // Single reservation
+        res = await $http({
+          method: "POST",
+          url: "/reserve/search/single",
+          data: {
+            name: "testData",
+          },
+        });
+      }
+      return res?.data;
+    };
+
+    // Bring in garage data from backend
     const addGarages = async () => {
       // Clear old garages and markers
       garages.length = 0;
@@ -236,18 +298,10 @@
       }
 
       // Get garage results from backend
-      const res = await $http({
-        method: "POST",
-        url: "/reserve/search",
-        data: {
-          name: "fish",
-        },
-      });
-
-      const results = res.data;
+      const results = await getGarages();
 
       // Add new garages
-      results.forEach((garage) => {
+      results?.forEach((garage) => {
         const newGarage = { ...garage };
         newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
         newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
@@ -310,6 +364,8 @@
       handleReserveBtn,
       reserveOptions,
       isFormValid,
+      handleSubmitReservation,
+      showModal,
     };
   }
 
@@ -319,6 +375,7 @@
     "$http",
     "$document",
     "$window",
+
     pageCtrl,
   ]);
 })(window);

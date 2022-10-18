@@ -294,7 +294,16 @@
               >
                 Cancel
               </button>
-              <button type="button" class="btn btn-primary">Reserve Now</button>
+              <!-- Data fields help Bootstrap close modal -->
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#reservation-modal"
+                ng-click="vm.handleSubmitReservation()"
+              >
+                Reserve Now
+              </button>
             </div>
           </div>
         </div>
