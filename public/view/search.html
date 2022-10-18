@@ -24,7 +24,8 @@
       import convert from 'https://cdn.jsdelivr.net/npm/convert@4';
       window.convert = convert;
     </script>
-
+    <!-- Time conversion library -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.4/build/global/luxon.min.js"></script>
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
@@ -53,24 +54,25 @@
                 <tbody>
                   <tr>
                     <th>Garage:</th>
-                    <td>Parkalot</td>
+                    <td>{{vm.reserveOptions.garage.description}}</td>
                   </tr>
                   <tr>
                     <th>Location:</th>
-                    <td><a href="https://www.google.com/maps/dir/?api=1&destination=24.0,32.0">Directions</a></td>
+                    <td><a ng-href="{{vm.reserveOptions.directionsLink}}">Directions</a></td>
                   </tr>
                   <tr>
                     <th>From:</th>
-                    <td>14:30 10/31/2022</td>
+                    <td>{{vm.reserveOptions.from.specifiedDatetime.toString().slice(0, 21)}}</td>
                   </tr>
                   <tr ng-if="!vm.searchForm.isMonthly">
                     <th>To:</th>
-                    <td>16:00 10/31/2022</td>
+                    <td>{{vm.reserveOptions.to.specifiedDatetime.toString().slice(0, 21)}}</td>
                   </tr>
                   <tr>
                     <th>Type:</th>
                     <td style="text-transform: capitalize">{{vm.searchForm.type}}</td>
                   </tr>
+                  <!-- TODO Should show user vehicles and track selection in reserveOptions -->
                   <tr>
                     <th>Vehicle:</th>
                     <td>
@@ -83,14 +85,14 @@
                   </tr>
                   <tr>
                     <th>Total Price:</th>
-                    <td>$35.75</td>
+                    <td>{{vm.reserveOptions.totalPrice}}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary">Save changes</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary">Reserve Now</button>
             </div>
           </div>
         </div>
@@ -104,15 +106,15 @@
         </section>
 
         <!-- Search Form -->
-        <form id="search-form" class="row g-3">
+        <form id="search-form" class="row g-3" validate>
           <!-- Location and Geolocate -->
           <fieldset>
             <legend>Location:</legend>
             <div class="input-group">
-              <input type="text" class="form-control" id="locationInput" placeholder="Atlanta, GA" ng-model="vm.searchForm.location" ng-if="!vm.searchForm.useGeo" />
+              <input type="text" class="form-control" id="locationInput" placeholder="Atlanta, GA" ng-model="vm.searchForm.location" ng-disabled="vm.searchForm.useGeo" />
 
               <span class="input-group-text"
-                ><input class="form-check-input" type="checkbox" ng-model="vm.searchForm.useGeo" id="checkUseLocation" /><label class="form-check-label" for="checkUseLocation"
+                ><input class="form-check-input loc-checkbox" type="checkbox" ng-model="vm.searchForm.useGeo" id="checkUseLocation" /><label class="form-check-label" for="checkUseLocation"
                   >My Location</label
                 ></span
               >
@@ -121,7 +123,7 @@
             <!-- Search radius -->
             <div class="input-group">
               <span class="input-group-text">Within:</span>
-              <input type="text" class="form-control" placeholer="0" ng-model="vm.searchForm.radius" /><br />
+              <input type="text" class="form-control" placeholer="0" ng-model="vm.searchForm.radius" required /><br />
               <select class="form-select" ng-model="vm.searchForm.radiusUnit">
                 <option selected value="miles">Miles</option>
                 <option value="feet">Feet</option>
@@ -142,7 +144,7 @@
             <legend>From:</legend>
             <div class="input-group datetime-date">
               <span class="input-group-text">Date</span>
-              <input type="date" class="form-control" ng-model="vm.form.from.date" />
+              <input type="date" class="form-control" ng-model="vm.searchForm.from.date" required />
             </div>
             <div class="input-group datetime-time" id="from-time" ng-if="!vm.searchForm.isMonthly">
               <span class="input-group-text">Time</span>
@@ -226,36 +228,21 @@
           </fieldset>
 
           <!-- Search button -->
-          <button class="btn btn-primary" type="submit" value="Submit" id="submitSearch" ng-click="vm.handleSearch($event)">Search</button>
+          <input class="btn btn-primary" type="submit" id="submitSearch" value="Search" ng-click="vm.handleSearch($event)" ng-disabled="!vm.isFormValid()" />
         </form>
       </div>
 
       <!-- Search Results -->
-      <section id="results-area">
+      <section id="results-area" ng-repeat="garage in vm.garages track by garage.garageId">
         <div class="result-tile">
           <div class="result-descrip">
-            <h3>Parkalot - 100 ft</h3>
-
-            <h5>123 Broad St E, Atlanta, GA, 33456</h5>
+            <h3>{{garage.description}}</h3>
+            <h5>{{garage.distance}} {{vm.user.radiusUnit}} away</h5>
           </div>
-
-          <button type="button" class="reserve-btn" data-garage-id="3" data-bs-toggle="modal" data-bs-target="#reservation-modal" ng-click="vm.handleReserveBtn($event)">
-            <h2>$35.75</h2>
+          <button type="button" class="reserve-btn" data-bs-toggle="modal" data-bs-target="#reservation-modal" ng-click="vm.handleReserveBtn($event, $index)">
+            <h2>${{(garage.price * 3).toFixed(2)}}</h2>
             <h3>Reserve</h3>
           </button>
-        </div>
-
-        <div ng-repeat="garage in vm.garages">
-          <div class="result-tile">
-            <div class="result-descrip">
-              <h3>{{garage.description}} - {{garage.distance}} {{vm.user.radiusUnit}}</h3>
-              <h5>{{garage.address}}</h5>
-            </div>
-            <button class="reserve-btn">
-              <h2>${{(garage.price * 3).toFixed(2)}}</h2>
-              <h3>Reserve</h3>
-            </button>
-          </div>
         </div>
       </section>
     </div>

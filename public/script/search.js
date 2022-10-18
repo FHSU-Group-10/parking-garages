@@ -2,6 +2,27 @@
   function pageCtrl($scope, $http, $document, $window) {
     // Conversion Library
     const convert = $window.convert;
+    // Time conversion library
+    const luxon = $window.luxon;
+    const DateTime = luxon.DateTime;
+
+    // TODO Converts the time specified by the user to the garage's local timezone
+    // Necessary because user local timezone may be different, and reservations should be set in the garage's zone
+    const toGarageTZ = (userDatetime, garageTimezone) => {
+      // Break up the user-specified local time
+      const datetime = {
+        year: userDatetime.getFullYear(),
+        month: 1 + userDatetime.getMonth(),
+        day: userDatetime.getDate(),
+        hour: userDatetime.getHours(),
+        minute: userDatetime.getMinutes(),
+      };
+      // Turn that into the same time, but in the timezone of the garage
+      // So that if I reserve a garage at 10pm, that means 10pm at the garage, not 10pm wherever I am
+      const garageDatetime = DateTime.fromObject(datetime, { zone: garageTimezone });
+      // Return as a JS Date object
+      return garageDatetime.toJSDate();
+    };
 
     // DATA
     let map, userMarker, radiusCircle;
@@ -18,6 +39,23 @@
       radius: 0,
       unit: 'miles',
       useGeo: false,
+    };
+
+    // TODO handles checking form fields
+    const isFormValid = () => {
+      const allFields =
+        (searchForm.location || searchForm.useGeo) &&
+        searchForm.radius &&
+        searchForm.radiusUnit &&
+        searchForm.type &&
+        searchForm.from.date &&
+        searchForm.from.hour &&
+        searchForm.from.minute &&
+        searchForm.to.date &&
+        searchForm.to.hour &&
+        searchForm.to.minute;
+
+      return allFields;
     };
 
     // Form fields
@@ -38,6 +76,28 @@
         hour: '13',
         minute: '00',
       },
+    };
+
+    // Reservation parameters
+    const reserveOptions = {
+      garage: {
+        id: null,
+        description: null,
+        lat: null,
+        lon: null,
+      },
+      from: {
+        specifiedDatetime: null,
+        garageLocalDatetime: null,
+      },
+      to: {
+        specifiedDatetime: null,
+        garageLocalDatetime: null,
+      },
+      type: null,
+      userVehicle: null,
+      totalPrice: null,
+      directionsLink: null,
     };
 
     // Create map, user marker, and array of garage markers
@@ -66,13 +126,15 @@
     const getCoords = async (searchString) => {
       const res = await fetch(location.protocol + '//nominatim.openstreetmap.org/search?format=json&q=' + searchString);
       const json = await res.json();
+
       // Return if nothing was found
       return json[0];
     };
 
     // Handles search form submission
     const handleSearch = async (e) => {
-      e.preventDefault();
+      //e.preventDefault();
+      // TODO validate data
 
       // Get user coords by geo or search string
       let location;
@@ -94,6 +156,32 @@
 
       setMap();
       addGarages();
+    };
+
+    // Handle clicking on reserve button in search results
+    const handleReserveBtn = (e, index) => {
+      const chosenGarage = garages[index] || {};
+
+      reserveOptions.garage.id = chosenGarage.garageId;
+      reserveOptions.garage.description = chosenGarage.description;
+      reserveOptions.garage.lat = chosenGarage.lat;
+      reserveOptions.garage.lon = chosenGarage.lon;
+      reserveOptions.directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${chosenGarage.lat},${chosenGarage.lon}`;
+      // Build 'from' time
+      reserveOptions.from.specifiedDatetime = searchForm.from.date;
+      reserveOptions.from.specifiedDatetime.setHours(parseInt(searchForm.from.hour));
+      reserveOptions.from.specifiedDatetime.setMinutes(parseInt(searchForm.from.minute));
+      // Build 'to' time
+      reserveOptions.to.specifiedDatetime = searchForm.to.date;
+      reserveOptions.to.specifiedDatetime.setHours(parseInt(searchForm.to.hour));
+      reserveOptions.to.specifiedDatetime.setMinutes(parseInt(searchForm.to.minute));
+
+      // Build garage local to and from times
+      reserveOptions.from.garageLocalDatetime = toGarageTZ(reserveOptions.from.specifiedDatetime, chosenGarage.timezone);
+      reserveOptions.to.garageLocalDatetime = toGarageTZ(reserveOptions.to.specifiedDatetime, chosenGarage.timezone);
+
+      reserveOptions.type = searchForm.type;
+      reserveOptions.totalPrice = chosenGarage.totalPrice || '$1,000';
     };
 
     const checkType = () => {
@@ -156,26 +244,32 @@
     // TODO replace with real data
     const fakeGarages = [
       {
+        garageId: 101,
         description: 'ParkingSpaceX',
         address: 'Main Street',
         lat: 0,
         lon: 0,
+        timezone: 'America/New_York',
         price: 16.75,
         rate: 'hour',
       },
       {
+        garageId: 102,
         description: 'GarageBrand',
         address: 'Broad Street',
         lat: 1,
         lon: 1,
+        timezone: 'America/New_York',
         price: 12.5,
         rate: '30 min',
       },
       {
+        garageId: 103,
         description: 'AllsPark',
         address: 'Wall Street',
         lat: -1,
         lon: 1,
+        timezone: 'America/New_York',
         price: 10,
         rate: 'day',
       },
@@ -190,6 +284,9 @@
       garages,
       addGarages,
       checkType,
+      handleReserveBtn,
+      reserveOptions,
+      isFormValid,
     };
   }
 

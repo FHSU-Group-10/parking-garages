@@ -70,6 +70,10 @@
   background-color: white;
 }
 
+.loc-checkbox {
+  margin-right: 0.5em;
+}
+
 .mapAndSearch {
 }
 #results-area {
@@ -85,7 +89,7 @@
   display: flex;
   justify-content: space-between;
   border: 5px solid black;
-  margin-bottom: 0.2em;
+  margin-top: 0.5em;
 }
 
 .reserve-btn {
@@ -119,7 +123,6 @@
 @media only screen and (min-width: 769px) {
   .mapAndSearch {
     display: flex;
-    margin-bottom: 1em;
   }
   #map-section {
     width: calc(100% - 350px);
