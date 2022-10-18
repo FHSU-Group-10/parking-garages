@@ -365,7 +365,6 @@
       reserveOptions,
       isFormValid,
       handleSubmitReservation,
-      showModal,
     };
   }
 
@@ -375,7 +374,6 @@
     "$http",
     "$document",
     "$window",
-
     pageCtrl,
   ]);
 })(window);
