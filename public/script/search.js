@@ -1,5 +1,5 @@
 (function (window) {
-  function pageCtrl($http, $window, $timeout) {
+  function pageCtrl($scope, $http, $document, $window, $timeout) {
     // LIBRARIES
 
     // Unit conversion Library
@@ -299,34 +299,34 @@
 
       // Get garage results from backend
       const results = await getGarages();
-      $timeout(() => {
-        // Add new garages
-        results?.forEach((garage) => {
-          const newGarage = { ...garage };
-          newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
-          newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
 
-          // Calculate distance from user
-          let from = L.latLng(user.lat, user.lon);
-          let to = L.latLng(newGarage.lat, newGarage.lon);
-          // Measurements in feet shouldn't be precise to the foot
-          if (user.radiusUnit == "feet")
-            newGarage.distance = parseFloat(
-              convert(map.distance(from, to), "meters")
-                .to("feet")
-                .toPrecision(3)
-            );
-          else
-            newGarage.distance = convert(map.distance(from, to), "meters")
-              .to(user.radiusUnit)
-              .toFixed(2);
+      // Add new garages
+      results?.forEach((garage) => {
+        const newGarage = { ...garage };
+        newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
+        newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
 
-          const pin = L.marker([newGarage.lat, newGarage.lon]);
-          pin.addTo(map).bindPopup(newGarage.description);
-          garages.push(newGarage);
-          garageMarkers.push(pin);
-        });
-      }, 0);
+        // Calculate distance from user
+        let from = L.latLng(user.lat, user.lon);
+        let to = L.latLng(newGarage.lat, newGarage.lon);
+        // Measurements in feet shouldn't be precise to the foot
+        if (user.radiusUnit == "feet")
+          newGarage.distance = parseFloat(
+            convert(map.distance(from, to), "meters").to("feet").toPrecision(3)
+          );
+        else
+          newGarage.distance = convert(map.distance(from, to), "meters")
+            .to(user.radiusUnit)
+            .toFixed(2);
+
+        const pin = L.marker([newGarage.lat, newGarage.lon]);
+        pin.addTo(map).bindPopup(newGarage.description);
+        garages.push(newGarage);
+        garageMarkers.push(pin);
+      });
+      // Load-bearing empty function, don't remove
+      // Search results disappear without it now
+      $timeout(() => {}, 0);
     };
 
     // Sets map from user object
@@ -372,5 +372,12 @@
   }
 
   var app = angular.module("pageApp", []);
-  app.controller("pageCtrl", ["$http", "$window", "$timeout", pageCtrl]);
+  app.controller("pageCtrl", [
+    "$scope",
+    "$http",
+    "$document",
+    "$window",
+    "$timeout",
+    pageCtrl,
+  ]);
 })(window);
