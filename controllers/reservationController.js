@@ -6,7 +6,7 @@
 
 /**
  * Search for available spaces - single reservation
- * GET request
+ * POST request
  *
  * @async
  * @param {String} street - The street address around which the user is searching for parking
@@ -27,36 +27,68 @@
  */
 const searchSpace = async (req, res) => {
   // TODO
-  // Get arguments from request url query
-  const street = req.query.street || null;
-  const city = req?.query?.city || null;
-  const state = req?.query?.state || null;
-  const zip = req?.query?.zip || null;
-  const startDateTime = req?.query?.startDateTime || null;
-  const endDateTime = req?.query?.endDateTime || null;
-  const reservationTypeId = req?.query?.reservationTypeId || null;
+  /* // Get arguments from request url query
+  const location = req.query.location;
+  const startDateTime = req.query.startDateTime;
+  const endDateTime = req.query.endDateTime;
 
   // Return early if any arguments are missing
-  if (!(street && city && state && zip && startDateTime && endDateTime && reservationTypeId)) {
-    return res.status(400).json({ message: 'Incomplete query' });
+  if (!(location && startDateTime && endDateTime)) {
+    return res.status(400).json({ message: "Incomplete query" });
   }
 
   // Check preconditions
   // TODO check if garages are known
 
   if (startDateTime >= endDateTime) {
-    return res.status(400).json({ message: 'Start datetime must be earlier than end datetime' });
+    return res
+      .status(400)
+      .json({ message: "Start datetime must be earlier than end datetime" });
   }
-  // Check against current time precondition
-  if (startDateTime < Date.now()) {
-    return res.status(400).json({ message: 'Start date time cannot be earlier than the current time' });
-  }
-
+  // TODO check against current time precondition */
+  console.log(req.body.name);
   // TODO Find matching available garages
-  const results = ['garage1', 'garage2'];
+  const fakeGarages = [
+    {
+      garageId: 101,
+      description: 'ParkingSpaceX',
+      lat: 0,
+      lon: 0,
+      timezone: 'America/New_York',
+      price: 16.75,
+      rate: 'hour',
+    },
+    {
+      garageId: 102,
+      description: 'GarageBrand',
+      lat: 1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 12.5,
+      rate: '30 min',
+    },
+    {
+      garageId: 103,
+      description: 'AllsPark',
+      lat: -1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 10,
+      rate: 'day',
+    },
+    {
+      garageId: 104,
+      description: 'SeeSpotPark',
+      lat: -1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 10,
+      rate: 'day',
+    },
+  ];
 
   // TODO Return results
-  return res.status(200).json(results);
+  return res.status(200).json(fakeGarages);
 };
 
 /**
@@ -86,29 +118,18 @@ const searchSpace = async (req, res) => {
 const reserveSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
-  const memberId = req?.body?.memberId;
-  const reservationTypeId = req?.body?.reservationTypeId;
-  const vehicleId = req?.body?.vehicleId;
-  const garageId = req?.body?.garageId;
-  const startDateTime = req?.body?.startDateTime;
-  const endDateTime = req?.body?.endDateTime;
-  const spotNumber = req?.body?.spotNumber;
-  const reservationStatusId = req?.body?.reservationStatusId;
-  const extraGrace = req?.body?.extraGrace;
-
+  const garageId = req.body.garageId;
+  const startDateTime = req.body.startDateTime;
+  const endDateTime = req.body.endDateTime;
+  const customerId = req.body.customerId;
+  const vehicle = req.body.vehicle;
+  /* 
   // Return early if any arguments missing (vehicles optional)
-  if (!(memberId && reservationTypeId && vehicleId && garageId && startDateTime && endDateTime)) {
-    // && spotNumber && reservationStatusId && extraGrace*/)) {
-    return res.status(400).json({ message: 'Incomplete request' });
+  if (!(garageId && startDateTime && endDateTime && customerId)) {
+    return res.status(400).json({ message: "Incomplete request" });
   }
-
-  // Check preconditions
-  if (startDateTime >= endDateTime) {
-    return res.status(400).json({ message: 'Start datetime must be earlier than end datetime' });
-  }
-  if (startDateTime < Date.now()) {
-    return res.status(400).json({ message: 'Start date time cannot be earlier than the current time' });
-  }
+ */
+  // TODO check preconditions
 
   // TODO create the reservation in the DB
   const reservation = { message: 'Reservation complete!' };
@@ -121,7 +142,7 @@ const reserveSpace = async (req, res) => {
 
 /**
  * Search for available spaces - Permanent Spot
- * GET request
+ * POST request
  *
  * @async
  * @param {} location - The location around which the user is searching for parking
@@ -142,7 +163,7 @@ const reserveSpace = async (req, res) => {
  * Postconditions:
  *  - None
  */
-/* 
+
 const searchGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from url query
@@ -152,20 +173,60 @@ const searchGuaranteedSpace = async (req, res) => {
   const startTime = req.query.startTime;
   const endTime = req.query.endTime;
   const frequency = req.query.frequency;
-
+  /* 
   // Return early if any arguments are missing
-  if (!(location && startDate && endDate && startTime && endTime && frequency)) {
-    return res.status(400).json({ message: 'Incomplete query' });
-  }
+  if (
+    !(location && startDate && endDate && startTime && endTime && frequency)
+  ) {
+    return res.status(400).json({ message: "Incomplete query" });
+  } */
 
   // TODO Check preconditions
 
   // TODO Find matching available garages
-  const results = ['garage1', 'garage2'];
+  const fakeGarages = [
+    {
+      garageId: 101,
+      description: 'ParkingSpaceX',
+      lat: 0,
+      lon: 0,
+      timezone: 'America/New_York',
+      price: 16.75,
+      rate: 'hour',
+    },
+    {
+      garageId: 102,
+      description: 'GarageBrand',
+      lat: 1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 12.5,
+      rate: '30 min',
+    },
+    {
+      garageId: 103,
+      description: 'AllsPark',
+      lat: -1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 10,
+      rate: 'day',
+    },
+    {
+      garageId: 104,
+      description: 'SeeSpotPark',
+      lat: -1,
+      lon: 1,
+      timezone: 'America/New_York',
+      price: 10,
+      rate: 'day',
+    },
+  ];
 
-  return res.status(200).json(results);
+  // TODO Return results
+  return res.status(200).json(fakeGarages);
 };
- */
+
 /**
  * Reserve a permanent space
  * POST request
@@ -190,7 +251,7 @@ const searchGuaranteedSpace = async (req, res) => {
  *  - frequency is one of Daily, Weekly, or Monthly
  *  - customerId is not null
  */
-/* 
+
 const reserveGuaranteedSpace = async (req, res) => {
   // TODO
   // Get arguments from POST request body
@@ -202,11 +263,21 @@ const reserveGuaranteedSpace = async (req, res) => {
   const frequency = req.body.frequency;
   const customerId = req.body.customerId;
   const vehicle = req.body.vehicle;
-
+  /* 
   // Return early if any args missing (vehicle optional)
-  if (!(garageId && startDate && endDate && startTime && endTime && frequency && customerId)) {
-    return res.status(400).json({ message: 'Incomplete request' });
-  }
+  if (
+    !(
+      garageId &&
+      startDate &&
+      endDate &&
+      startTime &&
+      endTime &&
+      frequency &&
+      customerId
+    )
+  ) {
+    return res.status(400).json({ message: "Incomplete request" });
+  } */
 
   // TODO check preconditions
 
@@ -216,7 +287,9 @@ const reserveGuaranteedSpace = async (req, res) => {
   // TODO return the reservation details after successful creation
   return res.status(200).json(reservation);
 };
- */
+
+// TIME CONVERSIONS
+
 /**
  * Convert a JS Date timestamp into a UTC SQL DateTime
  *
@@ -245,4 +318,11 @@ const datetimeSqlToJs = (sqlDatetime) => {
 };
 
 // Export functions
-module.exports = { searchSpace, reserveSpace, datetimeJsToSql, datetimeSqlToJs };
+module.exports = {
+  searchSpace,
+  reserveSpace,
+  searchGuaranteedSpace,
+  reserveGuaranteedSpace,
+  datetimeJsToSql,
+  datetimeSqlToJs,
+};
