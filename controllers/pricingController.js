@@ -1,29 +1,25 @@
 /**
- *  Get the pricing for a specified garage
+ *  Get the pricing for a specified price id
  *
- * @param {string} garageId - The ID of the garage to return pricing for
- * @returns {} - The pricing data for the specified garage
+ * @param {number} priceId - The ID of the pricing entry to return pricing data for
+ * @returns {object} - The pricing data for the specified pricing entry
  *
  * Preconditions:
- *  - Set of valid garageIds known to the system is not empty
- *  - garageId is not null
+ *  - priceId is the ID of a valid pricing entry
+ * Postconditions: None
  */
 const getPricing = async (req, res) => {
   // TODO
   // Get arguments from request url query
-  const garageId = req.query.garageId;
+  const priceId = req.query.priceId;
 
-  // Return early if garageId is missing
-  if (!garageId) {
-    return res.status(400).json({ message: 'garageId is required.' });
+  // Return early if priceId is missing
+  if (!priceId) {
+    return res.status(400).json({ message: 'priceId is required.' });
   }
 
-  // Find pricing for the specified garage
-  const results = {
-    reserveHourly: 10.5,
-    contractHourly: 8.0,
-    walkinHourly: 15.99,
-  };
+  // TODO Retrieve pricing data from the database
+  let results; // TODO call the model to get the data and assign to results
 
   // Return results
   return res.status(200).json(results);
@@ -32,36 +28,42 @@ const getPricing = async (req, res) => {
 /**
  *  Update the pricing of a specific garage
  *
- * @param {string} garageId - The ID of the garage to update pricing for
- * @param {string} priceType - The price type to update
- * @param {number} newPrice - The new price value
- * @returns {} - Signals success
+ * @param {string} priceId - The ID of the pricing entry to update pricing data for
+ * @param {string} description - The description of the pricing entry
+ * @param {number} cost - The cost per time unit
+ * @param {number} dailyMax - The daily maximum price
+ * @param {number} reservationTypeId - The reservation type of the pricing entry
+ * @returns {object} - JSON object to signal success or relay error messages
  *
  * Preconditions:
- *  - priceType is a valid value within the system
- *  - newPrice is a money value
+ *  - priceId is the ID of a valid pricing entry
+ *  - reservationTypeId is a valid value within the system
+ *  - cost and dailyMax are money values
  * Postconditions:
- *  - The specified price category of the specified garage is updated to the new price in the database
+ *  - The specified pricing entry is updated in the database
  */
 const updatePricing = async (req, res) => {
   // TODO
-  // Get arguments from request url query
-  const garageId = req.body.garageId;
-  const priceType = req.body.priceType;
-  const newPrice = req.body.newPrice;
+  // TODO Get arguments from request url query
 
   // Return early if any arguments are missing
-  if (!(garageId && priceType && newPrice)) {
+  if (!(priceId && description && cost && dailyMax && reservationTypeId)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
 
   // TODO Check preconditions
 
-  // Update pricing in the DB
-  const result = { message: 'Pricing updated.' };
+  // TODO Update pricing in the DB
 
-  // Return the result
-  return res.status(200).json(result);
+  // TODO Return the result
 };
+
+// TODO comments
+const createPricing = async (req, res) => {
+  // TODO so we can easily create the initial price entries for the system.
+  // I don't think this needs to be accessible from the UI unless we let garage owners set new prices and reservation types.
+};
+
+// TODO if you think a getAllPrices or deletePrice function would be helpful you could add them to get the full CRUD set.
 
 module.exports = { getPricing, updatePricing };
