@@ -24,7 +24,7 @@
 
     <!-- Unit conversion library -->
     <script type="module">
-      import convert from "https://cdn.jsdelivr.net/npm/convert@4";
+      import convert from 'https://cdn.jsdelivr.net/npm/convert@4';
       window.convert = convert;
     </script>
     <!-- Time conversion library -->
@@ -192,7 +192,14 @@
                       >
                     </td>
                   </tr>
-                  <tr>
+                  <tr ng-if="vm.searchForm.isMonthly">
+                    <th>From:</th>
+                    <td>
+                      {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
+                      15)}}
+                    </td>
+                  </tr>
+                  <tr ng-if="!vm.searchForm.isMonthly">
                     <th>From:</th>
                     <td>
                       {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
