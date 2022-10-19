@@ -24,7 +24,7 @@
 
     <!-- Unit conversion library -->
     <script type="module">
-      import convert from "https://cdn.jsdelivr.net/npm/convert@4";
+      import convert from 'https://cdn.jsdelivr.net/npm/convert@4';
       window.convert = convert;
     </script>
     <!-- Time conversion library -->
@@ -88,8 +88,11 @@
       #search-form {
         border: 5px solid black;
         margin: auto;
-        padding: 0 1em 1em 1em;
+        padding: 0.5em;
         background-color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
       .loc-checkbox {
         margin-right: 0.5em;
@@ -135,15 +138,19 @@
         }
         #map {
           border: 5px solid black;
-
-          height: 100%;
+          height: 500px;
         }
         #search-form {
           border-left: 0;
           margin: 0;
-          padding: 0 1em 1em 1em;
-          background-color: white;
+          padding: 1em;
           width: 350px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        #search-form > fieldset {
+          padding-bottom: 0.5em;
         }
       }
     </style>
@@ -192,7 +199,14 @@
                       >
                     </td>
                   </tr>
-                  <tr>
+                  <tr ng-if="vm.searchForm.isMonthly">
+                    <th>From:</th>
+                    <td>
+                      {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
+                      15)}}
+                    </td>
+                  </tr>
+                  <tr ng-if="!vm.searchForm.isMonthly">
                     <th>From:</th>
                     <td>
                       {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
@@ -261,7 +275,7 @@
         </section>
 
         <!-- Search Form -->
-        <form id="search-form" class="row g-3" validate>
+        <form id="search-form" class="" validate>
           <!-- Location and Geolocate -->
           <fieldset>
             <legend>Location:</legend>
