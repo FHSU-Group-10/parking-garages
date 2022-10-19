@@ -1,0 +1,84 @@
+###
+POST http://localhost:3500/user/login
+Content-Type: application/json
+
+{
+  "Login" : {
+    "username": "user15",
+    "password": "aaaa"
+  }
+}
+
+###
+
+POST http://localhost:3500/user/register
+Content-Type: application/json
+
+{
+  "username": "user5",
+  "password": "aaaa",
+  "first_name": "dustin",
+  "last_name": "threet",
+  "email": "me@mywebsite.com",
+  "phone": "18675309",
+  "is_operator": false
+}
+
+###
+
+# test for making sure we have all needed params
+POST http://localhost:3500/user/register
+Content-Type: application/json
+
+{
+  "username": "user9",
+  "password": "aaaa",
+  "first_name": "dustin",
+  "last_name": "threet",
+  "email": "me@mywebsite.com",
+  "phone": "18675309",
+  "is_operator": false
+}
+
+###
+
+# creating new user with hashed password
+POST http://localhost:3500/user/register
+Content-Type: application/json
+
+{
+  "username": "user17",
+  "password": "bbbb",
+  "first_name": "dustin",
+  "last_name": "threet",
+  "email": "me@mywebsite.com",
+  "phone": "18675309",
+  "is_operator": false
+}
+
+###
+
+# test new login with hashing passwords, correct password
+POST http://localhost:3500/user/login
+Content-Type: application/json
+
+{
+  "Login" : {
+    "username": "user17",
+    "password": "bbbb"
+  }
+}
+
+###
+
+# test new login with hashing passwords, incorrect password
+POST http://localhost:3500/user/login
+Content-Type: application/json
+
+{
+  "Login" : {
+    "username": "user17",
+    "password": "BBBB"
+  }
+}
+
