@@ -21,27 +21,27 @@
       zoom: 4,
       description: null,
       radius: 0,
-      unit: "miles",
+      unit: 'miles',
       useGeo: false,
     };
 
     // Form fields
     const searchForm = {
-      location: "",
+      location: '',
       radius: 2,
-      radiusUnit: "miles",
+      radiusUnit: 'miles',
       useGeo: false,
-      type: "single",
+      type: 'single',
       isMonthly: false,
       from: {
         date: null,
-        hour: "12",
-        minute: "00",
+        hour: '12',
+        minute: '00',
       },
       to: {
         date: null,
-        hour: "13",
-        minute: "00",
+        hour: '13',
+        minute: '00',
       },
     };
 
@@ -91,7 +91,7 @@
       // Convert radius from meters to user-specified units
       user.radiusUnit = searchForm.radiusUnit;
       user.radius = convert(parseFloat(searchForm.radius), user.radiusUnit).to(
-        "meters"
+        'meters'
       );
 
       setMap();
@@ -107,71 +107,68 @@
       reserveOptions.garage.lat = chosenGarage.lat;
       reserveOptions.garage.lon = chosenGarage.lon;
       reserveOptions.directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${chosenGarage.lat},${chosenGarage.lon}`;
-      // Build 'from' time
-      reserveOptions.from.specifiedDatetime = searchForm.from.date;
-      reserveOptions.from.specifiedDatetime.setHours(
-        parseInt(searchForm.from.hour)
-      );
-      reserveOptions.from.specifiedDatetime.setMinutes(
-        parseInt(searchForm.from.minute)
-      );
-      // Build 'to' time
-      reserveOptions.to.specifiedDatetime = searchForm.to.date;
-      reserveOptions.to.specifiedDatetime.setHours(
-        parseInt(searchForm.to.hour)
-      );
-      reserveOptions.to.specifiedDatetime.setMinutes(
-        parseInt(searchForm.to.minute)
-      );
-
-      // Build garage local to and from times
-      reserveOptions.from.garageLocalDatetime = toGarageTZ(
-        reserveOptions.from.specifiedDatetime,
-        chosenGarage.timezone
-      );
-      reserveOptions.to.garageLocalDatetime = toGarageTZ(
-        reserveOptions.to.specifiedDatetime,
-        chosenGarage.timezone
-      );
-
       reserveOptions.type = searchForm.type;
       reserveOptions.isMonthly = searchForm.isMonthly;
-      reserveOptions.totalPrice = chosenGarage.totalPrice || "$1,000";
+      reserveOptions.totalPrice = chosenGarage.totalPrice || '$1,000';
+
+      // The rest are only needed if reservation is not monthly/guaranteed
+      if (reserveOptions.isMonthly) {
+        // Build 'from' date only
+        reserveOptions.from.specifiedDatetime = searchForm.from.date;
+        reserveOptions.from.specifiedDatetime.setHours(0);
+
+        // Build garage local to and from times
+        reserveOptions.from.garageLocalDatetime = toGarageTZ(
+          reserveOptions.from.specifiedDatetime,
+          chosenGarage.timezone
+        );
+      } else {
+        // Build 'from' date only
+        reserveOptions.from.specifiedDatetime = searchForm.from.date;
+        reserveOptions.from.specifiedDatetime.setHours(
+          parseInt(searchForm.from.hour)
+        );
+        reserveOptions.from.specifiedDatetime.setMinutes(
+          parseInt(searchForm.from.minute)
+        );
+        // Build 'to' time
+        reserveOptions.to.specifiedDatetime = searchForm.to.date;
+        reserveOptions.to.specifiedDatetime.setHours(
+          parseInt(searchForm.to.hour)
+        );
+        reserveOptions.to.specifiedDatetime.setMinutes(
+          parseInt(searchForm.to.minute)
+        );
+
+        // Build garage local to and from times
+        reserveOptions.from.garageLocalDatetime = toGarageTZ(
+          reserveOptions.from.specifiedDatetime,
+          chosenGarage.timezone
+        );
+        reserveOptions.to.garageLocalDatetime = toGarageTZ(
+          reserveOptions.to.specifiedDatetime,
+          chosenGarage.timezone
+        );
+      }
     };
 
     // Submits the reservation to the backend
     const handleSubmitReservation = async () => {
-      try {
-        if (reserveOptions.isMonthly) {
-          // Monthly reservation
-          res = await $http({
-            method: "POST",
-            url: "/reserve/guaranteed",
-            data: {
-              ...reserveOptions,
-            },
-          });
-        } else {
-          // Single reservation
-          res = await $http({
-            method: "POST",
-            url: "/reserve/single",
-            data: {
-              ...reserveOptions,
-            },
-          });
-        }
-
-        console.log(res);
-      } catch (err) {
-        dialog(err.message);
-      }
-
-      // Modal is closed automatically by html
-      // Show status alert
-      alert("Reservation successful!");
-
-      $window.location.reload();
+      $http({
+        method: 'POST',
+        url: `/reserve/${reserveOptions.isMonthly ? 'guaranteed' : 'single'}`,
+        data: {
+          ...reserveOptions,
+        },
+      })
+        .then(() => {
+          // Modal is closed automatically by html
+          // Show status alert
+          alert('Reservation successful!');
+          // Window reloads after successful reservation
+          $window.location.reload();
+        })
+        .catch((err) => dialog(err.message));
     };
 
     // FUNCTIONS
@@ -184,19 +181,19 @@
         searchForm.radiusUnit &&
         searchForm.type &&
         searchForm.from.date &&
-        searchForm.from.hour &&
-        searchForm.from.minute &&
-        searchForm.to.date &&
-        searchForm.to.hour &&
-        searchForm.to.minute;
-
+        (searchForm.isMonthly ||
+          (searchForm.from.hour &&
+            searchForm.from.minute &&
+            searchForm.to.date &&
+            searchForm.to.hour &&
+            searchForm.to.minute));
       return allFields;
     };
 
     const setInitialMap = () => {
       // Create map, user marker, and array of garage markers
-      map = L.map("map").setView([user.lat, user.lon], user.zoom);
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      map = L.map('map').setView([user.lat, user.lon], user.zoom);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution:
           '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -220,6 +217,7 @@
         zone: garageTimezone,
       });
       // Return as a JS Date object
+      console.log(garageDatetime.toJSDate());
       return garageDatetime.toJSDate();
     };
 
@@ -237,7 +235,7 @@
         return {
           lat: position.coords.latitude,
           lon: position.coords.longitude,
-          display_name: "Your location",
+          display_name: 'Your location',
         };
       } catch (e) {
         console.error(e.message);
@@ -248,7 +246,7 @@
     const getCoords = async (searchString) => {
       const res = await fetch(
         location.protocol +
-          "//nominatim.openstreetmap.org/search?format=json&q=" +
+          '//nominatim.openstreetmap.org/search?format=json&q=' +
           searchString
       );
       const json = await res.json();
@@ -259,33 +257,7 @@
 
     // Sets isMonthly flag on search to hide certain fields
     const checkType = () => {
-      searchForm.isMonthly = searchForm.type == "monthly";
-    };
-
-    // Get garage results from backend
-    const getGarages = async () => {
-      let res;
-
-      if (searchForm.isMonthly) {
-        // Monthly reservation
-        res = await $http({
-          method: "POST",
-          url: "/reserve/search/guaranteed",
-          data: {
-            name: "testData",
-          },
-        });
-      } else {
-        // Single reservation
-        res = await $http({
-          method: "POST",
-          url: "/reserve/search/single",
-          data: {
-            name: "testData",
-          },
-        });
-      }
-      return res?.data;
+      searchForm.isMonthly = searchForm.type == 'monthly';
     };
 
     // Bring in garage data from backend
@@ -298,35 +270,45 @@
       }
 
       // Get garage results from backend
-      const results = await getGarages();
+      $http({
+        method: 'POST',
+        url: `/reserve/search/${
+          searchForm.isMonthly ? 'guaranteed' : 'single'
+        }`,
+        data: {
+          name: 'testData',
+        },
+      })
+        .then((results) => {
+          // Add new garages
+          results?.data?.forEach((garage) => {
+            const newGarage = { ...garage };
+            // Generate a random position near the user location
+            newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
+            newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
 
-      // Add new garages
-      results?.forEach((garage) => {
-        const newGarage = { ...garage };
-        newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
-        newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
+            // Calculate distance from user
+            let from = L.latLng(user.lat, user.lon);
+            let to = L.latLng(newGarage.lat, newGarage.lon);
+            // Measurements in feet shouldn't be precise to the foot
+            if (user.radiusUnit == 'feet')
+              newGarage.distance = parseFloat(
+                convert(map.distance(from, to), 'meters')
+                  .to('feet')
+                  .toPrecision(3)
+              );
+            else
+              newGarage.distance = convert(map.distance(from, to), 'meters')
+                .to(user.radiusUnit)
+                .toFixed(2);
 
-        // Calculate distance from user
-        let from = L.latLng(user.lat, user.lon);
-        let to = L.latLng(newGarage.lat, newGarage.lon);
-        // Measurements in feet shouldn't be precise to the foot
-        if (user.radiusUnit == "feet")
-          newGarage.distance = parseFloat(
-            convert(map.distance(from, to), "meters").to("feet").toPrecision(3)
-          );
-        else
-          newGarage.distance = convert(map.distance(from, to), "meters")
-            .to(user.radiusUnit)
-            .toFixed(2);
-
-        const pin = L.marker([newGarage.lat, newGarage.lon]);
-        pin.addTo(map).bindPopup(newGarage.description);
-        garages.push(newGarage);
-        garageMarkers.push(pin);
-      });
-      // Load-bearing empty function, don't remove
-      // Search results disappear without it now
-      $timeout(() => {}, 0);
+            const pin = L.marker([newGarage.lat, newGarage.lon]);
+            pin.addTo(map).bindPopup(newGarage.description);
+            garages.push(newGarage);
+            garageMarkers.push(pin);
+          });
+        })
+        .catch((err) => console.error(err.message));
     };
 
     // Sets map from user object
@@ -345,8 +327,8 @@
       userMarker.bindPopup(user.description).openPopup();
       // Set the search radius circle
       radiusCircle = L.circle([user.lat, user.lon], {
-        color: "black",
-        fillColor: "#000",
+        color: 'black',
+        fillColor: '#000',
         fillOpacity: 0.2,
         radius: user.radius,
       });
@@ -371,13 +353,13 @@
     };
   }
 
-  var app = angular.module("pageApp", []);
-  app.controller("pageCtrl", [
-    "$scope",
-    "$http",
-    "$document",
-    "$window",
-    "$timeout",
+  var app = angular.module('pageApp', []);
+  app.controller('pageCtrl', [
+    '$scope',
+    '$http',
+    '$document',
+    '$window',
+    '$timeout',
     pageCtrl,
   ]);
 })(window);
