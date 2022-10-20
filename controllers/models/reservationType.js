@@ -1,5 +1,5 @@
 // init sequelize
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 // ready our db connection function
 const dbConn = require('../../config/dbConn');
 const sequelize = dbConn();
