@@ -1,3 +1,6 @@
+// Needed here to simplify writing unit tests for models
+require('dotenv').config();
+
 const { Sequelize } = require('sequelize');
 
 // Simplified Sequelize version, no async/await
