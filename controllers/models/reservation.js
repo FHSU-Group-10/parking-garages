@@ -4,6 +4,13 @@ const { DataTypes } = require('sequelize');
 const dbConn = require('../../config/dbConn');
 const sequelize = dbConn();
 
+// Models to link with foreign keys
+const ReservationStatus = require('./reservationStatus');
+const Vehicle = require('./vehicle');
+const ReservationType = require('./reservationType');
+const User = require('./user');
+// TODO Cannot figure out async way to link User model
+
 const Reservation = sequelize.define(
   'Reservation',
   {
@@ -12,28 +19,19 @@ const Reservation = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    MEMBER_ID: {
-      type: DataTypes.INTEGER, // TODO FK relation
-      allowNull: false,
-      field: 'MEMBER_NAME', // db graph has name, should be ID
-    },
-    RESERVATION_TYPE_ID: {
-      // TODO fk relation
-      allowNull: false,
-    },
-    VEHICLE_ID: {
-      // TODO fk relation
-      allowNull: true,
-    },
     START_TIME: {
+      type: DataTypes.DATE,
       allowNull: false,
       field: 'START_TIME',
     },
     END_TIME: {
+      type: DataTypes.DATE,
       allowNull: true,
       field: 'END_TIME',
     },
     DATE_CREATED: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
       allowNull: true,
       field: 'DATE_CREATED',
     },
@@ -41,11 +39,6 @@ const Reservation = sequelize.define(
       type: DataTypes.BOOLEAN,
       allowNull: true,
       field: 'EXTRA_GRACE',
-    },
-    STATUS_ID: {
-      // TODO fk relation
-      allowNull: false,
-      field: 'STATUS_ID',
     },
   },
   {
@@ -55,5 +48,32 @@ const Reservation = sequelize.define(
     initialized: true,
   }
 );
+
+// TODO cannot pass User model directly from async model definition
+// Create relations to other tables (foreign keys)
+Reservation.belongsTo(User, {
+  foreignKey: {
+    name: 'MEMBER_ID',
+    allowNull: false,
+  },
+});
+Reservation.belongsTo(ReservationType, {
+  foreignKey: {
+    name: 'RESERVATION_TYPE_ID',
+    allowNull: false,
+  },
+});
+Reservation.belongsTo(Vehicle, {
+  foreignKey: {
+    name: 'VEHICLE_ID',
+    allowNull: true,
+  },
+});
+Reservation.belongsTo(ReservationStatus, {
+  foreignKey: {
+    name: 'STATUS_ID',
+    allowNull: false,
+  },
+});
 
 module.exports = Reservation;
