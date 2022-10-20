@@ -1,5 +1,20 @@
+// Needed here to simplify writing unit tests for models
+require('dotenv').config();
+
 const { Sequelize } = require('sequelize');
 
+// Simplified Sequelize version, no async/await
+const connectDB = () => {
+  try {
+    const connStr = `db2:DATABASE/${process.env.DB_NAME};HOSTNAME=${process.env.DB_HOST_NAME};PORT=${process.env.DB_PORT};Security=SSL;;PROTOCOL=TCPIP;UID=${process.env.DB_USERNAME};PWD=${process.env.DB_PASSWORD};`;
+    const sequelize = new Sequelize(connStr);
+    return sequelize;
+  } catch (error) {
+    console.error('Failed to create DB connection. ', error);
+  }
+};
+
+/*
 // Sequelize version
 const connectDB = async () => {
   try {
@@ -20,6 +35,7 @@ const connectDB = async () => {
     console.error('Failed to connect to DB. ', error);
   }
 };
+*/
 
 // ibm_db version
 /* const connectDB = () => {
