@@ -13,7 +13,9 @@ const Db = require('./models/user');
 const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 const Users = require('./models/user');
+const {token} = require("morgan");
 
 const login = async(req, res) => {
     try {
@@ -37,11 +39,22 @@ const login = async(req, res) => {
         });
         // separating dataValues from return set
         user =  (user || {}).dataValues;
+    
+        const jwt = require('jsonwebtoken');
         
         if (user) {
             const password_valid = await bcrypt.compare(obj.password,user.PW);
             if (password_valid) {
-                return res.status(200).json({token: 'success'}); // TODO: change to login token
+                let new_token = jwt.sign({
+                    "id": user.MEMBER_ID,
+                    "email": user.EMAIL,
+                    "first_name": user.FIRST_NAME,
+                    "last_name": user.LAST_NAME,
+                    "phone": user.PHONE,
+                    "username": user.USERNAME,
+                    "is_operator": user.IS_OPERATOR
+                },`${process.env.JWT_SECRET_KEY}`, {expiresIn: '1h'});
+                return res.status(200).json({token: new_token}); // TODO: change to login token
             } else {
                 return res.status(400).json({error: 'Password Incorrect'});
             }
