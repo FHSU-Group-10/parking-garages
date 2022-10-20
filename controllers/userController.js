@@ -13,12 +13,10 @@ const Db = require('./models/user');
 const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
 const bcrypt = require("bcrypt");
+const Users = require('./models/user');
 
 const login = async(req, res) => {
     try {
-        // fetch DB models, connect to DB
-        let {Users} = await getModels();
-        
         // setup params
         let username = req.username;
         let password = req.password;
@@ -97,9 +95,6 @@ const register = async (req, res) => {
         for (let param in required_fields) {
             if (!req.body[param] && !req.body.hasOwnProperty(param)) throw required_fields[param];
         }
-        
-        // fetch DB models, connect to DB
-        let {Users} = await getModels();
     
         let existing_user = await Users.findOne({
             where: {
