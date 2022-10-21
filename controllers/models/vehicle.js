@@ -2,10 +2,12 @@
 const { DataTypes } = require('sequelize');
 // ready our db connection function
 const dbConn = require('../../config/dbConn');
+const Reservation = require('./reservation');
 const sequelize = dbConn();
 
-// TODO User model must be linked to Vehicle
-// const User = require('./user');
+// Models to link with relations to Vehicle
+const User = require('./user');
+const Reservation = require('./reservation');
 
 const Vehicle = sequelize.define(
   'Vehicle',
@@ -44,13 +46,15 @@ const Vehicle = sequelize.define(
   }
 );
 
-// TODO Cannot pass model correctly from async model definition
-// Create relation to User
+// Create relation to User (FK in Vehicle)
 Vehicle.belongsTo(User, {
   foreignKey: {
     name: 'MEMBER_ID',
     allowNull: false,
   },
 });
+
+// Relation to Reservation (FK in Reseravtion)
+Vehicle.hasMany(Reservation);
 
 module.exports = Vehicle;

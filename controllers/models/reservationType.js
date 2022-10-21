@@ -4,6 +4,9 @@ const { DataTypes } = require('sequelize');
 const dbConn = require('../../config/dbConn');
 const sequelize = dbConn();
 
+// Models to link with relations to ReservationType
+const Reservation = require('./reservation');
+
 const ReservationType = sequelize.define(
   'ReservationType',
   {
@@ -25,5 +28,8 @@ const ReservationType = sequelize.define(
     initialized: true,
   }
 );
+
+// Create the relations to other tables (ReservationType has no FKs)
+ReservationType.hasMany(Reservation);
 
 module.exports = ReservationType;
