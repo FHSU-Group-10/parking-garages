@@ -7,6 +7,7 @@ const _ = require('lodash');
 
 // Models to link with relations to User
 const Reservation = require('./reservation');
+const Vehicle = require('./vehicle');
 
 const Users = sequelize.define(
   'Users',
@@ -62,6 +63,7 @@ const Users = sequelize.define(
 );
 
 // Create the relations to other tables (User has no FKs)
-User.hasMany(Reservation);
+Users.hasMany(Reservation);
+Users.hasMany(Vehicle);
 
 module.exports = Users;
