@@ -1,50 +1,35 @@
-const { Sequelize } = require('sequelize');
+// Needed here to simplify writing unit tests for models
+require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const { Sequelize, DataTypes } = require('sequelize');
+const addModels = require('../controllers/models/index');
+const addRelations = require('./modelRelations');
 
-// Sequelize version
-const connectDB = async () => {
+// Create sequelize instance with DB connection
+const connStr = `db2:DATABASE/${process.env.DB_NAME};HOSTNAME=${process.env.DB_HOST_NAME};PORT=${process.env.DB_PORT};Security=SSL;;PROTOCOL=TCPIP;UID=${process.env.DB_USERNAME};PWD=${process.env.DB_PASSWORD};`;
+const sequelize = new Sequelize(connStr);
+
+// Test connection, since this only runs once at startup
+const testConnection = async () => {
   try {
-    console.log('Connecting to DB...');
-
-    const connStr = `db2:DATABASE/${process.env.DB_NAME};HOSTNAME=${process.env.DB_HOST_NAME};PORT=${process.env.DB_PORT};Security=SSL;;PROTOCOL=TCPIP;UID=${process.env.DB_USERNAME};PWD=${process.env.DB_PASSWORD};`;
-    const sequelize = new Sequelize(connStr);
-
-    // Test the connection
     await sequelize.authenticate();
     console.log('Connected to DB!');
-
-    // Send a sample query
-    const [results, metadata] = await sequelize.query("SELECT * FROM users LIMIT 1");
-    console.log(results);
-    return sequelize;
-  } catch (error) {
-    console.error('Failed to connect to DB. ', error);
+  } catch (err) {
+    console.log('Could not connect to DB.');
   }
 };
+testConnection();
 
-// ibm_db version
-/* const connectDB = () => {
-  const ibmdb = require('ibm_db');
-  const connStr = `DATABASE=${process.env.DB_NAME};HOSTNAME=${process.env.DB_HOST_NAME};PORT=${process.env.DB_PORT};Security=SSL;SSLServerCertificate=;PROTOCOL=TCPIP;UID=${process.env.DB_USERNAME};PWD=${process.env.DB_PASSWORD};`;
+// Initialize all models
+addModels(sequelize, DataTypes);
 
-  ibmdb.open(connStr, (err, connection) => {
-    if (err){
-      console.error(err);
-      return;
-    }
-    console.log("Connected!");
+// Create all foreign keys here after models are attached
+addRelations(sequelize);
 
-    //connection.query("insert into users (username, pw, first_name, last_name, email, phone, is_operator) values ('user1', 'aaaa', 'justin', 'henley', 'jh@me.com', '8675309', false);", function (err1, rows){
-      connection.query("select * from users", function (err1, rows){
-      if (err1){
-        console.error(err1)
-      } else {
-        console.log(rows);
-      }
-      connection.close(function (err2) {
-        if (err2) console.error(err2)
-      })
-    })
-  })
-} */
+// Returns the sequelize instance with all models attached and all foreign keys established
+const connectDB = () => {
+  return sequelize;
+};
 
 module.exports = connectDB;
