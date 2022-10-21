@@ -1,26 +1,13 @@
 // init sequelize
-const { Sequelize, DataTypes, Model } = require('sequelize');
+const { DataTypes } = require('sequelize');
 // ready our db connection function
-const connectDB = require("../../config/dbConn");
+const dbConn = require('../../config/dbConn');
+const sequelize = dbConn();
 const _ = require('lodash');
 
-const Model_Cache = {
-    initialized: false,
-    getSql:() => connectDB()
-}
-
-async function getModels() {
-    
-    const sequelize = await Model_Cache.getSql();
-    
-    const Base_Options = {
-        sequelize: sequelize,
-        timestamps: false,
-        schema: "YHL46872"
-    }
-
-    class Users extends Model{}
-    Users.init({
+const Users = sequelize.define(
+    'Users',
+    {
         MEMBER_ID: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -62,18 +49,13 @@ async function getModels() {
             allowNull: false,
             field: "IS_OPERATOR"
         }
-    }, _.merge({}, Base_Options, {
-        tableName: 'USERS'
-    }));
-    
-    _.merge(Model_Cache, {
-        Users
-    },{initialized: true});
-    
-    return Model_Cache;
-    
-}
+    },
+    {
+        tableName: 'USERS',
+        timestamps: false,
+        schema: 'YHL46872',
+        initialized: true
+    }
+);
 
-module.exports = {
-    getModels
-}
+module.exports = Users;
