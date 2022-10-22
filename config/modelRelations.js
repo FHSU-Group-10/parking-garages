@@ -64,7 +64,7 @@ const addRelations = (sequelize) => {
     }
 
     Pricing.belongsTo(ReservationType, pricingFK.reservationTypeId);
-    ReservationType.belongsTo(Pricing, pricingFK.reservationTypeId);
+    ReservationType.hasMany(Pricing, pricingFK.reservationTypeId);
 
     // Foreign keys on Vehicle
     const vehicleFK = {
