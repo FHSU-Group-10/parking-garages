@@ -1,3 +1,7 @@
+const connectDB = require('../config/dbConn');
+const sequelize = connectDB();
+const { Pricing } = sequelize.models;
+
 /**
  *  Get the pricing for a specified garage
  *
@@ -10,20 +14,10 @@
  */
 const getPricing = async (req, res) => {
   // TODO
-  // Get arguments from request url query
-  const garageId = req.query.garageId;
-
-  // Return early if garageId is missing
-  if (!garageId) {
-    return res.status(400).json({ message: 'garageId is required.' });
-  }
+  // // Get arguments from request url query
 
   // Find pricing for the specified garage
-  const results = {
-    reserveHourly: 10.5,
-    contractHourly: 8.0,
-    walkinHourly: 15.99,
-  };
+  const results = await Pricing.findAll();
 
   // Return results
   return res.status(200).json(results);
