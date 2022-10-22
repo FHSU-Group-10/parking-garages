@@ -1,6 +1,6 @@
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
-const { Pricing } = sequelize.models;
+const { Pricing, reservationType } = sequelize.models;
 
 /**
  *  Get the pricing for a specified garage
@@ -17,6 +17,54 @@ const getPricing = async (req, res) => {
     const results = await Pricing.findAll();
     // Return results
     return res.status(200).json(results);
+  } catch (err) {
+    console.error('Pricing controller failed.');
+    return res.status(500);
+  }
+};
+
+const createPricing = async (req, res) => {
+  // TODO
+  // Get arguments from request url query
+  const description = req?.body?.description;
+  const cost = req?.body?.cost;
+  const dailyMax = req?.body?.dailyMax;
+  const reservationTypeId = req?.body?.reservationTypeId;
+
+  // Return early if any arguments are missing
+  if (!(description && cost && dailyMax && reservationTypeId)) {
+    return res.status(400).json({ message: 'Incomplete request' });
+  }
+
+  try {
+    const resType = await reservationType.findOne({
+      where: {
+        RESERVATION_TYPE_ID: reservationTypeId,
+      }
+    })
+
+    if (!resType) {
+      return res.status(400).json({ message: "Reservation type id invalid" });
+    }
+
+    const [price, created] = await Pricing.findOrCreate({
+      where: {
+        DESCRITION: description,
+        COST: cost,
+        DAILY_MAX: dailyMax,
+        RESERVATION_TYPE_ID: reservationTypeId,
+      }
+    })
+
+    if (!created) {
+      return res.status(400).json({ message: "Duplicate Pricing: An identical Pricing already exists." });
+    }
+    // TODO Check preconditions
+    // Pricing created in the DB
+    const result = { message: 'Pricing created.' };
+
+    // Return the result
+    return res.status(200).json(result);
   } catch (err) {
     console.error('Pricing controller failed.');
     return res.status(500);
@@ -58,4 +106,4 @@ const updatePricing = async (req, res) => {
   return res.status(200).json(result);
 };
 
-module.exports = { getPricing, updatePricing };
+module.exports = { getPricing, createPricing, updatePricing };
