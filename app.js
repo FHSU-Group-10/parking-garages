@@ -5,6 +5,8 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3500;
 const fs = require('fs');
+const connectDB = require('./config/dbConn');
+
 // Logger
 const logger = require('morgan');
 const router = express.Router();
@@ -26,12 +28,14 @@ app.use(express.urlencoded({ extended: false }));
 // JSON
 app.use(express.json());
 
+// Connect to DB and attach all models and relations
+connectDB();
+
 // API ROUTES
 app.use('/reserve', require('./routes/api/reserve'));
 app.use('/user', require('./routes/api/user'));
 app.use('/garage', require('./routes/api/garage'));
 app.use('/pricing', require('./routes/api/pricing'));
-
 
 // serve our images
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
@@ -94,7 +98,6 @@ async function start() {
       console.log(e);
     }
   });
-  
 
   app.get(VIEW_URL_PATH, async (req, res, next) => {
     try {
