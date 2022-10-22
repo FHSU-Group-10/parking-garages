@@ -6,9 +6,9 @@ const { Pricing } = sequelize.models;
 describe('Pricing Model', () => {
     test('DB contains a record', async () => {
         // Query for a single row
-        let Pricing = await Pricing.findOne();
+        let pricing = await Pricing.findOne();
 
-        expect(Pricing).not.toBe(null);
+        expect(pricing).not.toBe(null);
     });
     test('Raw SQL query', async () => {
         const [results, metadata] = await sequelize.query(
