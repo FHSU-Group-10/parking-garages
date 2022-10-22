@@ -5,22 +5,22 @@ const { Pricing } = sequelize.models;
 /**
  *  Get the pricing for a specified garage
  *
- * @param {string} garageId - The ID of the garage to return pricing for
  * @returns {} - The pricing data for the specified garage
  *
  * Preconditions:
- *  - Set of valid garageIds known to the system is not empty
- *  - garageId is not null
+ *  - Pricing data exists in DB (update in report and summary of change)
  */
 const getPricing = async (req, res) => {
   // TODO
-  // // Get arguments from request url query
-
-  // Find pricing for the specified garage
-  const results = await Pricing.findAll();
-
-  // Return results
-  return res.status(200).json(results);
+  try {
+    // Find pricing for the specified garage
+    const results = await Pricing.findAll();
+    // Return results
+    return res.status(200).json(results);
+  } catch (err) {
+    console.error('Pricing controller failed.');
+    return res.status(500);
+  }
 };
 
 /**
