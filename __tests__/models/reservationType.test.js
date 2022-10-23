@@ -1,26 +1,20 @@
 // Model to test
-const ReservationType = require('../../controllers/models/reservationType');
+const connectDB = require('../../config/dbConn');
+const sequelize = connectDB();
+const { ReservationType } = sequelize.models;
 
 describe('ReservationType Model', () => {
-  test('Connect to DB', async () => {
-    // Test the connection
-    const connect = async () => {
-      try {
-        await ReservationType.sequelize.authenticate();
-        return true;
-      } catch (err) {
-        return false;
-      }
-    };
-    const connected = await connect();
-
-    expect(connected).toBe(true);
-  });
-
   test('DB contains a record', async () => {
     // Query for a single row
     let resStatus = await ReservationType.findOne();
 
     expect(resStatus).not.toBe(null);
+  });
+  test('Raw SQL query', async () => {
+    const [results, metadata] = await sequelize.query(
+      'SELECT * FROM RESERVATION_TYPE LIMIT 1'
+    );
+
+    expect(results).not.toBe(null);
   });
 });

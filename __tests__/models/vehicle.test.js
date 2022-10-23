@@ -1,26 +1,20 @@
 // Model to test
-const Vehicle = require('../../controllers/models/vehicle');
+const connectDB = require('../../config/dbConn');
+const sequelize = connectDB();
+const { Vehicle } = sequelize.models;
 
 describe('Vehicle Model', () => {
-  test('Connect to DB', async () => {
-    // Test the connection
-    const connect = async () => {
-      try {
-        await Vehicle.sequelize.authenticate();
-        return true;
-      } catch (err) {
-        return false;
-      }
-    };
-    const connected = await connect();
-
-    expect(connected).toBe(true);
-  });
-
   test('DB contains a record', async () => {
     // Query for a single row
-    let resStatus = await Vehicle.findOne();
+    let vehicle = await Vehicle.findOne();
 
-    expect(resStatus).not.toBe(null);
+    expect(vehicle).not.toBe(null);
+  });
+  test('Raw SQL query', async () => {
+    const [results, metadata] = await sequelize.query(
+      'SELECT * FROM VEHICLES LIMIT 1'
+    );
+
+    expect(results).not.toBe(null);
   });
 });

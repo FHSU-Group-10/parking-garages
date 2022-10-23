@@ -13,21 +13,25 @@ const Db = require('./models/user');
 const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
 const bcrypt = require("bcrypt");
+const Users = require('./models/user');
 
 const login = async(req, res) => {
     try {
-        // fetch DB models, connect to DB
-        let {Users} = await getModels();
-        
         // setup params
-        let username = req.username;
-        let password = req.password;
+        let obj = {
+            username: req.body?.Login?.username,
+            password: req.body?.Login?.password
+        }
+        
+        for (let param in obj){
+            if (!obj[param]) throw `Incomplete Login attempt, ${param} is required!`
+        }
         
         // find our user attempting to login
         let user = await Users.findOne({
             where: {
                 USERNAME: {
-                    [Op.like]: username
+                    [Op.like]: obj.username
                 }
             }
         });
@@ -35,7 +39,7 @@ const login = async(req, res) => {
         user =  (user || {}).dataValues;
         
         if (user) {
-            const password_valid = await bcrypt.compare(password,user.PW); 
+            const password_valid = await bcrypt.compare(obj.password,user.PW);
             if (password_valid) {
                 return res.status(200).json({token: 'success'}); // TODO: change to login token
             } else {
@@ -47,6 +51,7 @@ const login = async(req, res) => {
         
     }catch (ex) {
         console.dir(ex); // log error
+        return res.status(400).json(ex);
     }
 }
 
@@ -97,9 +102,6 @@ const register = async (req, res) => {
         for (let param in required_fields) {
             if (!req.body[param] && !req.body.hasOwnProperty(param)) throw required_fields[param];
         }
-        
-        // fetch DB models, connect to DB
-        let {Users} = await getModels();
     
         let existing_user = await Users.findOne({
             where: {
