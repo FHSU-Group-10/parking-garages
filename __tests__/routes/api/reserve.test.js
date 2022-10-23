@@ -2,6 +2,8 @@
 const request = require('supertest');
 const app = require('../../../app');
 
+jest.setTimeout(10000);
+
 describe('Reserve Route', () => {
   describe('Search Single Space', () => {
     test('Valid query', async () => {
@@ -35,24 +37,6 @@ describe('Reserve Route', () => {
           price: 12.5,
           rate: '30 min',
         },
-        {
-          garageId: 103,
-          description: 'AllsPark',
-          lat: -1,
-          lon: 1,
-          timezone: 'America/New_York',
-          price: 10,
-          rate: 'day',
-        },
-        {
-          garageId: 104,
-          description: 'SeeSpotPark',
-          lat: -1,
-          lon: 1,
-          timezone: 'America/New_York',
-          price: 10,
-          rate: 'day',
-        },
       ]);
     });
 
@@ -65,7 +49,7 @@ describe('Reserve Route', () => {
 
   describe('Search Guaranteed Space', () => {
     test('Valid query', async () => {
-      const body = {
+      const params = {
         lat: 1,
         lon: 1,
         radius: 1000,
@@ -75,7 +59,8 @@ describe('Reserve Route', () => {
 
       const res = await request(app)
         .post('/reserve/search/guaranteed')
-        .send(body);
+        .send(params);
+      expect(res.status).toBe(200);
       expect(res.body).toEqual([
         {
           garageId: 101,
@@ -95,26 +80,7 @@ describe('Reserve Route', () => {
           price: 12.5,
           rate: '30 min',
         },
-        {
-          garageId: 103,
-          description: 'AllsPark',
-          lat: -1,
-          lon: 1,
-          timezone: 'America/New_York',
-          price: 10,
-          rate: 'day',
-        },
-        {
-          garageId: 104,
-          description: 'SeeSpotPark',
-          lat: -1,
-          lon: 1,
-          timezone: 'America/New_York',
-          price: 10,
-          rate: 'day',
-        },
       ]);
-      expect(res.status).toBe(200);
     });
 
     test('Incomplete query', async () => {
@@ -129,20 +95,19 @@ describe('Reserve Route', () => {
   describe('Reserve Single Space', () => {
     test('Valid query', async () => {
       const body = {
-        memberId: 123,
+        memberId: 1,
         reservationTypeId: 1,
-        vehicleId: 456,
-        garageId: 789,
+        vehicleId: 1,
+        garageId: 1,
         startDateTime: new Date(2025, 0, 1, 12, 0),
         endDateTime: new Date(2025, 0, 1, 15, 30),
         spotNumber: null,
-        reservationStatusId: null,
+        reservationStatusId: 1,
         extraGrace: false,
       };
 
       const res = await request(app).post('/reserve/single').send(body);
       expect(res.status).toBe(200);
-      //expect(res.body).toEqual({ message: 'Reservation complete!' });
     });
 
     test('Invalid query', async () => {
@@ -164,20 +129,19 @@ describe('Reserve Route', () => {
   describe('Reserve Guaranteed Space', () => {
     test('Valid query', async () => {
       const body = {
-        memberId: 123,
-        reservationTypeId: 2,
-        vehicleId: 456,
-        garageId: 789,
+        memberId: 1,
+        reservationTypeId: 1,
+        vehicleId: 1,
+        garageId: 1,
         startDateTime: new Date(2025, 0, 1, 12, 0),
-        endDateTime: new Date(2025, 0, 1, 15, 30),
+        endDateTime: null,
         spotNumber: null,
-        reservationStatusId: null,
+        reservationStatusId: 1,
         extraGrace: false,
       };
 
       const res = await request(app).post('/reserve/guaranteed').send(body);
       expect(res.status).toBe(200);
-      //expect(res.body).toEqual({ message: 'Reservation complete!' });
     });
 
     test('Invalid query', async () => {

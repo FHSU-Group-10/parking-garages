@@ -1,6 +1,8 @@
 // Controller to test
 const reservationController = require('../../controllers/reservationController');
 
+jest.setTimeout(20000);
+
 describe('Reservation Controller', () => {
   // reservationController.searchSpace()
   describe('Search for a single space', () => {
@@ -36,55 +38,73 @@ describe('Reservation Controller', () => {
     test('Incomplete query fails', async () => {
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Incomplete query' });
+      expect(results.body).toEqual({ message: 'Incomplete query.' });
     });
 
     test('Complete query succeeds', async () => {
-      req.query = {
-        street: '206 Washington St SW',
-        city: 'Atlanta',
-        state: 'GA',
-        zip: '30334',
+      req.body = {
+        lat: 1,
+        lon: 1,
+        radius: 1000,
+        reservationTypeId: 1,
         startDateTime: new Date(2025, 0, 1, 12, 0),
         endDateTime: new Date(2025, 0, 1, 15, 30),
-        reservationTypeId: 1,
       };
+
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(200);
-      expect(results.body).toEqual(['garage1', 'garage2']);
+      expect(results.body).toEqual([
+        {
+          garageId: 101,
+          description: 'ParkingSpaceX',
+          lat: 0,
+          lon: 0,
+          timezone: 'America/New_York',
+          price: 16.75,
+          rate: 'hour',
+        },
+        {
+          garageId: 102,
+          description: 'GarageBrand',
+          lat: 1,
+          lon: 1,
+          timezone: 'America/New_York',
+          price: 12.5,
+          rate: '30 min',
+        },
+      ]);
     });
 
     test('Starting datetime must be before ending datetime', async () => {
-      req.query = {
-        street: '206 Washington St SW',
-        city: 'Atlanta',
-        state: 'GA',
-        zip: '30334',
+      req.body = {
+        lat: 1,
+        lon: 1,
+        radius: 1000,
+        reservationTypeId: 1,
         startDateTime: new Date(2025, 0, 1, 15, 30),
         endDateTime: new Date(2025, 0, 1, 12, 0),
-        reservationTypeId: 1,
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
       expect(results.body).toEqual({
-        message: 'Start datetime must be earlier than end datetime',
+        message: 'Invalid date or time.',
       });
     });
 
     test('Starting datetime must be >= current datetime', async () => {
-      req.query = {
-        street: '206 Washington St SW',
-        city: 'Atlanta',
-        state: 'GA',
-        zip: '30334',
+      req.body = {
+        lat: 1,
+        lon: 1,
+        radius: 1000,
+        reservationTypeId: 1,
+
         startDateTime: new Date(2020, 0, 1, 12, 0),
         endDateTime: new Date(2025, 0, 1, 15, 30),
-        reservationTypeId: 1,
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
       expect(results.body).toEqual({
-        message: 'Start date time cannot be earlier than the current time',
+        message: 'Invalid date or time.',
       });
     });
   });
@@ -122,22 +142,40 @@ describe('Reservation Controller', () => {
     test('Incomplete query fails', async () => {
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Incomplete query' });
+      expect(results.body).toEqual({ message: 'Incomplete query.' });
     });
 
     test('Complete query succeeds', async () => {
-      req.query = {
-        street: '206 Washington St SW',
-        city: 'Atlanta',
-        state: 'GA',
-        zip: '30334',
-        startDateTime: new Date(2025, 0, 1, 12, 0),
-        endDateTime: new Date(2025, 0, 1, 15, 30),
-        reservationTypeId: 2,
+      req.body = {
+        lat: 1,
+        lon: 1,
+        radius: 1000,
+        reservationTypeId: 1,
+        startDateTime: new Date(2025, 0, 1, 12, 30),
+        endDateTime: new Date(2025, 0, 1, 15, 0),
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(200);
-      expect(results.body).toEqual(['garage1', 'garage2']);
+      expect(results.body).toEqual([
+        {
+          garageId: 101,
+          description: 'ParkingSpaceX',
+          lat: 0,
+          lon: 0,
+          timezone: 'America/New_York',
+          price: 16.75,
+          rate: 'hour',
+        },
+        {
+          garageId: 102,
+          description: 'GarageBrand',
+          lat: 1,
+          lon: 1,
+          timezone: 'America/New_York',
+          price: 12.5,
+          rate: '30 min',
+        },
+      ]);
     });
   });
 
@@ -297,14 +335,14 @@ describe('Reservation Controller', () => {
 
     test('Complete request succeeds', async () => {
       req.body = {
-        memberId: 123,
+        memberId: 1,
         reservationTypeId: 1,
-        vehicleId: 456,
-        garageId: 789,
+        vehicleId: 1,
+        garageId: 1,
         startDateTime: new Date(2025, 0, 1, 12, 0),
         endDateTime: new Date(2025, 0, 1, 15, 30),
         spotNumber: null,
-        reservationStatusId: null,
+        reservationStatusId: 1,
         extraGrace: false,
       };
       const reservation = await reservationController.reserveGuaranteedSpace(
