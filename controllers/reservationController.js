@@ -1,6 +1,10 @@
 // LIBRARIES
 
 // MODELS
+const connectDB = require('../config/dbConn');
+const sequelize = connectDB();
+const { Reservation, ReservationStatus, ReservationType, Vehicle, User } =
+  sequelize.models;
 
 // SINGLE RESERVATIONS
 
@@ -9,13 +13,7 @@
  * POST request
  *
  * @async
- * @param {String} street - The street address around which the user is searching for parking
- * @param {String} city -
- * @param {String} state -
- * @param {String} zip -
- * @param {Date} startDateTime - The desired starting time of the reservation
- * @param {Date} endDateTime - The desired ending time of the reservation
- * @param {Number} reservationTypeId - The type of reservation
+ 
  * @returns {[Object]} - an array of reservation options
  *
  * Preconditions:
@@ -102,40 +100,77 @@ const searchSpace = async (req, res) => {
  * @param {Number} garageId - The garage the reservation is for
  * @param {Date} startDateTime - When the reservation starts
  * @param {Date} endDateTime - When the reservation ends
- * @param {Number} spotNumber - The parking spot assigned to the reservation
  * @param {Number} reservationStatusId - The status of the reservation
- * @param {Boolean} extraGrace - Whether the user is given an extra grace period after the reservation end time has passed
  * @returns {Object} - reservation details
  *
  * Preconditions:
  *  - garageId is not null
  *  - startDateTime < endDateTime
  *  - startDateTime >= current datetime
- *  - customerId is not null
+ *  - memberId is not null
  * Postconditions:
  *  - A reservation is created in the system matching the given characteristics
  */
 const reserveSpace = async (req, res) => {
-  // TODO
   // Get arguments from POST request body
-  const garageId = req.body.garageId;
-  const startDateTime = req.body.startDateTime;
-  const endDateTime = req.body.endDateTime;
-  const customerId = req.body.customerId;
-  const vehicle = req.body.vehicle;
-  /* 
+  const memberId = req?.body?.memberId;
+  const reservationTypeId = req?.body?.reservationTypeId;
+  const vehicleId = req?.body?.vehicleId;
+  const garageId = req?.body?.garageId;
+  const startDateTime = req?.body?.startDateTime;
+  const endDateTime = req?.body?.endDateTime;
+  const reservationStatusId = req?.body?.reservationStatusId;
+
   // Return early if any arguments missing (vehicles optional)
-  if (!(garageId && startDateTime && endDateTime && customerId)) {
-    return res.status(400).json({ message: "Incomplete request" });
+  if (
+    !(memberId && reservationTypeId && garageId && startDateTime && endDateTime)
+  ) {
+    return res.status(400).json({ message: 'Incomplete request.' });
   }
- */
-  // TODO check preconditions
 
-  // TODO create the reservation in the DB
-  const reservation = { message: 'Reservation complete!' };
+  // Check preconditions
+  if (startDateTime < endDateTime || startDateTime < Date.now()) {
+    return res.status(400).json({ message: 'Invalid date or time.' });
+  }
 
-  // TODO return the reservation details after successful creation
-  return res.status(200).json(reservation);
+  // Create the reservation in the DB
+  try {
+    // Check that all FK values are valid in the database
+    const user = User.findByPK(memberId, { attributes: ['USERNAME'] });
+    const resType = ReservationType.findByPK(reservationTypeId, {
+      attributes: ['RESERVATION_TYPE_ID'],
+    });
+    const vehicle = vehicleId
+      ? Vehicle.findByPK(vehicleId, { attributes: ['VEHICLE_ID'] })
+      : 'none';
+    const status = reservationStatusId
+      ? ReservationStatus.findByPK(reservationStatusId, {
+          attributes: ['STATUS_ID'],
+        })
+      : 'none';
+
+    if (!(user && resType && vehicle && status)) {
+      return res.status(400).json({ message: 'Invalid ID(s) provided.' });
+    }
+
+    // Create the reservation
+    // TODO make sure reservations are in the time zone of the garage
+    const reservation = await Reservation.create({
+      START_TIME: startDateTime,
+      END_TIME: endDateTime,
+      MEMBER_ID: memberId,
+      RESERVATION_TYPE_ID: reservationTypeId,
+      VEHICLE_ID: vehicleId,
+      STATUS_ID: reservationStatusId,
+    });
+
+    // Return the reservation details after successful creation
+    return res.status(200).json(reservation);
+  } catch (error) {
+    // Some request failed
+    console.error('Reservation Controller: reserveSpace failed');
+    return res.status(500);
+  }
 };
 
 // PERMANENT/GUARANTEED RESERVATIONS
@@ -230,91 +265,81 @@ const searchGuaranteedSpace = async (req, res) => {
 /**
  * Reserve a permanent space
  * POST request
- *
- * @async
- * @param {} garageId - The ID of the garage in which to reserve a space
- * @param {Date} startDate - The desired starting date of the reservation
- * @param {Date} endDate - The desired ending date of the reservation
- * @param {} startTime - The desired starting time of the reservation
- * @param {} endTime - The desired ending time of the reservation
- * @param {String} frequency - The frequency of the reservation
- * @param {} customerId - The ID of the customer the reservation is made for
- * @param {} vehicle - The vehicle plate details for the vehicle the reservation is made for
- * @returns {} reservation details
+ * 
+ @async
+ * @param {Number} memberId - ID number of the member the reservation is for
+ * @param {Number} reservationTypeId - The type of reservation
+ * @param {Number} vehicleId - The vehicle the reservation is for
+ * @param {Number} garageId - The garage the reservation is for
+ * @param {Date} startDateTime - When the reservation starts
+ * @param {Number} reservationStatusId - The status of the reservation
+ * @returns {Object} - reservation details
  *
  * Preconditions:
  *  - garageId is not null
- *  - startDate < endDate
- *  - startTime < endTime
  *  - startDate >= current date
- *  - startTime >= current time
- *  - frequency is one of Daily, Weekly, or Monthly
- *  - customerId is not null
+ *  - memberId is not null
+ *  - memberId, reservationTypeId, vehicleId, and reservationTypeId are all valid keys in their respective tables
+ * Postconditions:
+ *  - A reservation is created in the system matching the given characteristics
  */
 
 const reserveGuaranteedSpace = async (req, res) => {
-  // TODO
   // Get arguments from POST request body
-  const garageId = req.body.garageId;
-  const startDate = req.body.startDate;
-  const endDate = req.body.endDate;
-  const startTime = req.body.startTime;
-  const endTime = req.body.endTime;
-  const frequency = req.body.frequency;
-  const customerId = req.body.customerId;
-  const vehicle = req.body.vehicle;
-  /* 
-  // Return early if any args missing (vehicle optional)
-  if (
-    !(
-      garageId &&
-      startDate &&
-      endDate &&
-      startTime &&
-      endTime &&
-      frequency &&
-      customerId
-    )
-  ) {
-    return res.status(400).json({ message: "Incomplete request" });
-  } */
+  const memberId = req?.body?.memberId;
+  const reservationTypeId = req?.body?.reservationTypeId;
+  const vehicleId = req?.body?.vehicleId;
+  const garageId = req?.body?.garageId;
+  const startDateTime = req?.body?.startDateTime;
+  const reservationStatusId = req?.body?.reservationStatusId;
 
-  // TODO check preconditions
+  // Return early if any arguments missing (vehicles optional)
+  if (!(memberId && reservationTypeId && garageId && startDateTime)) {
+    return res.status(400).json({ message: 'Incomplete request.' });
+  }
 
-  // TODO create the reservation in the DB
-  const reservation = { message: 'Reservation complete!' };
+  // Check preconditions
+  if (startDateTime < Date.now()) {
+    return res.status(400).json({ message: 'Invalid date or time.' });
+  }
 
-  // TODO return the reservation details after successful creation
-  return res.status(200).json(reservation);
-};
+  // Create the reservation in the DB
+  try {
+    // Check that all FK values are valid in the database
+    const user = User.findByPK(memberId, { attributes: ['USERNAME'] });
+    const resType = ReservationType.findByPK(reservationTypeId, {
+      attributes: ['RESERVATION_TYPE_ID'],
+    });
+    const vehicle = vehicleId
+      ? Vehicle.findByPK(vehicleId, { attributes: ['VEHICLE_ID'] })
+      : 'none';
+    const status = reservationStatusId
+      ? ReservationStatus.findByPK(reservationStatusId, {
+          attributes: ['STATUS_ID'],
+        })
+      : 'none';
 
-// TIME CONVERSIONS
+    if (!(user && resType && vehicle && status)) {
+      return res.status(400).json({ message: 'Invalid ID(s) provided.' });
+    }
 
-/**
- * Convert a JS Date timestamp into a UTC SQL DateTime
- *
- * @param {Date} jsDatetime - A JS Date timestamp
- * @returns {String} - The time converted to UTC as a SQL-style DateTime string
- */
-const datetimeJsToSql = (jsDatetime) => {
-  const sqlDatetime = jsDatetime.toISOString().slice(0, 19).replace('T', ' ');
-  return sqlDatetime;
-};
+    // Create the reservation
+    // TODO make sure reservations are in the time zone of the garage
+    const reservation = await Reservation.create({
+      START_TIME: startDateTime,
+      MEMBER_ID: memberId,
+      RESERVATION_TYPE_ID: reservationTypeId,
+      VEHICLE_ID: vehicleId,
+      STATUS_ID: reservationStatusId,
+    });
 
-/**
- * Convert a UTC SQL DateTime into a JS Date timestamp
- *
- * @param {String} sqlDatetime - A UTC SQL-style DateTime string
- * @returns {Date} - The time converted to a Date object in the server's timezone
- */
-const datetimeSqlToJs = (sqlDatetime) => {
-  // Split sql datetime into parts to recreate as UTC
-  const timeParts = sqlDatetime.split(/[- :]/);
-  // Decrement month. Date months are 0-11 Jan-Dec
-  timeParts[1]--;
-  // Create new time in UTC
-  const jsDatetime = new Date(Date.UTC(...timeParts));
-  return jsDatetime;
+    // Return the reservation details after successful creation
+    return res.status(200).json(reservation);
+  } catch (error) {
+    // Some request failed
+    console.error('Reservation Controller: reserveGuaranteedSpace failed');
+    return res.status(500);
+  }
 };
 
 // Export functions
@@ -323,6 +348,4 @@ module.exports = {
   reserveSpace,
   searchGuaranteedSpace,
   reserveGuaranteedSpace,
-  datetimeJsToSql,
-  datetimeSqlToJs,
 };
