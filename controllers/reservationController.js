@@ -3,7 +3,7 @@
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
-const { Reservation, ReservationStatus, ReservationType, Vehicle, User } =
+const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
   sequelize.models;
 
 // SINGLE RESERVATIONS
@@ -47,8 +47,8 @@ const searchSpace = async (req, res) => {
   }
 
   // Check preconditions
-  if (startDateTime < Date.now()) {
-    return res.status(200).json({ message: 'Invalid date or time.' });
+  if (startDateTime < Date.now() || startDateTime >= endDateTime) {
+    return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
   // TODO Find matching available garages
@@ -70,24 +70,6 @@ const searchSpace = async (req, res) => {
       timezone: 'America/New_York',
       price: 12.5,
       rate: '30 min',
-    },
-    {
-      garageId: 103,
-      description: 'AllsPark',
-      lat: -1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 10,
-      rate: 'day',
-    },
-    {
-      garageId: 104,
-      description: 'SeeSpotPark',
-      lat: -1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 10,
-      rate: 'day',
     },
   ];
 
@@ -142,18 +124,24 @@ const reserveSpace = async (req, res) => {
   // Create the reservation in the DB
   try {
     // Check that all FK values are valid in the database
-    const user = await User.findByPK(memberId, { attributes: ['USERNAME'] });
-    const resType = await ReservationType.findByPK(reservationTypeId, {
+    let user, resType, vehicle, status;
+    user = await Users.findByPk(memberId, { attributes: ['USERNAME'] });
+    resType = await ReservationType.findByPk(reservationTypeId, {
       attributes: ['RESERVATION_TYPE_ID'],
     });
-    const vehicle = (await vehicleId)
-      ? Vehicle.findByPK(vehicleId, { attributes: ['VEHICLE_ID'] })
-      : 'none';
-    const status = (await reservationStatusId)
-      ? ReservationStatus.findByPK(reservationStatusId, {
-          attributes: ['STATUS_ID'],
-        })
-      : 'none';
+
+    if (vehicleId)
+      vehicle = await Vehicle.findByPk(vehicleId, {
+        attributes: ['VEHICLE_ID'],
+      });
+    else vehicle = 'none';
+
+    if (reservationStatusId)
+      status = await ReservationStatus.findByPk(reservationStatusId, {
+        attributes: ['STATUS_ID'],
+      });
+    else status = 'none';
+
     // TODO add garage controller and check validity
 
     if (!(user && resType && vehicle && status)) {
@@ -178,6 +166,7 @@ const reserveSpace = async (req, res) => {
   } catch (error) {
     // Some request failed
     console.error('Reservation Controller: reserveSpace failed');
+    console.log(error);
     return res.status(500);
   }
 };
@@ -244,24 +233,6 @@ const searchGuaranteedSpace = async (req, res) => {
       price: 12.5,
       rate: '30 min',
     },
-    {
-      garageId: 103,
-      description: 'AllsPark',
-      lat: -1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 10,
-      rate: 'day',
-    },
-    {
-      garageId: 104,
-      description: 'SeeSpotPark',
-      lat: -1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 10,
-      rate: 'day',
-    },
   ];
 
   // TODO Return results
@@ -312,18 +283,26 @@ const reserveGuaranteedSpace = async (req, res) => {
   // Create the reservation in the DB
   try {
     // Check that all FK values are valid in the database
-    const user = User.findByPK(memberId, { attributes: ['USERNAME'] });
-    const resType = ReservationType.findByPK(reservationTypeId, {
+    // Check that all FK values are valid in the database
+    let user, resType, vehicle, status;
+    user = await Users.findByPk(memberId, { attributes: ['USERNAME'] });
+    resType = await ReservationType.findByPk(reservationTypeId, {
       attributes: ['RESERVATION_TYPE_ID'],
     });
-    const vehicle = vehicleId
-      ? Vehicle.findByPK(vehicleId, { attributes: ['VEHICLE_ID'] })
-      : 'none';
-    const status = reservationStatusId
-      ? ReservationStatus.findByPK(reservationStatusId, {
-          attributes: ['STATUS_ID'],
-        })
-      : 'none';
+
+    if (vehicleId)
+      vehicle = await Vehicle.findByPk(vehicleId, {
+        attributes: ['VEHICLE_ID'],
+      });
+    else vehicle = 'none';
+
+    if (reservationStatusId)
+      status = await ReservationStatus.findByPk(reservationStatusId, {
+        attributes: ['STATUS_ID'],
+      });
+    else status = 'none';
+
+    // TODO add garage controller and check validity
 
     if (!(user && resType && vehicle && status)) {
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
@@ -331,6 +310,8 @@ const reserveGuaranteedSpace = async (req, res) => {
 
     // Create the reservation
     // TODO make sure reservations are in the time zone of the garage
+    // TODO set default status
+    // TODO should availability be confirmed before reservation? If so, add here.
     const reservation = await Reservation.create({
       START_TIME: startDateTime,
       MEMBER_ID: memberId,
