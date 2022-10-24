@@ -22,6 +22,7 @@
             $http.post(URLS.login, {Login})
                 .then((resp) => {
                     loading=0;
+                    if (resp.data.is_operator) window.location.href = 'http://localhost:3500/view/operator'
                     console.dir(resp); // debug - remove
                 }) // TODO: handle error message
         }

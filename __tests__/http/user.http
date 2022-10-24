@@ -47,13 +47,13 @@ POST http://localhost:3500/user/register
 Content-Type: application/json
 
 {
-  "username": "user17",
+  "username": "operator-dustin",
   "password": "bbbb",
   "first_name": "dustin",
   "last_name": "threet",
   "email": "me@mywebsite.com",
   "phone": "18675309",
-  "is_operator": false
+  "is_operator": true
 }
 
 ###
