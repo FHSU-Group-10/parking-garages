@@ -3,13 +3,16 @@
  * GET request
  * @returns {[Object]} - An array of existing garages
  */
-// const _ = require("lodash");
-const Db = require('./models/garage');
+const _ = require("lodash");
+const Db = require('../config/dbConn')();
 const { Sequelize, Op } = require("sequelize");
-const getModels = Db.getModels;
-const bcrypt = require("bcrypt");
+//const getModels = Db.getModels;
+//const bcrypt = require("bcrypt");
+//const jwt = require('jsonwebtoken');
+//const {token} = require("morgan");
+const Garage = Db.models.Garage;
 const listGarages = async (req, res) => {
-try {
+  try {
     // Find pricing for the specified garage
     const results = await Garage.findAll();
     // Return results
@@ -18,8 +21,8 @@ try {
     console.error('Garage controller failed.');
     return res.status(500);
   }
-  // TODO
-  return res.status(200).json([
+}
+  //return res.status(200).json([
    /*
     {
       id: 'garage1',
@@ -39,8 +42,7 @@ try {
       overbookRate: 1.1,
       isActive: false,
     },*/
-  ]);
-};
+
 const getGarageId = async (req, res) => {
 try {
     // Find pricing for the specified garage
@@ -86,23 +88,22 @@ const updateGarage = async (req, res) => {
   const isActive=req?.body?.isActive
 
    // Return early if any arguments are missing
-  if (!(garageName && floors && spotsPerFLoor && location && isActive)) {
+  if (!(garageName && floors && spotsPerFloor && location && isActive)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
   // Check preconditions
-  if (numFloors < 1) {
+  if (floors < 1) {
     return res.status(400).json({ message: 'Number of floors must be >= 1.' });
   }
   if (!spotsPerFloor.every((spots) => spots >= 0)) {
     return res.status(400).json({ message: 'Every floor must have at least 0 spots.' });
   }
-  if (numFloors != spotsPerFloor.length) {
+  if (floors != spotsPerFloor.length) {
     return res.status(400).json({ message: 'Number of floors does not match length of spotsPerFloor array.' });
   }
   if (overbookRate < 1.0) {
     return res.status(400).json({ message: 'Overbook rate must be at least 100%.' });
   }
-     // TODO Check if garageId is valid
   const validGarages = getGarageId();
   if (!validGarages.includes(garageId)) {
     return res.status(400).json({ message: 'garageId does not exist.' });
@@ -153,10 +154,8 @@ const deleteGarage = async (req, res) => {
   if (!validGarages.includes(garageId)) {
     return res.status(400).json({ message: 'garageId does not exist.' });
   }
-
-  // TODO Delete garage from database
 try {
-  await Post.destroy({
+  await Garage.destroy({
     where: {
       GARAGE_ID: garageId
     },
@@ -200,18 +199,18 @@ const addGarage = async (req, res) => {
   const isActive=req?.body?.isActive
 
   // Return early if any arguments are missing
-  if (!(garageName && floors && spotsPerFLoor && location && isActive)) {
+  if (!(garageName && floors && spotsPerFloor && location && isActive)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
 
   // Check preconditions
-  if (numFloors < 1) {
+  if (floors < 1) {
     return res.status(400).json({ message: 'Number of floors must be >= 1.' });
   }
   if (!spotsPerFloor.every((spots) => spots >= 0)) {
     return res.status(400).json({ message: 'Every floor must have at least 0 spots.' });
   }
-  if (numFloors != spotsPerFloor.length) {
+  if (floors != spotsPerFloor.length) {
     return res.status(400).json({ message: 'Number of floors does not match length of spotsPerFloor array.' });
   }
   if (overbookRate < 1.0) {
