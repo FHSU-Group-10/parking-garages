@@ -47,6 +47,10 @@
 
     // Reservation parameters
     const reserveOptions = {
+      user: {
+        memberId: null,
+        vehicle: null,
+      },
       garage: {
         id: null,
         description: null,
@@ -62,7 +66,6 @@
         garageLocalDatetime: null,
       },
       type: null,
-      userVehicle: null,
       totalPrice: null,
       directionsLink: null,
     };
@@ -158,6 +161,7 @@
         method: 'POST',
         url: `/reserve/${reserveOptions.isMonthly ? 'guaranteed' : 'single'}`,
         data: {
+          // TODO send only needed fields
           ...reserveOptions,
         },
       })

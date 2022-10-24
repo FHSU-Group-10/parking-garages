@@ -29,7 +29,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Connect to DB and attach all models and relations
-connectDB();
+const sequelize = connectDB();
+// Test connection (Moved here to not slow down unit tests)
+const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connected to DB!');
+  } catch (err) {
+    console.log('Could not connect to DB.');
+  }
+};
+testConnection();
 
 // API ROUTES
 app.use('/reserve', require('./routes/api/reserve'));

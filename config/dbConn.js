@@ -11,7 +11,7 @@ const connStr = `db2:DATABASE/${process.env.DB_NAME};HOSTNAME=${process.env.DB_H
 const sequelize = new Sequelize(connStr);
 
 // Test connection, since this only runs once at startup
-const testConnection = async () => {
+/* const testConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connected to DB!');
@@ -19,7 +19,7 @@ const testConnection = async () => {
     console.log('Could not connect to DB.');
   }
 };
-testConnection();
+testConnection(); */
 
 // Initialize all models
 addModels(sequelize, DataTypes);
