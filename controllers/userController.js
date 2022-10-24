@@ -26,7 +26,7 @@ const login = async(req, res) => {
         }
         
         for (let param in obj){
-            if (!obj[param]) throw `Incomplete Login attempt, ${param} is required!`
+            if (!obj[param]) return res.status(400).json({error:`Incomplete Login attempt, ${param} is required!`});
         }
         
         // find our user attempting to login
