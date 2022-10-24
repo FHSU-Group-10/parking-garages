@@ -77,12 +77,12 @@
 <body class="background" ng-app="pageApp" ng-controller="pageCtrl as vm">
 <div ng-show="vm.loading"><img src="http://www.nasa.gov/multimedia/videogallery/ajax-loader.gif" /></div>
 
-<!-- Modal -->
-<div class="modal fade" id="error_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<!-- Error Modal -->
+<div class="modal fade" id="error_modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Error {{vm.error_modal.status}}</h5>
+        <h5 class="modal-title" id="error_modal_label">Error {{vm.error_modal.status}}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
