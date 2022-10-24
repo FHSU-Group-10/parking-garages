@@ -13,6 +13,7 @@
         function login() {
             $http.post(URLS.login, {Login})
                 .then((resp) => {
+                    console.dir(resp); // debug - remove
                 }) // TODO: handle error message
         }
         return {
