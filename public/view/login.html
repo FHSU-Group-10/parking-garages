@@ -26,6 +26,18 @@
   .background {
     background-color: black;
   }
+
+  .loading-modal-lg .modal-dialog{
+    display: table;
+    position: relative;
+    margin: 0 auto;
+    top: calc(50% - 24px);
+  }
+
+  .loading-modal-lg .modal-dialog .modal-content{
+    background-color: transparent;
+    border: none;
+  }
   
   .card {
     border: none;
@@ -75,10 +87,19 @@
 </style>
 
 <body class="background" ng-app="pageApp" ng-controller="pageCtrl as vm">
-<div ng-show="vm.loading"><img src="http://www.nasa.gov/multimedia/videogallery/ajax-loader.gif" /></div>
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="modal fade loading-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="width: 48px">
+      <span style="color: white" class="fa fa-spinner fa-spin fa-3x"></span>
+    </div>
+  </div>
+</div>
+
 
 <!-- Error Modal -->
-<div class="modal fade" id="error_modal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="error-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">

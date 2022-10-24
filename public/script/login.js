@@ -14,9 +14,21 @@
             message: '',
             status: '',
             show: (error) => {
+                loading_modal.hide(); // make sure we are never show at the same time
                 error_modal.message = error.data.error;
                 error_modal.status = error.status;
-                $('#error_modal').modal('show');
+                $('#error-modal').modal('show');
+            }
+        }
+    
+        const loading_modal = {
+            hide: () => {
+                console.log('hiding'); // debug - remove
+                $('#loading-modal').modal('hide');
+    
+            },
+            show: () => {
+                $('#loading-modal').modal('show');
             }
         }
         
@@ -25,19 +37,16 @@
         let loading = 0;
         
         function login() {
-            console.log('function ran'); // debug - remove
-            console.dir(loading); // debug - remove
-            loading = 1;
-            console.dir(loading); // debug - remove
+           loading_modal.show(); // show our loading icon
             $http.post(URLS.login, {Login})
                 .then((resp) => {
-                    loading=0;
-                    if (resp.data.is_operator) window.location.href = 'http://localhost:3500/view/operator'
-                    console.dir(resp); // debug - remove
+                    if (resp.data.is_operator) window.location.href = 'http://localhost:3500/view/operator'; // TODO: replace with our final real URL
+                    loading_modal.hide(); // hide loading scree
                 }, (reject) => {
+                    console.log(reject); // debug -r emvoe 
+                    loading_modal.hide();
                     error_modal.show(reject);
-                    console.dir(reject); // debug - remove
-                }) // TODO: handle error message
+                })
         }
         return {
             error_modal,
@@ -47,7 +56,9 @@
         }
     }
     
+    
     var app = angular.module('pageApp', []);
+    
     app.controller("pageCtrl", [
         '$scope' ,
         '$http',
