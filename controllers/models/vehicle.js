@@ -1,56 +1,51 @@
-// init sequelize
-const { DataTypes } = require('sequelize');
-// ready our db connection function
-const dbConn = require('../../config/dbConn');
-const sequelize = dbConn();
+// Exports a function that defines the model
+// Receives the sequelize instance and datatypes as parameters
+// Relations are defined elsewhere
+module.exports = (sequelize, DataTypes) => {
+  sequelize.define(
+    'Vehicle',
+    {
+      VEHICLE_ID: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      DESCRIPTION: {
+        type: DataTypes.STRING(64),
+        allowNull: true,
+        field: 'DESCRIPTION',
+      },
+      PLATE_NUMBER: {
+        type: DataTypes.STRING(16),
+        allowNull: false,
+        field: 'PLATE_NUMBER',
+      },
+      PLATE_STATE: {
+        type: DataTypes.STRING(16),
+        allowNull: false,
+        field: 'PLATE_STATE',
+      },
+      IS_ACTIVE: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        field: 'IS_ACTIVE',
+      },
+    },
+    {
+      tableName: 'VEHICLES',
+      timestamps: false,
+      schema: 'YHL46872',
+      initialized: true,
+    }
+  );
 
-// TODO User model must be linked to Vehicle
-// const User = require('./user');
+  // Models to link with relations to Vehicle
+  //const Users = require('./user');
+  //const Reservation = require('./reservation');
 
-const Vehicle = sequelize.define(
-  'Vehicle',
-  {
-    VEHICLE_ID: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    DESCRIPTION: {
-      type: DataTypes.STRING(64),
-      allowNull: true,
-      field: 'DESCRIPTION',
-    },
-    PLATE_NUMBER: {
-      type: DataTypes.STRING(16),
-      allowNull: false,
-      field: 'PLATE_NUMBER',
-    },
-    PLATE_STATE: {
-      type: DataTypes.STRING(16),
-      allowNull: false,
-      field: 'PLATE_STATE',
-    },
-    IS_ACTIVE: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      field: 'IS_ACTIVE',
-    },
-  },
-  {
-    tableName: 'VEHICLES',
-    timestamps: false,
-    schema: 'YHL46972',
-    initialized: true,
-  }
-);
+  // Create relation to User (FK in Vehicle)
+  //Vehicle.belongsTo(sequelize.models.Users);
 
-// TODO Cannot pass model correctly from async model definition
-// Create relation to User
-Vehicle.belongsTo(User, {
-  foreignKey: {
-    name: 'MEMBER_ID',
-    allowNull: false,
-  },
-});
-
-module.exports = Vehicle;
+  // Relation to Reservation (FK in Reservation)
+  //Vehicle.hasMany(Reservation);
+};

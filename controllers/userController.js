@@ -9,13 +9,14 @@
  */
 
 const _ = require("lodash");
-const Db = require('./models/user');
+const Db = require('../config/dbConn')();
 const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const Users = require('./models/user');
 const {token} = require("morgan");
+const Users = Db.models.Users;
 
 const login = async(req, res) => {
     try {
