@@ -13,8 +13,10 @@
         const error_modal = {
             message: '',
             status: '',
+            close: () => {
+              $('.modal').modal('hide');
+            },
             show: (error) => {
-                loading_modal.hide(); // make sure we are never show at the same time
                 error_modal.message = error.data.error;
                 error_modal.status = error.status;
                 $('#error-modal').modal('show');
@@ -23,7 +25,6 @@
     
         const loading_modal = {
             hide: () => {
-                console.log('hiding'); // debug - remove
                 $('#loading-modal').modal('hide');
     
             },
@@ -41,12 +42,10 @@
             $http.post(URLS.login, {Login})
                 .then((resp) => {
                     if (resp.data.is_operator) window.location.href = 'http://localhost:3500/view/operator'; // TODO: replace with our final real URL
-                    loading_modal.hide(); // hide loading scree
                 }, (reject) => {
-                    console.log(reject); // debug -r emvoe 
-                    loading_modal.hide();
                     error_modal.show(reject);
                 })
+                .finally(loading_modal.hide)
         }
         return {
             error_modal,

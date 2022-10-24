@@ -89,7 +89,7 @@
 <body class="background" ng-app="pageApp" ng-controller="pageCtrl as vm">
 
 <!-- Loading Modal -->
-<div id="loading-modal" class="modal fade loading-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+<div id="loading-modal" class="modal fade loading-modal-lg" aria-hidden="true">
   <div class="modal-dialog modal-sm">
     <div class="modal-content" style="width: 48px">
       <span style="color: white" class="fa fa-spinner fa-spin fa-3x"></span>
@@ -110,7 +110,7 @@
         {{vm.error_modal.message}}
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button ng-click="vm.error_modal.close()" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
