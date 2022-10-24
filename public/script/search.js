@@ -15,20 +15,16 @@
 
     // Track position and pins
     // Defaults to view of continental USA
-    const user = {
-      lat: 39.5,
-      lon: -98.35,
-      zoom: 4,
-      description: null,
-      radius: 0,
-      unit: 'miles',
-      useGeo: false,
-    };
 
     // Form fields
     const searchForm = {
       location: '',
+      lat: 39.5,
+      lon: -98.35,
+      zoom: 4,
+      description: null,
       radius: 2,
+      radiusMeters: null,
       radiusUnit: 'miles',
       useGeo: false,
       type: 'single',
@@ -77,28 +73,19 @@
       //e.preventDefault();
       // TODO validate data
 
-      // Get user coords by geo or search string
-      let location;
-      if (searchForm.useGeo) location = await getGeolocate();
-      else location = await getCoords(searchForm.location);
+      // Set user coords by geo or search string
+      await setLocation();
 
-      // TODO return error if no location found
-      if (!location) return;
+      // Convert radius from user-specified units to meters
+      searchForm.radiusMeters = convert(
+        parseFloat(searchForm.radius),
+        searchForm.radiusUnit
+      ).to('meters');
 
-      // Set data in user object
-      user.lat = location.lat;
-      user.lon = location.lon;
-      user.description = location.display_name;
-      user.zoom = 12;
-
-      // Convert radius from meters to user-specified units
-      user.radiusUnit = searchForm.radiusUnit;
-      user.radius = convert(parseFloat(searchForm.radius), user.radiusUnit).to(
-        'meters'
-      );
-
-      setMap();
-      addGarages();
+      // Get matching garages with availability
+      await getResults();
+      // Set the map with search location and garage pins and radius circle
+      await setMap();
     };
 
     // Handle clicking on reserve button in search results
@@ -161,8 +148,12 @@
         method: 'POST',
         url: `/reserve/${reserveOptions.isMonthly ? 'guaranteed' : 'single'}`,
         data: {
-          // TODO send only needed fields
-          ...reserveOptions,
+          memberId: reserveOptions.user.memberId,
+          vehicleId: reserveOptions.user.vehicleId,
+          garageId: reserveOptions.garage.id,
+          reservationTypeId: reserveOptions.type,
+          startDateTime: reserveOptions.from.garageLocalDatetime,
+          endDateTime: reserveOptions.to.garageLocalDatetime,
         },
       })
         .then(() => {
@@ -172,7 +163,7 @@
           // Window reloads after successful reservation
           $window.location.reload();
         })
-        .catch((err) => dialog(err.message));
+        .catch((err) => alert(err.message));
     };
 
     // FUNCTIONS
@@ -196,7 +187,10 @@
 
     const setInitialMap = () => {
       // Create map, user marker, and array of garage markers
-      map = L.map('map').setView([user.lat, user.lon], user.zoom);
+      map = L.map('map').setView(
+        [searchForm.lat, searchForm.lon],
+        searchForm.zoom
+      );
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution:
@@ -204,7 +198,7 @@
       }).addTo(map);
     };
 
-    // Converts the time specified by the user to the garage's local timezone
+    // TODO move to backend - Converts the time specified by the user to the garage's local timezone
     // Necessary because user local timezone may be different, and reservations should be set in the garage's zone
     const toGarageTZ = (userDatetime, garageTimezone) => {
       // Break up the user-specified local time
@@ -232,31 +226,39 @@
       );
     }
 
-    // Get coords from user location
-    const getGeolocate = async () => {
+    // Sets location data from search form
+    const setLocation = async () => {
       try {
-        const position = await getPosition();
-        return {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-          display_name: 'Your location',
-        };
-      } catch (e) {
-        console.error(e.message);
+        if (searchForm.useGeo) {
+          // Geolocate
+          const location = await getPosition();
+          console.log(location);
+          searchForm.lat = location.coords.latitude;
+          searchForm.lon = location.coords.longitude;
+          searchForm.description = 'Your location';
+          searchForm.zoom = 12;
+
+          return true;
+        } else {
+          // Locate from search string
+          const res = await fetch(
+            location.protocol +
+              '//nominatim.openstreetmap.org/search?format=json&q=' +
+              searchForm.location
+          );
+          const json = await res.json();
+
+          searchForm.lat = json[0].lat;
+          searchForm.lon = json[0].lon;
+          searchForm.description = json[0].display_name;
+          searchForm.zoom = 12;
+
+          return true;
+        }
+      } catch (error) {
+        console.error(error);
+        return false;
       }
-    };
-
-    // Get coords from search string
-    const getCoords = async (searchString) => {
-      const res = await fetch(
-        location.protocol +
-          '//nominatim.openstreetmap.org/search?format=json&q=' +
-          searchString
-      );
-      const json = await res.json();
-
-      // Return if nothing was found
-      return json[0];
     };
 
     // Sets isMonthly flag on search to hide certain fields
@@ -264,14 +266,29 @@
       searchForm.isMonthly = searchForm.type == 'monthly';
     };
 
+    // Builds a an object with components of a Luxon datetime for use in backend
+    const buildTime = (time) => {
+      return {
+        year: time.date.getFullYear(),
+        month: 1 + time.date.getMonth(),
+        day: time.date.getDate(),
+        hour: time.hour,
+        minute: time.minute,
+      };
+    };
+
     // Bring in garage data from backend
-    const addGarages = async () => {
+    const getResults = async () => {
       // Clear old garages and markers
       garages.length = 0;
       while (garageMarkers.length > 0) {
         // Remove from map and array simultaneously
         garageMarkers.pop().removeFrom(map);
       }
+
+      // Build datetimes
+      const startDateTime = buildTime(searchForm.from);
+      const endDateTime = buildTime(searchForm.to);
 
       // Get garage results from backend
       $http({
@@ -280,61 +297,71 @@
           searchForm.isMonthly ? 'guaranteed' : 'single'
         }`,
         data: {
-          name: 'testData',
+          lat: searchForm.lat,
+          lon: searchForm.lon,
+          radius: searchForm.radiusMeters,
+          reservationTypeId: searchForm.type,
+          startDateTime: startDateTime,
+          endDateTime: searchForm.isMonthly ? null : endDateTime,
         },
       })
         .then((results) => {
-          // Add new garages
-          results?.data?.forEach((garage) => {
-            const newGarage = { ...garage };
-            // Generate a random position near the user location
-            newGarage.lat = parseFloat(user.lat) + (0.5 - Math.random()) * 0.1;
-            newGarage.lon = parseFloat(user.lon) + (0.5 - Math.random()) * 0.1;
+          // Return if status is not OK
+          if (results.status != 200) return;
 
-            // Calculate distance from user
-            let from = L.latLng(user.lat, user.lon);
-            let to = L.latLng(newGarage.lat, newGarage.lon);
-            // Measurements in feet shouldn't be precise to the foot
-            if (user.radiusUnit == 'feet')
-              newGarage.distance = parseFloat(
-                convert(map.distance(from, to), 'meters')
-                  .to('feet')
-                  .toPrecision(3)
+          // Process results
+          results.data?.forEach((garage) => {
+            // TODO Remove - Generates a random position near the user location. Let's us test geolocate anywhere and get results
+            garage.lat =
+              parseFloat(searchForm.lat) + (0.5 - Math.random()) * 0.1;
+            garage.lon =
+              parseFloat(searchForm.lon) + (0.5 - Math.random()) * 0.1;
+
+            // Distance is returned in meters, convert back to user units
+            if (searchForm.radiusUnit == 'feet')
+              // Measurements in feet shouldn't be precise to the foot
+              garage.distance = parseFloat(
+                convert(garage.distance, 'meters').to('feet').toPrecision(3)
               );
-            else
-              newGarage.distance = convert(map.distance(from, to), 'meters')
-                .to(user.radiusUnit)
+            else {
+              garage.distance = convert(garage.distance, 'meters')
+                .to(searchForm.radiusUnit)
                 .toFixed(2);
+            }
 
-            const pin = L.marker([newGarage.lat, newGarage.lon]);
-            pin.addTo(map).bindPopup(newGarage.description);
-            garages.push(newGarage);
+            // Add pin and label to map
+            const pin = L.marker([garage.lat, garage.lon]);
+            pin.addTo(map).bindPopup(garage.description);
+            // Save garage and pin
+            garages.push(garage);
             garageMarkers.push(pin);
           });
         })
-        .catch((err) => console.error(err.message));
+        .catch((error) => console.error(error));
     };
 
     // Sets map from user object
     const setMap = () => {
       // Recenter map
-      map.setView([user.lat, user.lon], user.zoom);
+      console.log(searchForm.lat, searchForm.lon);
+      map.setView([searchForm.lat, searchForm.lon], searchForm.zoom);
 
       // Clear previous marker and circle
       if (userMarker) userMarker.removeFrom(map);
       if (radiusCircle) radiusCircle.removeFrom(map);
 
-      // Set a marker
-      userMarker = L.marker([user.lat, user.lon]);
+      // Set a marker for the search location
+      userMarker = L.marker([searchForm.lat, searchForm.lon]);
       userMarker.addTo(map);
-      // Set a label with the placename
-      userMarker.bindPopup(user.description).openPopup();
+      // Label the marker
+      userMarker.bindPopup(searchForm.description).openPopup();
+
       // Set the search radius circle
-      radiusCircle = L.circle([user.lat, user.lon], {
+      radiusCircle = L.circle([searchForm.lat, searchForm.lon], {
         color: 'black',
         fillColor: '#000',
         fillOpacity: 0.2,
-        radius: user.radius,
+        radius: searchForm.radius,
       });
       radiusCircle.addTo(map);
     };
@@ -346,9 +373,8 @@
     return {
       handleSearch,
       searchForm,
-      user,
       garages,
-      addGarages,
+      addGarages: getResults,
       checkType,
       handleReserveBtn,
       reserveOptions,

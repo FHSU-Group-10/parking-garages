@@ -1,10 +1,34 @@
 // LIBRARIES
-
+const luxon = require('luxon');
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
 const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
   sequelize.models;
+
+// Get the timezone for the search position
+const timezone = async (lat, lon) => {
+  try {
+    const res = await fetch(
+      `http://api.timezonedb.com/v2.1/get-time-zone?key=${process.env.TIMEZONE_API}&format=json&by=position&lat=${lat}&lng=${lon}`
+    );
+    const json = await res.json();
+    return json.zoneName;
+  } catch (error) {
+    console.error(error);
+    return;
+  }
+};
+
+const timeFromLocal = (timeObj, tz) => {
+  try {
+    const localTime = luxon.DateTime.fromObject(timeObj, { zone: tz });
+    return localTime.toJSDate();
+  } catch (error) {
+    console.error(error);
+    return;
+  }
+};
 
 // SINGLE RESERVATIONS
 
@@ -35,8 +59,8 @@ const searchSpace = async (req, res) => {
   const lon = req?.body?.lon;
   const radius = req?.body?.radius;
   const reservationTypeId = req?.body?.reservationTypeId;
-  const startDateTime = req?.body?.startDateTime;
-  const endDateTime = req?.body?.endDateTime;
+  let startDateTime = req?.body?.startDateTime;
+  let endDateTime = req?.body?.endDateTime;
 
   // Return early if any arguments are missing
   if (
@@ -46,12 +70,18 @@ const searchSpace = async (req, res) => {
     return res.status(400).json({ message: 'Incomplete query.' });
   }
 
+  // Convert times to search position local time
+  const tz = await timezone(lat, lon);
+  startDateTime = timeFromLocal(startDateTime, tz);
+  endDateTime = timeFromLocal(endDateTime, tz);
+
   // Check preconditions
   if (startDateTime < Date.now() || startDateTime >= endDateTime) {
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
   // TODO Find matching available garages
+  // TODO pass distance to each
   const fakeGarages = [
     {
       garageId: 101,
@@ -61,6 +91,7 @@ const searchSpace = async (req, res) => {
       timezone: 'America/New_York',
       price: 16.75,
       rate: 'hour',
+      distance: 500,
     },
     {
       garageId: 102,
@@ -70,6 +101,7 @@ const searchSpace = async (req, res) => {
       timezone: 'America/New_York',
       price: 12.5,
       rate: '30 min',
+      distance: 3000,
     },
   ];
 
