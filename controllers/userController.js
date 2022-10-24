@@ -14,7 +14,6 @@ const { Sequelize, Op } = require("sequelize");
 const getModels = Db.getModels;
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
-const Users = require('./models/user');
 const {token} = require("morgan");
 const Users = Db.models.Users;
 
@@ -55,7 +54,14 @@ const login = async(req, res) => {
                     "username": user.USERNAME,
                     "is_operator": user.IS_OPERATOR
                 },`${process.env.JWT_SECRET_KEY}`, {expiresIn: '1h'});
-                return res.status(200).json({token: new_token}); // TODO: change to login token
+                return res.status(200).json(
+                    {
+                        token: new_token,
+                        first_name: user.FIRST_NAME,
+                        last_name: user.LAST_NAME,
+                        username: user.USERNAME,
+                        is_operator: user.IS_OPERATOR}
+            ); // TODO: change to login token
             } else {
                 return res.status(400).json({error: 'Password Incorrect'});
             }
