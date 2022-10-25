@@ -6,7 +6,12 @@ const sequelize = connectDB();
 const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
   sequelize.models;
 
-// Get the timezone for the search position
+/**  Get the timezone for the search position
+ *
+ * @param {Number} lat - The latitude of the search location
+ * @param {Number} lon - The longitude of the search location
+ * @returns {String} - A timezone string, ex: "America/New_York"
+ */
 const timezone = async (lat, lon) => {
   try {
     const res = await fetch(
@@ -20,7 +25,12 @@ const timezone = async (lat, lon) => {
   }
 };
 
-// Sets the time in the given timezone
+/** Sets the time in the given timezone
+ *
+ * @param {Object} timeObj - An object with year, month, day, hour, and minute numeric fields representing a time
+ * @param {String} tz - A timezone string, ex: "America/New_York"
+ * @returns {Date} - A JS Date object representing the specified time set in the specified timezone
+ */
 const timeFromLocal = (timeObj, tz) => {
   try {
     const localTime = luxon.DateTime.fromObject(timeObj, { zone: tz });
@@ -31,10 +41,8 @@ const timeFromLocal = (timeObj, tz) => {
   }
 };
 
-// SINGLE RESERVATIONS
-
 /**
- * Search for available spaces - single reservation
+ * Search for available spaces - single or monthly
  * POST request
  *
  * @async
@@ -49,7 +57,9 @@ const timeFromLocal = (timeObj, tz) => {
  *
  * Preconditions:
  *  - Set of valid garages known to the system is not empty
- *  - startDateTime < endDateTime
+ *  - lat, lon, radius, reservationTypeId, and startDateTime are not null
+ *  - Either isMonthly is true, or endDateTime is not null
+ *  - If isMonthly is true, startDateTime < endDateTime
  *  - startDateTime >= current datetime
  * Postconditions:
  *  - None
@@ -65,6 +75,7 @@ const searchSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments are missing
+  console.log(req.body);
   if (
     !req?.body ||
     !(
@@ -96,7 +107,7 @@ const searchSpace = async (req, res) => {
   // TODO pass distance to each
   const fakeGarages = [
     {
-      garageId: 101,
+      garageId: 1,
       description: 'ParkingSpaceX',
       lat: 0,
       lon: 0,
@@ -106,7 +117,7 @@ const searchSpace = async (req, res) => {
       distance: 500,
     },
     {
-      garageId: 102,
+      garageId: 2,
       description: 'GarageBrand',
       lat: 1,
       lon: 1,
@@ -122,7 +133,7 @@ const searchSpace = async (req, res) => {
 };
 
 /**
- * Reserve a single space
+ * Reserve a single or monthly space
  * POST request
  *
  * @async
@@ -130,16 +141,20 @@ const searchSpace = async (req, res) => {
  * @param {Number} reservationTypeId - The type of reservation
  * @param {Number} vehicleId - The vehicle the reservation is for
  * @param {Number} garageId - The garage the reservation is for
- * @param {Date} startDateTime - When the reservation starts
- * @param {Date} endDateTime - When the reservation ends
- * @param {Number} reservationStatusId - The status of the reservation
+ * @param {Number} lat - The latitude of the search location, NOT the garage
+ * @param {Number} lon - The longitude of the search location, NOT the garage
+ * @param {Object} startDateTime - When the reservation starts
+ * @param {Object} endDateTime - When the reservation ends
+ * @param {Number} reservationStatusId - The status of the reservation, optional
+ * @param {Boolean} isMonthly - Whether the reservation is for a monthly/guaranteed space
  * @returns {Object} - reservation details
  *
  * Preconditions:
- *  - garageId is not null
+ *  - memberId, reservationTypeId, vehicleId, garageId, and reservationStatusId are valid keys in the DB
+ *  - lat, lon, and startDateTime are not null
+ *  - Either isMonthly is true or endDateTime is not null
  *  - startDateTime < endDateTime
  *  - startDateTime >= current datetime
- *  - memberId is not null
  * Postconditions:
  *  - A reservation is created in the system matching the given characteristics
  */
@@ -149,53 +164,52 @@ const reserveSpace = async (req, res) => {
   const reservationTypeId = req?.body?.reservationTypeId;
   const vehicleId = req?.body?.vehicleId;
   const garageId = req?.body?.garageId;
-  const startDateTime = req?.body?.startDateTime;
-  const endDateTime = req?.body?.endDateTime;
-  const reservationStatusId = req?.body?.reservationStatusId;
+  const lat = req?.body?.lat;
+  const lon = req?.body?.lon;
+  let startDateTime = req?.body?.startDateTime;
+  let endDateTime = req?.body?.endDateTime;
+  let reservationStatusId = req?.body?.reservationStatusId;
+  const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments missing (vehicles optional)
+  console.log(req.body);
   if (
-    !(memberId && reservationTypeId && garageId && startDateTime && endDateTime)
+    !req?.body ||
+    !(
+      memberId &&
+      reservationTypeId &&
+      garageId &&
+      startDateTime &&
+      (endDateTime || isMonthly)
+    )
   ) {
     return res.status(400).json({ message: 'Incomplete request.' });
   }
 
+  // Convert times to search position local time
+  const tz = await timezone(lat, lon);
+  startDateTime = timeFromLocal(startDateTime, tz);
+  endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
+
   // Check preconditions
-  if (startDateTime >= endDateTime || startDateTime < Date.now()) {
+  if (
+    startDateTime < Date.now() ||
+    (!isMonthly && startDateTime >= endDateTime)
+  ) {
+    console.log(startDateTime, endDateTime);
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
   // Create the reservation in the DB
   try {
-    // Check that all FK values are valid in the database
-    let user, resType, vehicle, status;
-    user = await Users.findByPk(memberId, { attributes: ['USERNAME'] });
-    resType = await ReservationType.findByPk(reservationTypeId, {
-      attributes: ['RESERVATION_TYPE_ID'],
-    });
+    // Reservation model will throw an error if any FK is invalid, no need to check first
 
-    if (vehicleId)
-      vehicle = await Vehicle.findByPk(vehicleId, {
-        attributes: ['VEHICLE_ID'],
-      });
-    else vehicle = 'none';
-
-    if (reservationStatusId)
-      status = await ReservationStatus.findByPk(reservationStatusId, {
-        attributes: ['STATUS_ID'],
-      });
-    else status = 'none';
-
-    // TODO add garage controller and check validity
-
-    if (!(user && resType && vehicle && status)) {
-      return res.status(400).json({ message: 'Invalid ID(s) provided.' });
-    }
-
-    // Create the reservation
     // TODO make sure reservations are in the time zone of the garage
     // TODO set default status
+    if (!reservationStatusId) reservationStatusId = 1;
     // TODO should availability be confirmed before reservation? If so, add here.
+
+    // Create the reservation
     const reservation = await Reservation.create({
       START_TIME: startDateTime,
       END_TIME: endDateTime,
@@ -205,111 +219,24 @@ const reserveSpace = async (req, res) => {
       STATUS_ID: reservationStatusId,
     });
 
+    // TODO add the reservation to the timetables
+
     // Return the reservation details after successful creation
     return res.status(200).json(reservation);
   } catch (error) {
     // Some request failed
-    console.error('Reservation Controller: reserveSpace failed');
-    console.log(error);
-    return res.status(500);
+    console.error(
+      'Error: Reservation Controller - reserveSpace() - ' + error.name
+    );
+    console.error(error);
+    return res.status(500).json({ message: 'Reservation failed.' });
   }
 };
 
 // PERMANENT/GUARANTEED RESERVATIONS
 
-/**
- * Reserve a permanent space
- * POST request
- * 
- @async
- * @param {Number} memberId - ID number of the member the reservation is for
- * @param {Number} reservationTypeId - The type of reservation
- * @param {Number} vehicleId - The vehicle the reservation is for
- * @param {Number} garageId - The garage the reservation is for
- * @param {Date} startDateTime - When the reservation starts
- * @param {Number} reservationStatusId - The status of the reservation
- * @returns {Object} - reservation details
- *
- * Preconditions:
- *  - garageId is not null
- *  - startDate >= current date
- *  - memberId is not null
- *  - memberId, reservationTypeId, vehicleId, and reservationTypeId are all valid keys in their respective tables
- * Postconditions:
- *  - A reservation is created in the system matching the given characteristics
- */
-
-const reserveGuaranteedSpace = async (req, res) => {
-  // Get arguments from POST request body
-  const memberId = req?.body?.memberId;
-  const reservationTypeId = req?.body?.reservationTypeId;
-  const vehicleId = req?.body?.vehicleId;
-  const garageId = req?.body?.garageId;
-  const startDateTime = req?.body?.startDateTime;
-  const reservationStatusId = req?.body?.reservationStatusId;
-
-  // Return early if any arguments missing (vehicles optional)
-  if (!(memberId && reservationTypeId && garageId && startDateTime)) {
-    return res.status(400).json({ message: 'Incomplete request.' });
-  }
-
-  // Check preconditions
-  if (startDateTime < Date.now()) {
-    return res.status(400).json({ message: 'Invalid date or time.' });
-  }
-
-  // Create the reservation in the DB
-  try {
-    // Check that all FK values are valid in the database
-    // Check that all FK values are valid in the database
-    let user, resType, vehicle, status;
-    user = await Users.findByPk(memberId, { attributes: ['USERNAME'] });
-    resType = await ReservationType.findByPk(reservationTypeId, {
-      attributes: ['RESERVATION_TYPE_ID'],
-    });
-
-    if (vehicleId)
-      vehicle = await Vehicle.findByPk(vehicleId, {
-        attributes: ['VEHICLE_ID'],
-      });
-    else vehicle = 'none';
-
-    if (reservationStatusId)
-      status = await ReservationStatus.findByPk(reservationStatusId, {
-        attributes: ['STATUS_ID'],
-      });
-    else status = 'none';
-
-    // TODO add garage controller and check validity
-
-    if (!(user && resType && vehicle && status)) {
-      return res.status(400).json({ message: 'Invalid ID(s) provided.' });
-    }
-
-    // Create the reservation
-    // TODO make sure reservations are in the time zone of the garage
-    // TODO set default status
-    // TODO should availability be confirmed before reservation? If so, add here.
-    const reservation = await Reservation.create({
-      START_TIME: startDateTime,
-      MEMBER_ID: memberId,
-      RESERVATION_TYPE_ID: reservationTypeId,
-      VEHICLE_ID: vehicleId,
-      STATUS_ID: reservationStatusId,
-    });
-
-    // Return the reservation details after successful creation
-    return res.status(200).json(reservation);
-  } catch (error) {
-    // Some request failed
-    console.error('Reservation Controller: reserveGuaranteedSpace failed');
-    return res.status(500);
-  }
-};
-
 // Export functions
 module.exports = {
   searchSpace,
   reserveSpace,
-  reserveGuaranteedSpace,
 };

@@ -19,15 +19,12 @@
     // Form fields
     const searchForm = {
       location: '',
-      lat: 39.5,
-      lon: -98.35,
       zoom: 4,
-      description: null,
+
       radius: 2,
-      radiusMeters: null,
       radiusUnit: 'miles',
       useGeo: false,
-      type: 'single',
+      type: '1',
       isMonthly: false,
       from: {
         date: null,
@@ -43,8 +40,13 @@
 
     // Reservation parameters
     const reserveOptions = {
+      lat: 39.5, // The search location. Defaults to center of the US.
+      lon: -98.35,
+      description: null, // The description of the search location
+      radiusMeters: null,
+      radiusUnit: null,
       user: {
-        memberId: null,
+        memberId: 1, // TODO add users
         vehicle: null,
       },
       garage: {
@@ -53,13 +55,9 @@
         lat: null,
         lon: null,
       },
-      from: {
-        specifiedDatetime: null,
-        garageLocalDatetime: null,
-      },
-      to: {
-        specifiedDatetime: null,
-        garageLocalDatetime: null,
+      time: {
+        from: null,
+        to: null,
       },
       type: null,
       totalPrice: null,
@@ -69,6 +67,7 @@
     // EVENT HANDLERS
 
     // Handles search form submission
+    // TODO debounce!
     const handleSearch = async (e) => {
       //e.preventDefault();
       // TODO validate data
@@ -77,10 +76,11 @@
       await setLocation();
 
       // Convert radius from user-specified units to meters
-      searchForm.radiusMeters = convert(
+      reserveOptions.radiusMeters = convert(
         parseFloat(searchForm.radius),
         searchForm.radiusUnit
       ).to('meters');
+      reserveOptions.type = searchForm.type;
 
       // Get matching garages with availability
       await getResults();
@@ -97,63 +97,26 @@
       reserveOptions.garage.lat = chosenGarage.lat;
       reserveOptions.garage.lon = chosenGarage.lon;
       reserveOptions.directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${chosenGarage.lat},${chosenGarage.lon}`;
-      reserveOptions.type = searchForm.type;
+
       reserveOptions.isMonthly = searchForm.isMonthly;
       reserveOptions.totalPrice = chosenGarage.totalPrice || '$1,000';
-
-      // The rest are only needed if reservation is not monthly/guaranteed
-      if (reserveOptions.isMonthly) {
-        // Build 'from' date only
-        reserveOptions.from.specifiedDatetime = searchForm.from.date;
-        reserveOptions.from.specifiedDatetime.setHours(0);
-
-        // Build garage local to and from times
-        reserveOptions.from.garageLocalDatetime = toGarageTZ(
-          reserveOptions.from.specifiedDatetime,
-          chosenGarage.timezone
-        );
-      } else {
-        // Build 'from' date only
-        reserveOptions.from.specifiedDatetime = searchForm.from.date;
-        reserveOptions.from.specifiedDatetime.setHours(
-          parseInt(searchForm.from.hour)
-        );
-        reserveOptions.from.specifiedDatetime.setMinutes(
-          parseInt(searchForm.from.minute)
-        );
-        // Build 'to' time
-        reserveOptions.to.specifiedDatetime = searchForm.to.date;
-        reserveOptions.to.specifiedDatetime.setHours(
-          parseInt(searchForm.to.hour)
-        );
-        reserveOptions.to.specifiedDatetime.setMinutes(
-          parseInt(searchForm.to.minute)
-        );
-
-        // Build garage local to and from times
-        reserveOptions.from.garageLocalDatetime = toGarageTZ(
-          reserveOptions.from.specifiedDatetime,
-          chosenGarage.timezone
-        );
-        reserveOptions.to.garageLocalDatetime = toGarageTZ(
-          reserveOptions.to.specifiedDatetime,
-          chosenGarage.timezone
-        );
-      }
     };
 
     // Submits the reservation to the backend
     const handleSubmitReservation = async () => {
       $http({
         method: 'POST',
-        url: `/reserve/${reserveOptions.isMonthly ? 'guaranteed' : 'single'}`,
+        url: '/reserve',
         data: {
           memberId: reserveOptions.user.memberId,
           vehicleId: reserveOptions.user.vehicleId,
           garageId: reserveOptions.garage.id,
+          lat: reserveOptions.lat, // Search area timezone. NOT garage timezone
+          lon: reserveOptions.lon,
           reservationTypeId: reserveOptions.type,
-          startDateTime: reserveOptions.from.garageLocalDatetime,
-          endDateTime: reserveOptions.to.garageLocalDatetime,
+          startDateTime: reserveOptions.time.from,
+          endDateTime: reserveOptions.time.to,
+          isMonthly: reserveOptions.isMonthly,
         },
       })
         .then(() => {
@@ -188,7 +151,7 @@
     const setInitialMap = () => {
       // Create map, user marker, and array of garage markers
       map = L.map('map').setView(
-        [searchForm.lat, searchForm.lon],
+        [reserveOptions.lat, reserveOptions.lon],
         searchForm.zoom
       );
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -196,27 +159,6 @@
         attribution:
           '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
-    };
-
-    // TODO move to backend - Converts the time specified by the user to the garage's local timezone
-    // Necessary because user local timezone may be different, and reservations should be set in the garage's zone
-    const toGarageTZ = (userDatetime, garageTimezone) => {
-      // Break up the user-specified local time
-      const datetime = {
-        year: userDatetime.getFullYear(),
-        month: 1 + userDatetime.getMonth(),
-        day: userDatetime.getDate(),
-        hour: userDatetime.getHours(),
-        minute: userDatetime.getMinutes(),
-      };
-      // Turn that into the same time, but in the timezone of the garage
-      // So that if I reserve a garage at 10pm, that means 10pm at the garage, not 10pm wherever I am
-      const garageDatetime = DateTime.fromObject(datetime, {
-        zone: garageTimezone,
-      });
-      // Return as a JS Date object
-      console.log(garageDatetime.toJSDate());
-      return garageDatetime.toJSDate();
     };
 
     // Wraps geolocation in a promise
@@ -233,9 +175,9 @@
           // Geolocate
           const location = await getPosition();
           console.log(location);
-          searchForm.lat = location.coords.latitude;
-          searchForm.lon = location.coords.longitude;
-          searchForm.description = 'Your location';
+          reserveOptions.lat = location.coords.latitude;
+          reserveOptions.lon = location.coords.longitude;
+          reserveOptions.description = 'Your location';
           searchForm.zoom = 12;
 
           return true;
@@ -248,9 +190,9 @@
           );
           const json = await res.json();
 
-          searchForm.lat = json[0].lat;
-          searchForm.lon = json[0].lon;
-          searchForm.description = json[0].display_name;
+          reserveOptions.lat = json[0].lat;
+          reserveOptions.lon = json[0].lon;
+          reserveOptions.description = json[0].display_name;
           searchForm.zoom = 12;
 
           return true;
@@ -261,9 +203,9 @@
       }
     };
 
-    // Sets isMonthly flag on search to hide certain fields
+    // TODO Change - Sets isMonthly flag on search to hide certain fields
     const checkType = () => {
-      searchForm.isMonthly = searchForm.type == 'monthly';
+      searchForm.isMonthly = searchForm.type == '2';
     };
 
     // Builds a an object with components of a Luxon datetime for use in backend
@@ -287,22 +229,22 @@
       }
 
       // Build datetimes
-      const startDateTime = buildTime(searchForm.from);
-      const endDateTime = searchForm.isMonthly
+      reserveOptions.time.from = buildTime(searchForm.from);
+      reserveOptions.time.to = searchForm.isMonthly
         ? null
         : buildTime(searchForm.to);
 
       // Get garage results from backend
       $http({
         method: 'POST',
-        url: `/reserve/search/single`,
+        url: `/reserve/search`,
         data: {
-          lat: searchForm.lat,
-          lon: searchForm.lon,
-          radius: searchForm.radiusMeters,
-          reservationTypeId: searchForm.type,
-          startDateTime: startDateTime,
-          endDateTime: searchForm.isMonthly ? null : endDateTime,
+          lat: reserveOptions.lat,
+          lon: reserveOptions.lon,
+          radius: reserveOptions.radiusMeters,
+          reservationTypeId: reserveOptions.type,
+          startDateTime: reserveOptions.time.from,
+          endDateTime: reserveOptions.time.to,
           isMonthly: searchForm.isMonthly,
         },
       })
@@ -314,9 +256,9 @@
           results.data?.forEach((garage) => {
             // TODO Remove - Generates a random position near the user location. Let's us test geolocate anywhere and get results
             garage.lat =
-              parseFloat(searchForm.lat) + (0.5 - Math.random()) * 0.1;
+              parseFloat(reserveOptions.lat) + (0.5 - Math.random()) * 0.1;
             garage.lon =
-              parseFloat(searchForm.lon) + (0.5 - Math.random()) * 0.1;
+              parseFloat(reserveOptions.lon) + (0.5 - Math.random()) * 0.1;
 
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
@@ -344,25 +286,24 @@
     // Sets map from user object
     const setMap = () => {
       // Recenter map
-      console.log(searchForm.lat, searchForm.lon);
-      map.setView([searchForm.lat, searchForm.lon], searchForm.zoom);
+      map.setView([reserveOptions.lat, reserveOptions.lon], searchForm.zoom);
 
       // Clear previous marker and circle
       if (userMarker) userMarker.removeFrom(map);
       if (radiusCircle) radiusCircle.removeFrom(map);
 
       // Set a marker for the search location
-      userMarker = L.marker([searchForm.lat, searchForm.lon]);
+      userMarker = L.marker([reserveOptions.lat, reserveOptions.lon]);
       userMarker.addTo(map);
       // Label the marker
-      userMarker.bindPopup(searchForm.description).openPopup();
+      userMarker.bindPopup(reserveOptions.description).openPopup();
 
       // Set the search radius circle
-      radiusCircle = L.circle([searchForm.lat, searchForm.lon], {
+      radiusCircle = L.circle([reserveOptions.lat, reserveOptions.lon], {
         color: 'black',
         fillColor: '#000',
         fillOpacity: 0.2,
-        radius: searchForm.radius,
+        radius: reserveOptions.radiusMeters,
       });
       radiusCircle.addTo(map);
     };
