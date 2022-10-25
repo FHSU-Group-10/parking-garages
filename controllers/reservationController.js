@@ -6,7 +6,14 @@ const sequelize = connectDB();
 const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
   sequelize.models;
 
+// Timezone API is rate-limited to 1 request per second.
+// Each Timezone API request must happen with a 1-second delay to avoid rate-limiting
+function timeout() {
+  return new Promise((resolve) => setTimeout(resolve, 1000));
+}
+// TODO Debounce search and reserve
 /**  Get the timezone for the search position
+ * NOTE - Timezone API is rate-limited to 1 request/second
  *
  * @param {Number} lat - The latitude of the search location
  * @param {Number} lon - The longitude of the search location
@@ -14,13 +21,14 @@ const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
  */
 const timezone = async (lat, lon) => {
   try {
+    await timeout();
     const res = await fetch(
       `http://api.timezonedb.com/v2.1/get-time-zone?key=${process.env.TIMEZONE_API}&format=json&by=position&lat=${lat}&lng=${lon}`
     );
     const json = await res.json();
     return json.zoneName;
   } catch (error) {
-    console.error(error);
+    console.error('Reservation Controller - Too many requests for timezone');
     return;
   }
 };
@@ -75,7 +83,6 @@ const searchSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments are missing
-  console.log(req.body);
   if (
     !req?.body ||
     !(
@@ -172,7 +179,6 @@ const reserveSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments missing (vehicles optional)
-  console.log(req.body);
   if (
     !req?.body ||
     !(
@@ -196,7 +202,6 @@ const reserveSpace = async (req, res) => {
     startDateTime < Date.now() ||
     (!isMonthly && startDateTime >= endDateTime)
   ) {
-    console.log(startDateTime, endDateTime);
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
@@ -224,12 +229,17 @@ const reserveSpace = async (req, res) => {
     // Return the reservation details after successful creation
     return res.status(200).json(reservation);
   } catch (error) {
-    // Some request failed
-    console.error(
-      'Error: Reservation Controller - reserveSpace() - ' + error.name
-    );
-    console.error(error);
-    return res.status(500).json({ message: 'Reservation failed.' });
+    if (error.name == 'SequelizeForeignKeyConstraintError') {
+      // Foreign keys invalid
+      return res.status(400).json({ message: 'Invalid ID(s) provided.' });
+    } else {
+      // Some request failed
+      console.error(
+        'Error: Reservation Controller - reserveSpace() - ' + error.name
+      );
+      console.error(error);
+      return res.status(500).json({ message: 'Reservation failed.' });
+    }
   }
 };
 
