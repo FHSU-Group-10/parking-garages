@@ -288,14 +288,14 @@
 
       // Build datetimes
       const startDateTime = buildTime(searchForm.from);
-      const endDateTime = buildTime(searchForm.to);
+      const endDateTime = searchForm.isMonthly
+        ? null
+        : buildTime(searchForm.to);
 
       // Get garage results from backend
       $http({
         method: 'POST',
-        url: `/reserve/search/${
-          searchForm.isMonthly ? 'guaranteed' : 'single'
-        }`,
+        url: `/reserve/search/single`,
         data: {
           lat: searchForm.lat,
           lon: searchForm.lon,
@@ -303,6 +303,7 @@
           reservationTypeId: searchForm.type,
           startDateTime: startDateTime,
           endDateTime: searchForm.isMonthly ? null : endDateTime,
+          isMonthly: searchForm.isMonthly,
         },
       })
         .then((results) => {

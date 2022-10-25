@@ -20,6 +20,7 @@ const timezone = async (lat, lon) => {
   }
 };
 
+// Sets the time in the given timezone
 const timeFromLocal = (timeObj, tz) => {
   try {
     const localTime = luxon.DateTime.fromObject(timeObj, { zone: tz });
@@ -41,8 +42,9 @@ const timeFromLocal = (timeObj, tz) => {
  * @param {Number} lon - Longitude of center of search area
  * @param {Number} radius - Search radius in meters
  * @param {Number} reservationTypeId - PK of Reservation Type
- * @param {Date} startDateTime - The desired start time of the reservation
- * @param {Date} endDateTime - The desired end time of the reservation
+ * @param {Object} startDateTime - The desired start time of the reservation
+ * @param {Object} endDateTime - The desired end time of the reservation
+ * @param {Boolean} isMonthly - Signals if the reservation is guaranteed/monthly
  * @returns {[Object]}  an array of reservation options
  *
  * Preconditions:
@@ -53,7 +55,6 @@ const timeFromLocal = (timeObj, tz) => {
  *  - None
  */
 const searchSpace = async (req, res) => {
-  // TODO
   // Get arguments from url query
   const lat = req?.body?.lat;
   const lon = req?.body?.lon;
@@ -61,11 +62,19 @@ const searchSpace = async (req, res) => {
   const reservationTypeId = req?.body?.reservationTypeId;
   let startDateTime = req?.body?.startDateTime;
   let endDateTime = req?.body?.endDateTime;
+  const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments are missing
   if (
     !req?.body ||
-    !(lat && lon && radius && reservationTypeId && startDateTime && endDateTime)
+    !(
+      lat &&
+      lon &&
+      radius &&
+      reservationTypeId &&
+      startDateTime &&
+      (endDateTime || isMonthly)
+    )
   ) {
     return res.status(400).json({ message: 'Incomplete query.' });
   }
@@ -73,10 +82,13 @@ const searchSpace = async (req, res) => {
   // Convert times to search position local time
   const tz = await timezone(lat, lon);
   startDateTime = timeFromLocal(startDateTime, tz);
-  endDateTime = timeFromLocal(endDateTime, tz);
+  endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
 
   // Check preconditions
-  if (startDateTime < Date.now() || startDateTime >= endDateTime) {
+  if (
+    startDateTime < Date.now() ||
+    (!isMonthly && startDateTime >= endDateTime)
+  ) {
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
@@ -206,72 +218,6 @@ const reserveSpace = async (req, res) => {
 // PERMANENT/GUARANTEED RESERVATIONS
 
 /**
- * Search for available spaces - Permanent Spot
- * POST request
- *
- * @async
- * @param {Number} lat - Latitude of center of search area
- * @param {Number} lon - Longitude of center of search area
- * @param {Number} radius - Search radius in meters
- * @param {Number} reservationTypeId - PK of Reservation Type
- * @param {Date} startDateTime - The desired start time of the reservation
- * @returns {[Object]}  an array of reservation options
- *
- * Preconditions:
- *  - set of valid garages known to the system is not empty
- *  - startDate >= current date
- * Postconditions:
- *  - None
- */
-const searchGuaranteedSpace = async (req, res) => {
-  // TODO
-  // Get arguments from url query
-  const lat = req?.body?.lat;
-  const lon = req?.body?.lon;
-  const radius = req?.body?.radius;
-  const reservationTypeId = req?.body?.reservationTypeId;
-  const startDateTime = req?.body?.startDateTime;
-
-  // Return early if any arguments are missing
-  if (
-    !req?.body ||
-    !(lat && lon && radius && reservationTypeId && startDateTime)
-  ) {
-    return res.status(400).json({ message: 'Incomplete query.' });
-  }
-
-  // Check preconditions
-  if (startDateTime < Date.now()) {
-    return res.status(200).json({ message: 'Invalid date or time.' });
-  }
-
-  // TODO Find matching available garages
-  const fakeGarages = [
-    {
-      garageId: 101,
-      description: 'ParkingSpaceX',
-      lat: 0,
-      lon: 0,
-      timezone: 'America/New_York',
-      price: 16.75,
-      rate: 'hour',
-    },
-    {
-      garageId: 102,
-      description: 'GarageBrand',
-      lat: 1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 12.5,
-      rate: '30 min',
-    },
-  ];
-
-  // TODO Return results
-  return res.status(200).json(fakeGarages);
-};
-
-/**
  * Reserve a permanent space
  * POST request
  * 
@@ -365,6 +311,5 @@ const reserveGuaranteedSpace = async (req, res) => {
 module.exports = {
   searchSpace,
   reserveSpace,
-  searchGuaranteedSpace,
   reserveGuaranteedSpace,
 };

@@ -11,14 +11,26 @@ describe('Reservation Controller', () => {
     // Set mock request and response items before each test
     beforeEach(() => {
       req = {
-        query: {
-          street: null,
-          city: null,
-          state: null,
-          zip: null,
-          startDateTime: null,
-          endDateTime: null,
+        body: {
+          lat: null,
+          lon: null,
+          radius: null,
           reservationTypeId: null,
+          startDateTime: {
+            year: null,
+            month: null,
+            day: null,
+            hour: null,
+            minute: null,
+          },
+          endDateTime: {
+            year: null,
+            month: null,
+            day: null,
+            hour: null,
+            minute: null,
+          },
+          isMonthly: null,
         },
       };
 
@@ -47,12 +59,25 @@ describe('Reservation Controller', () => {
         lon: 1,
         radius: 1000,
         reservationTypeId: 1,
-        startDateTime: new Date(2025, 0, 1, 12, 0),
-        endDateTime: new Date(2025, 0, 1, 15, 30),
+        startDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 12,
+          minute: 0,
+        },
+        endDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 15,
+          minute: 30,
+        },
+        isMonthly: false,
       };
 
       const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(200);
+
       expect(results.body).toEqual([
         {
           garageId: 101,
@@ -62,6 +87,7 @@ describe('Reservation Controller', () => {
           timezone: 'America/New_York',
           price: 16.75,
           rate: 'hour',
+          distance: 500,
         },
         {
           garageId: 102,
@@ -71,8 +97,10 @@ describe('Reservation Controller', () => {
           timezone: 'America/New_York',
           price: 12.5,
           rate: '30 min',
+          distance: 3000,
         },
       ]);
+      expect(results.status).toBe(200);
     });
 
     test('Starting datetime must be before ending datetime', async () => {
@@ -81,8 +109,21 @@ describe('Reservation Controller', () => {
         lon: 1,
         radius: 1000,
         reservationTypeId: 1,
-        startDateTime: new Date(2025, 0, 1, 15, 30),
-        endDateTime: new Date(2025, 0, 1, 12, 0),
+        startDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 15,
+          minute: 30,
+        },
+        endDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 12,
+          minute: 0,
+        },
+        isMonthly: false,
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
@@ -97,9 +138,21 @@ describe('Reservation Controller', () => {
         lon: 1,
         radius: 1000,
         reservationTypeId: 1,
-
-        startDateTime: new Date(2020, 0, 1, 12, 0),
-        endDateTime: new Date(2025, 0, 1, 15, 30),
+        startDateTime: {
+          year: 2021,
+          month: 1,
+          day: 1,
+          hour: 12,
+          minute: 0,
+        },
+        endDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 15,
+          minute: 30,
+        },
+        isMonthly: false,
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(400);
@@ -151,8 +204,15 @@ describe('Reservation Controller', () => {
         lon: 1,
         radius: 1000,
         reservationTypeId: 1,
-        startDateTime: new Date(2025, 0, 1, 12, 30),
-        endDateTime: new Date(2025, 0, 1, 15, 0),
+        startDateTime: {
+          year: 2023,
+          month: 1,
+          day: 1,
+          hour: 12,
+          minute: 0,
+        },
+        endDateTime: null,
+        isMonthly: true,
       };
       const results = await reservationController.searchSpace(req, res);
       expect(results.status).toBe(200);
@@ -165,6 +225,7 @@ describe('Reservation Controller', () => {
           timezone: 'America/New_York',
           price: 16.75,
           rate: 'hour',
+          distance: 500,
         },
         {
           garageId: 102,
@@ -174,8 +235,32 @@ describe('Reservation Controller', () => {
           timezone: 'America/New_York',
           price: 12.5,
           rate: '30 min',
+          distance: 3000,
         },
       ]);
+    });
+
+    test('Starting datetime must be >= current datetime', async () => {
+      req.body = {
+        lat: 1,
+        lon: 1,
+        radius: 1000,
+        reservationTypeId: 1,
+        startDateTime: {
+          year: 2021,
+          month: 1,
+          day: 1,
+          hour: 12,
+          minute: 0,
+        },
+        endDateTime: null,
+        isMonthly: true,
+      };
+      const results = await reservationController.searchSpace(req, res);
+      expect(results.status).toBe(400);
+      expect(results.body).toEqual({
+        message: 'Invalid date or time.',
+      });
     });
   });
 
