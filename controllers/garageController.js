@@ -199,7 +199,7 @@ const addGarage = async (req, res) => {
   const isActive=req?.body?.isActive
 
   // Return early if any arguments are missing
-  if (!(garageName && floors && spotsPerFloor && location && isActive)) {
+  if (!(garageName && floors && spotsPerFloor && location)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
 

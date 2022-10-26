@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
         'Garage',
         {
             GARAGE_ID: {
-                type: DataTypes.NUMERIC,
+                type: DataTypes.INTEGER,
                 autoIncrement: true,
                 primaryKey: true
             },
@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
                 unique: true
             },
             FLOOR_COUNT: {
-                type: DataTypes.NUMERIC,
+                type: DataTypes.INTEGER,
                 allowNull: false,
                 field: "FLOOR_COUNT"
             },
@@ -35,13 +35,13 @@ module.exports = (sequelize, DataTypes) => {
                 field: "OVERBOOK_RATE"
             },
             IS_ACTIVE: {
-                type: DataTypes.BOOL,
+                type: DataTypes.BOOLEAN,
                 allowNull: false,
                 field: "IS_ACTIVE"
             }
         },
         {
-            tableName: 'GARAGE',
+            tableName: 'GARAGES',
             timestamps: false,
             schema: 'YHL46872',
             initialized: true,
