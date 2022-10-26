@@ -1,8 +1,14 @@
 const addRelations = (sequelize) => {
   // Get needed models
   // Any added models should be named here before establishing relations
-  const { Users, Reservation, ReservationStatus, ReservationType, Vehicle, Pricing } =
-    sequelize.models;
+  const {
+    Users,
+    Reservation,
+    ReservationStatus,
+    ReservationType,
+    Vehicle,
+    Pricing,
+  } = sequelize.models;
 
   try {
     // Relationships
@@ -60,11 +66,11 @@ const addRelations = (sequelize) => {
           name: 'RESERVATION_TYPE_ID',
           allowNull: false,
         },
-      }
-    }
+      },
+    };
 
     Pricing.belongsTo(ReservationType, pricingFK.reservationTypeId);
-    ReservationType.hasMany(Pricing, pricingFK.reservationTypeId);
+    ReservationType.hasOne(Pricing, pricingFK.reservationTypeId);
 
     // Foreign keys on Vehicle
     const vehicleFK = {
@@ -77,6 +83,17 @@ const addRelations = (sequelize) => {
     };
     Users.hasMany(Vehicle, vehicleFK.memberId);
     Vehicle.belongsTo(Users, vehicleFK.memberId);
+
+    // TODO Foreign keys on Floor
+    const floorFK = {
+      garageId: {
+        foreignKey: {
+          name: 'GARAGE_ID',
+          allowNull: false,
+        },
+      },
+    };
+    // TODO Garage needed to create relation
 
     console.log('Relations added to models.');
   } catch (error) {
