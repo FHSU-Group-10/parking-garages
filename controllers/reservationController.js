@@ -106,7 +106,7 @@ const searchSpace = async (req, res) => {
   if (
     startDateTime < Date.now() ||
     (!isMonthly && startDateTime >= endDateTime)
-  ) {
+  ) {dev
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
@@ -244,7 +244,6 @@ const reserveSpace = async (req, res) => {
 };
 
 // PERMANENT/GUARANTEED RESERVATIONS
-
 // Export functions
 module.exports = {
   searchSpace,

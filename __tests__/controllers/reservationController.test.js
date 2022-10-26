@@ -491,6 +491,7 @@ describe('Reservation Controller', () => {
       expect(reservation.status).toBe(200);
       expect(reservation.body).not.toBe(null);
     });
+    
     test('Starting datetime must be >= current datetime', async () => {
       req.body = {
         memberId: 1,
@@ -516,7 +517,7 @@ describe('Reservation Controller', () => {
         message: 'Invalid date or time.',
       });
     });
-
+    
     test('FKs must be valid PKs in their respective tables', async () => {
       req.body = {
         memberId: 1000,
