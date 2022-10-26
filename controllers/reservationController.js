@@ -1,5 +1,7 @@
 // LIBRARIES
 const luxon = require('luxon');
+// Haversine distance formula
+const haversine = require('haversine-distance');
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
@@ -106,7 +108,8 @@ const searchSpace = async (req, res) => {
   if (
     startDateTime < Date.now() ||
     (!isMonthly && startDateTime >= endDateTime)
-  ) {dev
+  ) {
+    dev;
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
@@ -241,6 +244,30 @@ const reserveSpace = async (req, res) => {
       return res.status(500).json({ message: 'Reservation failed.' });
     }
   }
+};
+
+// Find garages with availability
+const getAvailability = (lat, lon, radiusMeters) => {
+  // All garages in the system which are active
+  const garages = Garages.findAll({ where: { isActive: true } });
+  // Garages found with availability
+  const results = [];
+
+  // Location of the search
+  const searchLoc = { lat, lon };
+  let garageLoc;
+
+  garages.forEach((garage) => {
+    // Check if garage is within range
+    // Could optimize with a sequelize query defining a bounding box, then check corners here. Unsure which is more optimal, the haversine or a bunch of boundary checks
+    garageLoc = { lat: garage.lat, lon: garage.lon };
+    const dist = distance(searchLoc, garageLoc);
+    if (dist > radiusMeters) return;
+
+    // Count total spaces for garage
+    let totalSpaces = 0;
+    const floors = Floor.findAll({ where: { garageId: garage } });
+  });
 };
 
 // PERMANENT/GUARANTEED RESERVATIONS
