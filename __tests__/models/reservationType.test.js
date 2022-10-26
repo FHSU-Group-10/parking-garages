@@ -3,6 +3,8 @@ const connectDB = require('../../config/dbConn');
 const sequelize = connectDB();
 const { ReservationType } = sequelize.models;
 
+jest.setTimeout(10000);
+
 describe('ReservationType Model', () => {
   test('DB contains a record', async () => {
     // Query for a single row
