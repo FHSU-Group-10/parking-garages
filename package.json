@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server",
     "dev": "nodemon server",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --coverage --detectOpenHandles"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --coverage --detectOpenHandles",
+    "test-silent": "node --experimental-vm-modules node_modules/.bin/jest --coverage --silent"
   },
   "repository": {
     "type": "git",
