@@ -30,7 +30,7 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly)
 };
 
 // Check the availability of a single garage given its ID, time, and reservation type
-const checkAvailability = async (garageId, start, end, isMonthly) => {
+const checkAvailability = async (garageId, resTypeId, start, end, isMonthly) => {
   // TODO
   return false;
 };
