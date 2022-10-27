@@ -3,8 +3,37 @@ const luxon = require('luxon');
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
-const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
-  sequelize.models;
+const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } = sequelize.models;
+
+// Find available parking garages for a given location, radius, time slot, and reservation type
+const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly) => {
+  // TODO
+
+  // TODO Use checkAvailability on each garage to find if it is available
+
+  return [
+    {
+      garageId: 1,
+      description: 'ParkingSpaceX',
+      lat: 0,
+      lon: 0,
+      distance: 500,
+    },
+    {
+      garageId: 2,
+      description: 'GarageBrand',
+      lat: 1,
+      lon: 1,
+      distance: 3000,
+    },
+  ];
+};
+
+// Check the availability of a single garage given its ID, time, and reservation type
+const checkAvailability = async (garageId, start, end, isMonthly) => {
+  // TODO
+  return false;
+};
 
 // Timezone API is rate-limited to 1 request per second.
 // Each Timezone API request must happen with a 1-second delay to avoid rate-limiting
@@ -83,17 +112,7 @@ const searchSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments are missing
-  if (
-    !req?.body ||
-    !(
-      lat &&
-      lon &&
-      radius &&
-      reservationTypeId &&
-      startDateTime &&
-      (endDateTime || isMonthly)
-    )
-  ) {
+  if (!req?.body || !(lat && lon && radius && reservationTypeId && startDateTime && (endDateTime || isMonthly))) {
     return res.status(400).json({ message: 'Incomplete query.' });
   }
 
@@ -103,40 +122,24 @@ const searchSpace = async (req, res) => {
   endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
 
   // Check preconditions
-  if (
-    startDateTime < Date.now() ||
-    (!isMonthly && startDateTime >= endDateTime)
-  ) {dev
+  if (startDateTime < Date.now() || (!isMonthly && startDateTime >= endDateTime)) {
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
   // TODO Find matching available garages
-  // TODO pass distance to each
-  const fakeGarages = [
-    {
-      garageId: 1,
-      description: 'ParkingSpaceX',
-      lat: 0,
-      lon: 0,
-      timezone: 'America/New_York',
-      price: 16.75,
-      rate: 'hour',
-      distance: 500,
-    },
-    {
-      garageId: 2,
-      description: 'GarageBrand',
-      lat: 1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 12.5,
-      rate: '30 min',
-      distance: 3000,
-    },
-  ];
-
-  // TODO Return results
-  return res.status(200).json(fakeGarages);
+  const availableGarages = await findAvailable(
+    lat,
+    lon,
+    radius,
+    reservationTypeId,
+    startDateTime,
+    endDateTime,
+    isMonthly
+  );
+  console.log(availableGarages);
+  // Return results
+  if (availableGarages == []) return res.status(204).send();
+  else return res.status(200).json(availableGarages);
 };
 
 /**
@@ -179,16 +182,7 @@ const reserveSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments missing (vehicles optional)
-  if (
-    !req?.body ||
-    !(
-      memberId &&
-      reservationTypeId &&
-      garageId &&
-      startDateTime &&
-      (endDateTime || isMonthly)
-    )
-  ) {
+  if (!req?.body || !(memberId && reservationTypeId && garageId && startDateTime && (endDateTime || isMonthly))) {
     return res.status(400).json({ message: 'Incomplete request.' });
   }
 
@@ -198,10 +192,7 @@ const reserveSpace = async (req, res) => {
   endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
 
   // Check preconditions
-  if (
-    startDateTime < Date.now() ||
-    (!isMonthly && startDateTime >= endDateTime)
-  ) {
+  if (startDateTime < Date.now() || (!isMonthly && startDateTime >= endDateTime)) {
     return res.status(400).json({ message: 'Invalid date or time.' });
   }
 
@@ -234,9 +225,7 @@ const reserveSpace = async (req, res) => {
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
     } else {
       // Some request failed
-      console.error(
-        'Error: Reservation Controller - reserveSpace() - ' + error.name
-      );
+      console.error('Error: Reservation Controller - reserveSpace() - ' + error.name);
       console.error(error);
       return res.status(500).json({ message: 'Reservation failed.' });
     }
@@ -248,4 +237,6 @@ const reserveSpace = async (req, res) => {
 module.exports = {
   searchSpace,
   reserveSpace,
+  findAvailable,
+  checkAvailability,
 };

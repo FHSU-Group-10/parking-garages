@@ -84,9 +84,6 @@ describe('Reservation Controller', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -94,9 +91,6 @@ describe('Reservation Controller', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
@@ -222,9 +216,6 @@ describe('Reservation Controller', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -232,9 +223,6 @@ describe('Reservation Controller', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
@@ -491,7 +479,7 @@ describe('Reservation Controller', () => {
       expect(reservation.status).toBe(200);
       expect(reservation.body).not.toBe(null);
     });
-    
+
     test('Starting datetime must be >= current datetime', async () => {
       req.body = {
         memberId: 1,
@@ -517,7 +505,7 @@ describe('Reservation Controller', () => {
         message: 'Invalid date or time.',
       });
     });
-    
+
     test('FKs must be valid PKs in their respective tables', async () => {
       req.body = {
         memberId: 1000,
@@ -542,4 +530,10 @@ describe('Reservation Controller', () => {
       expect(results.body).toEqual({ message: 'Invalid ID(s) provided.' });
     });
   });
+
+  // reservationController.findAvailable()
+  describe('Find available garages', () => {});
+
+  // reservationController.checkAvailability()
+  describe('Check if a garage is available', () => {});
 });
