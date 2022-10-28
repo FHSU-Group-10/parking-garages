@@ -1,0 +1,68 @@
+// return list prices
+###
+GET http://localhost:3500/pricing/getPricing
+Content-Type: application/json
+
+{
+    
+}
+
+// Add pricing row to table 
+###
+POST http://localhost:3500/pricing/createPricing
+Content-Type: application/json
+
+{
+    "description": "single",
+    "cost": "4.00",
+    "dailyMax": 15,
+    "reservationTypeId": 1
+}
+
+// Add pricing row to table 
+###
+POST http://localhost:3500/pricing/createPricing
+Content-Type: application/json
+
+{
+    "description": "guaranteed",
+    "cost": "3.00",
+    "dailyMax": 15,
+    "reservationTypeId": 1
+}
+
+// Add pricing row to table 
+###
+POST http://localhost:3500/pricing/createPricing
+Content-Type: application/json
+
+{
+    "description": "walkIn",
+    "cost": "8.00",
+    "dailyMax": 15,
+    "reservationTypeId": 1
+}
+// update pricing in table
+###
+POST http://localhost:3500/pricing/updatePricing
+Content-Type: application/json
+
+{
+    "singleRes": "single",
+    "singleCost": "4.00",
+    "guaranteedRes": "guaranteed",
+    "guaranteedCost": "5.00",
+    "walkInRes": "walkIn",
+    "walkInCost": "9.00",
+    "DailyMax": 20
+}
+
+
+// delete a row in the table
+###
+POST http://localhost:3500/pricing/destroyRow
+Content-Type: application/json
+
+{
+    "description": "single"
+}
