@@ -54,11 +54,9 @@ const updatePricing = async (req, res) => {
   const walkInRes = req?.body?.price.walkInRes;
   const walkInCost = req.body.price.walkInCost;
   const newDailyMax = req?.body?.price.dailyMax;
-  // Return early if any arguments are missing
-  // if (!(resType || newPrice || newDailyMax)) {
-  //     return res.status(400).json({ message: 'pricingController: Incomplete update pricing request' });
-  // }
+
   try {
+    // check each reservation/cost combo and update price
     if (singleRes && singleCost) {
       await setPricing(singleRes, singleCost, res);
       console.log({ message: 'Single reservation price updated.\n' });
@@ -71,6 +69,7 @@ const updatePricing = async (req, res) => {
       await setPricing(walkInRes, walkInCost, res);
       console.log({ message: 'Walk-in reservation price updated.\n' });
     }
+    // set new price for daily max on every row
     if (newDailyMax) {
       await Pricing.update(
         {
@@ -112,7 +111,6 @@ const updatePricing = async (req, res) => {
  *  - Updates the cost to the matching resType description  
  */
 async function setPricing(resType, newPrice, res) {
-  console.log('resType', resType);
   // Initialzie priceUpdat to equal the target reservation type to be updated
   let priceUpdate = await Pricing.findOne({
     where: {
