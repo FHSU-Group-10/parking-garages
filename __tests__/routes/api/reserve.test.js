@@ -37,9 +37,6 @@ describe('Reserve Route', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -47,9 +44,6 @@ describe('Reserve Route', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
@@ -88,9 +82,6 @@ describe('Reserve Route', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -98,9 +89,6 @@ describe('Reserve Route', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
