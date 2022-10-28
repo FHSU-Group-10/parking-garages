@@ -18,12 +18,12 @@ module.exports = (sequelize, DataTypes) => {
             },
             COST: {
                 type: DataTypes.STRING(24),
-                allowNull: true,
+                allowNull: false,
                 field: 'COST',
             },
             DAILY_MAX: {
                 type: DataTypes.INTEGER,
-                allowNull: true,
+                allowNull: false,
                 field: 'DAILY_MAX',
             },
         },
