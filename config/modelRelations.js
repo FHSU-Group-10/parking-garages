@@ -87,7 +87,7 @@ const addRelations = (sequelize) => {
         },
       },
     };
-    Garage.hasMany(Floor, Floor.garageId);
+    Garage.hasMany(Floor, floorFK.garageId);
     Floor.belongsTo(Garage, floorFK.garageId);
 
     console.log('Relations added to models.');

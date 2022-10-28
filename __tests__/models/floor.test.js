@@ -13,10 +13,17 @@ describe('Floor Model', () => {
     expect(resStatus).not.toBe(null);
   });
   test('Raw SQL query', async () => {
-    const [results, metadata] = await sequelize.query(
-      'SELECT * FROM FLOOR LIMIT 1'
-    );
+    const [results, metadata] = await sequelize.query('SELECT * FROM FLOORS LIMIT 1');
 
     expect(results).not.toBe(null);
   });
+  /* test('Create a floor', async () => {
+    let res = await Floor.create({
+      FLOOR_NUM: 1,
+      SPACE_COUNT: 10,
+      GARAGE_ID: 1,
+    });
+
+    expect(res).not.toBe(null);
+  }); */
 });
