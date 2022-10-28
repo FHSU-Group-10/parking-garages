@@ -45,7 +45,6 @@ const getPricing = async (req, res) => {
  * 
  */
 const updatePricing = async (req, res) => {
-  console.log('***', req.body);
   // TODO
   // Get arguments from request url query
   const singleRes = req?.body?.price.singleRes;
@@ -61,22 +60,18 @@ const updatePricing = async (req, res) => {
   // }
   try {
     if (singleRes && singleCost) {
-      console.log("inside single res condition");
       await setPricing(singleRes, singleCost, res);
       console.log({ message: 'Single reservation price updated.\n' });
     }
     if (guaranteedRes && guaranteedCost) {
-      console.log("inside guaranteed res condition");
       await setPricing(guaranteedRes, guaranteedCost, res);
       console.log({ message: 'Guaranteed reservation price updated.\n' });
     }
     if (walkInRes && walkInCost) {
-      console.log("inside walk-in res condition");
       await setPricing(walkInRes, walkInCost, res);
       console.log({ message: 'Walk-in reservation price updated.\n' });
     }
     if (newDailyMax) {
-      console.log("inside daily max res condition");
       await Pricing.update(
         {
           DAILY_MAX: newDailyMax, res
