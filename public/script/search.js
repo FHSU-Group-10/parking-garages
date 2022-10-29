@@ -245,6 +245,7 @@
 
           // Process results
           results.data?.forEach((garage) => {
+            console.log(garage);
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
               // Measurements in feet shouldn't be precise to the foot

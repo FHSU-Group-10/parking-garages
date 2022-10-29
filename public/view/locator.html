@@ -7,10 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- Bootstrap -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
       integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
@@ -62,18 +59,10 @@
         background: #6a11cb;
 
         /* Chrome 10-25, Safari 5.1-6 */
-        background: -webkit-linear-gradient(
-          to right,
-          rgba(106, 17, 203, 1),
-          rgba(37, 117, 252, 1)
-        );
+        background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
 
         /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-        background: linear-gradient(
-          to right,
-          rgba(106, 17, 203, 1),
-          rgba(37, 117, 252, 1)
-        );
+        background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
       }
       #app {
         width: 90vw;
@@ -156,11 +145,7 @@
     </style>
   </head>
 
-  <body
-    class="background gradient-custom"
-    ng-app="pageApp"
-    ng-controller="pageCtrl as vm"
-  >
+  <body class="background gradient-custom" ng-app="pageApp" ng-controller="pageCtrl as vm">
     <div id="app">
       <!-- Modal -->
       <div
@@ -174,15 +159,8 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">
-                Confirm Reservation
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+              <h5 class="modal-title" id="exampleModalLabel">Confirm Reservation</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <table class="table reservationDetails">
@@ -194,37 +172,24 @@
                   <tr>
                     <th>Location:</th>
                     <td>
-                      <a ng-href="{{vm.reserveOptions.directionsLink}}"
-                        >Directions</a
-                      >
+                      <a ng-href="{{vm.reserveOptions.directionsLink}}">Directions</a>
                     </td>
                   </tr>
                   <tr ng-if="vm.searchForm.isMonthly">
                     <th>From:</th>
-                    <td>
-                      {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
-                      15)}}
-                    </td>
+                    <td>{{vm.reserveOptions.from.specifiedDatetime.toString().slice(0, 15)}}</td>
                   </tr>
                   <tr ng-if="!vm.searchForm.isMonthly">
                     <th>From:</th>
-                    <td>
-                      {{vm.reserveOptions.from.specifiedDatetime.toString().slice(0,
-                      21)}}
-                    </td>
+                    <td>{{vm.reserveOptions.from.specifiedDatetime.toString().slice(0, 21)}}</td>
                   </tr>
                   <tr ng-if="!vm.searchForm.isMonthly">
                     <th>To:</th>
-                    <td>
-                      {{vm.reserveOptions.to.specifiedDatetime.toString().slice(0,
-                      21)}}
-                    </td>
+                    <td>{{vm.reserveOptions.to.specifiedDatetime.toString().slice(0, 21)}}</td>
                   </tr>
                   <tr>
                     <th>Type:</th>
-                    <td style="text-transform: capitalize">
-                      {{vm.searchForm.type}}
-                    </td>
+                    <td style="text-transform: capitalize">{{vm.searchForm.type}}</td>
                   </tr>
                   <!-- TODO Should show user vehicles and track selection in reserveOptions -->
                   <tr>
@@ -245,13 +210,7 @@
               </table>
             </div>
             <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <!-- Data fields help Bootstrap close modal -->
               <button
                 type="button"
@@ -295,22 +254,14 @@
                   type="checkbox"
                   ng-model="vm.searchForm.useGeo"
                   id="checkUseLocation"
-                /><label class="form-check-label" for="checkUseLocation"
-                  >My Location</label
-                ></span
+                /><label class="form-check-label" for="checkUseLocation">My Location</label></span
               >
             </div>
 
             <!-- Search radius -->
             <div class="input-group">
               <span class="input-group-text">Within:</span>
-              <input
-                type="text"
-                class="form-control"
-                placeholer="0"
-                ng-model="vm.searchForm.radius"
-                required
-              /><br />
+              <input type="text" class="form-control" placeholer="0" ng-model="vm.searchForm.radius" required /><br />
               <select class="form-select" ng-model="vm.searchForm.radiusUnit">
                 <option selected value="miles">Miles</option>
                 <option value="feet">Feet</option>
@@ -319,11 +270,7 @@
             <!-- Reservation Type -->
             <div class="input-group">
               <span class="input-group-text">Reservation Type</span>
-              <select
-                class="form-select"
-                ng-model="vm.searchForm.type"
-                ng-change="vm.checkType()"
-              >
+              <select class="form-select" ng-model="vm.searchForm.type" ng-change="vm.checkType()">
                 <option value="1">Single</option>
                 <option value="2">Monthly</option>
               </select>
@@ -335,23 +282,11 @@
             <legend>From:</legend>
             <div class="input-group datetime-date">
               <span class="input-group-text">Date</span>
-              <input
-                type="date"
-                class="form-control"
-                ng-model="vm.searchForm.from.date"
-                required
-              />
+              <input type="date" class="form-control" ng-model="vm.searchForm.from.date" required />
             </div>
-            <div
-              class="input-group datetime-time"
-              id="from-time"
-              ng-if="!vm.searchForm.isMonthly"
-            >
+            <div class="input-group datetime-time" id="from-time" ng-if="!vm.searchForm.isMonthly">
               <span class="input-group-text">Time</span>
-              <select
-                class="form-select datetime-hour"
-                ng-model="vm.searchForm.from.hour"
-              >
+              <select class="form-select datetime-hour" ng-model="vm.searchForm.from.hour">
                 <option value="00">00</option>
                 <option value="01">01</option>
                 <option value="02">02</option>
@@ -378,10 +313,7 @@
                 <option value="23">23</option>
               </select>
               <span class="input-group-text">:</span>
-              <select
-                class="form-select datetime-minute"
-                ng-model="vm.searchForm.from.minute"
-              >
+              <select class="form-select datetime-minute" ng-model="vm.searchForm.from.minute">
                 <option value="00">00</option>
                 <option value="30">30</option>
               </select>
@@ -393,18 +325,11 @@
             <legend>To:</legend>
             <div class="input-group datetime-date">
               <span class="input-group-text">Date</span>
-              <input
-                type="date"
-                class="form-control"
-                ng-model="vm.searchForm.to.date"
-              />
+              <input type="date" class="form-control" ng-model="vm.searchForm.to.date" />
             </div>
             <div class="input-group datetime-time" id="to-time">
               <span class="input-group-text">Time</span>
-              <select
-                class="form-select datetime-hour"
-                ng-model="vm.searchForm.to.hour"
-              >
+              <select class="form-select datetime-hour" ng-model="vm.searchForm.to.hour">
                 <option value="00">00</option>
                 <option value="01">01</option>
                 <option value="02">02</option>
@@ -431,10 +356,7 @@
                 <option value="23">23</option>
               </select>
               <span class="input-group-text">:</span>
-              <select
-                class="form-select w-auto datetime-minute"
-                ng-model="vm.searchForm.to.minute"
-              >
+              <select class="form-select w-auto datetime-minute" ng-model="vm.searchForm.to.minute">
                 <option value="00">00</option>
                 <option value="30">30</option>
               </select>
@@ -454,14 +376,11 @@
       </div>
 
       <!-- Search Results -->
-      <section
-        id="results-area"
-        ng-repeat="garage in vm.garages track by garage.garageId"
-      >
+      <section id="results-area" ng-repeat="garage in vm.garages track by garage.garageId">
         <div class="result-tile">
           <div class="result-descrip">
             <h3>{{garage.description}}</h3>
-            <h5>{{garage.distance}} {{vm.user.radiusUnit}} away</h5>
+            <h5>{{garage.distance}} {{vm.searchForm.radiusUnit}} away</h5>
           </div>
           <button
             type="button"
