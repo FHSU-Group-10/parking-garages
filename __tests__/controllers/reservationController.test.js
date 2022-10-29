@@ -84,9 +84,6 @@ describe('Reservation Controller', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -94,9 +91,6 @@ describe('Reservation Controller', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
@@ -222,9 +216,6 @@ describe('Reservation Controller', () => {
           description: 'ParkingSpaceX',
           lat: 0,
           lon: 0,
-          timezone: 'America/New_York',
-          price: 16.75,
-          rate: 'hour',
           distance: 500,
         },
         {
@@ -232,9 +223,6 @@ describe('Reservation Controller', () => {
           description: 'GarageBrand',
           lat: 1,
           lon: 1,
-          timezone: 'America/New_York',
-          price: 12.5,
-          rate: '30 min',
           distance: 3000,
         },
       ]);
@@ -330,7 +318,7 @@ describe('Reservation Controller', () => {
         isMonthly: false,
       };
       const reservation = await reservationController.reserveSpace(req, res);
-      //expect(reservation.body).toEqual({ message: 'Reservation complete!' });
+      // console.log(reservation);
       expect(reservation.status).toBe(200);
     });
 
@@ -491,7 +479,7 @@ describe('Reservation Controller', () => {
       expect(reservation.status).toBe(200);
       expect(reservation.body).not.toBe(null);
     });
-    
+
     test('Starting datetime must be >= current datetime', async () => {
       req.body = {
         memberId: 1,
@@ -517,7 +505,7 @@ describe('Reservation Controller', () => {
         message: 'Invalid date or time.',
       });
     });
-    
+
     test('FKs must be valid PKs in their respective tables', async () => {
       req.body = {
         memberId: 1000,
@@ -540,6 +528,78 @@ describe('Reservation Controller', () => {
       const results = await reservationController.reserveSpace(req, res);
       expect(results.status).toBe(400);
       expect(results.body).toEqual({ message: 'Invalid ID(s) provided.' });
+    });
+  });
+
+  // reservationController.findAvailable()
+  describe('Find available garages', () => {
+    // TODO
+  });
+
+  // reservationController.checkAvailability()
+  describe('Check if a garage is available', () => {
+    // TODO
+  });
+
+  // reservationController.timezone()
+  describe('Get timezone from coordinates', () => {
+    let lat, lon;
+
+    test('New York, USA', async () => {
+      lat = 40.73061;
+      lon = -73.935242;
+      const tz = await reservationController.timezone(lat, lon);
+      expect(tz).toBe('America/New_York');
+    });
+
+    test('Taipei, Taiwan', async () => {
+      lat = 25.105497;
+      lon = 121.597366;
+      const tz = await reservationController.timezone(lat, lon);
+      expect(tz).toEqual('Asia/Taipei');
+    });
+
+    test('Addis Ababa, Ethiopia', async () => {
+      lat = 9.005401;
+      lon = 38.763611;
+      const tz = await reservationController.timezone(lat, lon);
+      expect(tz).toEqual('Africa/Addis_Ababa');
+    });
+
+    test('McMurdo Station, Antarctica', async () => {
+      lat = -77.5047;
+      lon = 166.4006;
+      const tz = await reservationController.timezone(lat, lon);
+      expect(tz).toEqual('Antarctica/McMurdo');
+    });
+  });
+
+  // reservationController.timeFromLocal()
+  describe('Set time in a given timezone', () => {
+    const time = {
+      year: 2030,
+      month: 6,
+      day: 15,
+      hour: 12,
+      minute: 0,
+    };
+
+    test('Taipei time', () => {
+      const tz = 'Asia/Taipei';
+      const res = reservationController.timeFromLocal(time, tz);
+      expect(res.toUTCString()).toEqual('Sat, 15 Jun 2030 04:00:00 GMT');
+    });
+
+    test('UTC time', () => {
+      const tz = 'Atlantic/Reykjavik';
+      const res = reservationController.timeFromLocal(time, tz);
+      expect(res.toUTCString()).toEqual('Sat, 15 Jun 2030 12:00:00 GMT');
+    });
+
+    test('Invalid time', () => {
+      const tz = 'Nope/Nah';
+      const res = reservationController.timeFromLocal('timeless', tz);
+      expect(res).toBe(null);
     });
   });
 });
