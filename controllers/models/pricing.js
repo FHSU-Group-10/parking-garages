@@ -2,38 +2,38 @@
 // Receives the sequelize instance and datatypes as parameters
 // Relations are defined elsewhere
 module.exports = (sequelize, DataTypes) => {
-    sequelize.define(
-        'Pricing',
-        {
-            PRICING_ID: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                allowNull: false,
-                primaryKey: true,
-            },
-            DESCRIPTION: {
-                type: DataTypes.STRING(64),
-                allowNull: false,
-                field: 'DESCRIPTION',
-            },
-            COST: {
-                type: DataTypes.STRING(24),
-                allowNull: false,
-                field: 'COST',
-            },
-            DAILY_MAX: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                field: 'DAILY_MAX',
-            },
-        },
-        {
-            tableName: 'PRICING',
-            timestamps: false,
-            schema: 'YHL46872',
-            initialized: true,
-        }
-    );
+  sequelize.define(
+    'Pricing',
+    {
+      PRICING_ID: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true,
+      },
+      DESCRIPTION: {
+        type: DataTypes.STRING(64),
+        allowNull: false,
+        field: 'DESCRIPTION',
+      },
+      COST: {
+        type: DataTypes.STRING(24),
+        allowNull: false,
+        field: 'COST',
+      },
+      DAILY_MAX: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'DAILY_MAX',
+      },
+    },
+    {
+      tableName: 'PRICING',
+      timestamps: false,
+      schema: 'g10',
+      initialized: true,
+    }
+  );
 };
 
 // // init sequelize

@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       tableName: 'USERS',
       timestamps: false,
-      schema: 'YHL46872',
+      schema: 'g10',
       initialized: true,
     }
   ); /* 

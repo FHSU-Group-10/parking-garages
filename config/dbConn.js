@@ -7,7 +7,7 @@ const addModels = require('../controllers/models/index');
 const addRelations = require('./modelRelations');
 
 // Create sequelize instance with DB connection
-const connStr = `db2:DATABASE/${process.env.DB_NAME};HOSTNAME=${process.env.DB_HOST_NAME};PORT=${process.env.DB_PORT};Security=SSL;;PROTOCOL=TCPIP;UID=${process.env.DB_USERNAME};PWD=${process.env.DB_PASSWORD};`;
+const connStr = `postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST_NAME}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true`;
 const sequelize = new Sequelize(connStr);
 
 // Test connection, since this only runs once at startup
