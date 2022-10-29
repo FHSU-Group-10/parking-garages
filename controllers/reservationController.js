@@ -1,10 +1,75 @@
 // LIBRARIES
 const luxon = require('luxon');
+const haversine = require('haversine-distance');
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
-const { Reservation, ReservationStatus, ReservationType, Vehicle, Users } =
-  sequelize.models;
+const { Reservation, ReservationStatus, ReservationType, Vehicle, Users, Floor, Garage, Pricing } = sequelize.models;
+
+// Find available parking garages for a given location, radius, time slot, and reservation type
+const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly) => {
+  try {
+    // Get all active garages from DB
+    let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
+
+    // Prepare location objects for distance calcs
+    const searchLoc = { latitude: lat, longitude: lon };
+    let garageLoc;
+    // Filter garages based on search radius
+    garages = garages
+      .map((garage) => {
+        // TODO consider moving mock locations in here for more interesting location testing
+        garageLoc = { latitude: garage.LAT, longitude: garage.LON };
+        const dist = haversine(searchLoc, garageLoc); // haversine distance function
+        // Store distance in garage object
+        garage.distance = dist;
+        return garage;
+      })
+      .filter((garage) => garage.distance <= radius);
+
+    // Use checkAvailability on each garage to find if it is available
+    // TODO may need to send floors if hannah changes it
+    garages = await garages.filter(
+      async (garage) => await checkAvailability(garage.GARAGE_ID, resTypeId, garage.IS_ACTIVE, start, end, isMonthly)
+    );
+
+    // TODO Add price to response
+    // Retrieve pricing
+    const price = await Pricing.findOne({ where: { RESERVATION_TYPE_ID: resTypeId } });
+    // Parse price
+    // Calculate reservation length
+    // Calculate total price
+    // Add price to response
+
+    // TODO return garages;
+
+    return [
+      {
+        garageId: 1,
+        description: 'ParkingSpaceX',
+        lat: 0,
+        lon: 0,
+        distance: 500,
+      },
+      {
+        garageId: 2,
+        description: 'GarageBrand',
+        lat: 1,
+        lon: 1,
+        distance: 3000,
+      },
+    ];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+// Check the availability of a single garage given its ID, time, and reservation type
+const checkAvailability = async (garageId, resTypeId, start, end, isMonthly) => {
+  // TODO
+  return true;
+};
 
 // Timezone API is rate-limited to 1 request per second.
 // Each Timezone API request must happen with a 1-second delay to avoid rate-limiting
@@ -40,13 +105,9 @@ const timezone = async (lat, lon) => {
  * @returns {Date} - A JS Date object representing the specified time set in the specified timezone
  */
 const timeFromLocal = (timeObj, tz) => {
-  try {
-    const localTime = luxon.DateTime.fromObject(timeObj, { zone: tz });
-    return localTime.toJSDate();
-  } catch (error) {
-    console.error(error);
-    return;
-  }
+  const localTime = luxon.DateTime.fromObject(timeObj, { zone: tz }).toJSDate();
+  if (!localTime || !isNaN(localTime)) return localTime;
+  else return null;
 };
 
 /**
@@ -73,70 +134,49 @@ const timeFromLocal = (timeObj, tz) => {
  *  - None
  */
 const searchSpace = async (req, res) => {
-  // Get arguments from url query
-  const lat = req?.body?.lat;
-  const lon = req?.body?.lon;
-  const radius = req?.body?.radius;
-  const reservationTypeId = req?.body?.reservationTypeId;
-  let startDateTime = req?.body?.startDateTime;
-  let endDateTime = req?.body?.endDateTime;
-  const isMonthly = req?.body?.isMonthly;
+  try {
+    // Get arguments from url query
+    const lat = req?.body?.lat;
+    const lon = req?.body?.lon;
+    const radius = req?.body?.radius;
+    const reservationTypeId = req?.body?.reservationTypeId;
+    let startDateTime = req?.body?.startDateTime;
+    let endDateTime = req?.body?.endDateTime;
+    const isMonthly = req?.body?.isMonthly;
 
-  // Return early if any arguments are missing
-  if (
-    !req?.body ||
-    !(
-      lat &&
-      lon &&
-      radius &&
-      reservationTypeId &&
-      startDateTime &&
-      (endDateTime || isMonthly)
-    )
-  ) {
-    return res.status(400).json({ message: 'Incomplete query.' });
+    // Return early if any arguments are missing
+    if (!req?.body || !(lat && lon && radius && reservationTypeId && startDateTime && (endDateTime || isMonthly))) {
+      return res.status(400).json({ message: 'Incomplete query.' });
+    }
+
+    // Convert times to search position local time
+    const tz = await timezone(lat, lon);
+    startDateTime = timeFromLocal(startDateTime, tz);
+    endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
+
+    // Check preconditions
+    if (startDateTime < Date.now() || (!isMonthly && startDateTime >= endDateTime)) {
+      return res.status(400).json({ message: 'Invalid date or time.' });
+    }
+
+    // Find matching available garages
+    const availableGarages = await findAvailable(
+      lat,
+      lon,
+      radius,
+      reservationTypeId,
+      startDateTime,
+      endDateTime,
+      isMonthly
+    );
+
+    // Return results
+    if (availableGarages == []) return res.status(204).send();
+    else return res.status(200).json(availableGarages);
+  } catch (error) {
+    console.error('Reservation Controller: ' + error);
+    return res.status(500).send();
   }
-
-  // Convert times to search position local time
-  const tz = await timezone(lat, lon);
-  startDateTime = timeFromLocal(startDateTime, tz);
-  endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
-
-  // Check preconditions
-  if (
-    startDateTime < Date.now() ||
-    (!isMonthly && startDateTime >= endDateTime)
-  ) {dev
-    return res.status(400).json({ message: 'Invalid date or time.' });
-  }
-
-  // TODO Find matching available garages
-  // TODO pass distance to each
-  const fakeGarages = [
-    {
-      garageId: 1,
-      description: 'ParkingSpaceX',
-      lat: 0,
-      lon: 0,
-      timezone: 'America/New_York',
-      price: 16.75,
-      rate: 'hour',
-      distance: 500,
-    },
-    {
-      garageId: 2,
-      description: 'GarageBrand',
-      lat: 1,
-      lon: 1,
-      timezone: 'America/New_York',
-      price: 12.5,
-      rate: '30 min',
-      distance: 3000,
-    },
-  ];
-
-  // TODO Return results
-  return res.status(200).json(fakeGarages);
 };
 
 /**
@@ -179,16 +219,7 @@ const reserveSpace = async (req, res) => {
   const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments missing (vehicles optional)
-  if (
-    !req?.body ||
-    !(
-      memberId &&
-      reservationTypeId &&
-      garageId &&
-      startDateTime &&
-      (endDateTime || isMonthly)
-    )
-  ) {
+  if (!req?.body || !(memberId && reservationTypeId && garageId && startDateTime && (endDateTime || isMonthly))) {
     return res.status(400).json({ message: 'Incomplete request.' });
   }
 
@@ -198,11 +229,15 @@ const reserveSpace = async (req, res) => {
   endDateTime = isMonthly ? null : timeFromLocal(endDateTime, tz);
 
   // Check preconditions
-  if (
-    startDateTime < Date.now() ||
-    (!isMonthly && startDateTime >= endDateTime)
-  ) {
+  if (startDateTime < Date.now() || (!isMonthly && startDateTime >= endDateTime)) {
     return res.status(400).json({ message: 'Invalid date or time.' });
+  }
+
+  const user = await Users.findByPk(memberId);
+  const vehicle = await Vehicle.findByPk(vehicleId);
+
+  if (!(user?.MEMBER_ID == memberId && vehicle?.MEMBER_ID == memberId)) {
+    return res.status(400).json({ message: 'Invalid ID(s) provided.' });
   }
 
   // Create the reservation in the DB
@@ -210,9 +245,18 @@ const reserveSpace = async (req, res) => {
     // Reservation model will throw an error if any FK is invalid, no need to check first
 
     // TODO make sure reservations are in the time zone of the garage
+
+    // Availability should be confirmed before reservation
+    // TODO find a way to collapse these into a single DB request. Join all the tables?
+    const isActive = await Garage.findByPk(1);
+    const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, isMonthly);
+
+    if (!(isActive && isAvailable)) {
+      return res.status(400).json({ message: 'Garage unavailable.' });
+    }
+
     // TODO set default status
     if (!reservationStatusId) reservationStatusId = 1;
-    // TODO should availability be confirmed before reservation? If so, add here.
 
     // Create the reservation
     const reservation = await Reservation.create({
@@ -234,9 +278,7 @@ const reserveSpace = async (req, res) => {
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
     } else {
       // Some request failed
-      console.error(
-        'Error: Reservation Controller - reserveSpace() - ' + error.name
-      );
+      console.error('Error: Reservation Controller - reserveSpace() - ' + error.name);
       console.error(error);
       return res.status(500).json({ message: 'Reservation failed.' });
     }
@@ -248,4 +290,8 @@ const reserveSpace = async (req, res) => {
 module.exports = {
   searchSpace,
   reserveSpace,
+  findAvailable,
+  checkAvailability,
+  timezone,
+  timeFromLocal,
 };
