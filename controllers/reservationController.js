@@ -8,7 +8,6 @@ const { Reservation, ReservationStatus, ReservationType, Vehicle, Users, Floor, 
 
 // Find available parking garages for a given location, radius, time slot, and reservation type
 const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly) => {
-  // TODO
   try {
     // Get all active garages from DB
     let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
