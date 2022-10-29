@@ -47,19 +47,16 @@ const getPricing = async (req, res) => {
 const updatePricing = async (req, res) => {
   // TODO
   // Get arguments from request url query
-  const singleRes = req?.body?.singleRes;
-  const singleCost = req?.body?.singleCost;
-  const guaranteedRes = req?.body?.guaranteedRes;
-  const guaranteedCost = req?.body?.guaranteedCost;
-  const walkInRes = req?.body?.walkInRes;
-  const walkInCost = req?.body?.walkInCost;
-  const newDailyMax = req?.body?.DailyMax;
+  const singleRes = req?.body?.price.singleRes;
+  const singleCost = req.body.price.singleCost;
+  const guaranteedRes = req?.body?.price.guaranteedRes;
+  const guaranteedCost = req.body.price.guaranteedCost;
+  const walkInRes = req?.body?.price.walkInRes;
+  const walkInCost = req.body.price.walkInCost;
+  const newDailyMax = req?.body?.price.dailyMax;
 
-  // Return early if any arguments are missing
-  // if (!(resType || newPrice || newDailyMax)) {
-  //     return res.status(400).json({ message: 'pricingController: Incomplete update pricing request' });
-  // }
   try {
+    // check each reservation/cost combo and update price
     if (singleRes && singleCost) {
       await setPricing(singleRes, singleCost, res);
       console.log({ message: 'Single reservation price updated.\n' });
@@ -72,6 +69,7 @@ const updatePricing = async (req, res) => {
       await setPricing(walkInRes, walkInCost, res);
       console.log({ message: 'Walk-in reservation price updated.\n' });
     }
+    // set new price for daily max on every row
     if (newDailyMax) {
       await Pricing.update(
         {
@@ -93,10 +91,10 @@ const updatePricing = async (req, res) => {
   // TODO Check preconditions
 
   // Update pricing in the DB
-  const result = { message: 'Pricing updated.' };
+  // const result = { message: 'Pricing updated.' };
 
   // Return the result
-  return res.status(200).json(result);
+  // return res.status(200).json(result);
 };
 
 /**
@@ -113,20 +111,23 @@ const updatePricing = async (req, res) => {
  *  - Updates the cost to the matching resType description  
  */
 async function setPricing(resType, newPrice, res) {
+  // Initialzie priceUpdat to equal the target reservation type to be updated
   let priceUpdate = await Pricing.findOne({
     where: {
       DESCRIPTION: resType
     }
   });
+  // if priceUpdate is null, no matching reservation description is found return error message
   if (!priceUpdate) {
     return res.status(400).json({ message: 'pricingController failed at setPricing()' });
   }
+  // set new price 
   priceUpdate.set({
     COST: newPrice
   });
   await priceUpdate.save();
   return res.status(200);
-};
+}
 
 const createPricing = async (req, res) => {
   // TODO
@@ -147,11 +148,11 @@ const createPricing = async (req, res) => {
         RESERVATION_TYPE_ID: reservationTypeId,
       }
     });
-
+    // if resType is null, no matching reservation type id exists
     if (!resType) {
       return res.status(400).json({ message: "princingController: Reservation type id invalid" });
     }
-
+    // find an identical row, if not found, create a new entry
     const [price, created] = await Pricing.findOrCreate({
       where: {
         DESCRIPTION: description,
@@ -160,7 +161,7 @@ const createPricing = async (req, res) => {
         RESERVATION_TYPE_ID: reservationTypeId,
       }
     });
-
+    // if new row is not created, an identical match is found and returns
     if (!created) {
       return res.status(400).json({ message: "Duplicate Pricing: An identical Pricing already exists." });
     }
@@ -176,16 +177,29 @@ const createPricing = async (req, res) => {
   }
 };
 
+/**
+ * 
+ * @param {string} resType - Reservation type description 
+ * @returns {} - Succes or failure message
+ * 
+ * Precondition:
+ *  - There is a row in pricing table with a matching description 
+ * 
+ * Postcondition:
+ *  - The row is deleted from pricing table
+ */
+
 const destroyRow = async (req, res) => {
   const resType = req.body.description;
   try {
+    // destroy row with description value passed to resType
     await Pricing.destroy({
       where: {
         DESCRIPTION: resType
       }
     });
   } catch {
-    return res.status(400).json({ message: "error in destroy row." });
+    return res.status(400).json({ message: "pricingController: Error in destroy row." });
   }
   return res.status(200).json({ message: "Row deleted." });
 };
