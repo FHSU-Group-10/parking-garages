@@ -76,10 +76,7 @@
       await setLocation();
 
       // Convert radius from user-specified units to meters
-      reserveOptions.radiusMeters = convert(
-        parseFloat(searchForm.radius),
-        searchForm.radiusUnit
-      ).to('meters');
+      reserveOptions.radiusMeters = convert(parseFloat(searchForm.radius), searchForm.radiusUnit).to('meters');
       reserveOptions.type = searchForm.type;
 
       // Get matching garages with availability
@@ -150,22 +147,16 @@
 
     const setInitialMap = () => {
       // Create map, user marker, and array of garage markers
-      map = L.map('map').setView(
-        [reserveOptions.lat, reserveOptions.lon],
-        searchForm.zoom
-      );
+      map = L.map('map').setView([reserveOptions.lat, reserveOptions.lon], searchForm.zoom);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution:
-          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
     };
 
     // Wraps geolocation in a promise
     function getPosition(options) {
-      return new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, options)
-      );
+      return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, options));
     }
 
     // Sets location data from search form
@@ -184,9 +175,7 @@
         } else {
           // Locate from search string
           const res = await fetch(
-            location.protocol +
-              '//nominatim.openstreetmap.org/search?format=json&q=' +
-              searchForm.location
+            location.protocol + '//nominatim.openstreetmap.org/search?format=json&q=' + searchForm.location
           );
           const json = await res.json();
 
@@ -230,9 +219,10 @@
 
       // Build datetimes
       reserveOptions.time.from = buildTime(searchForm.from);
-      reserveOptions.time.to = searchForm.isMonthly
-        ? null
-        : buildTime(searchForm.to);
+      reserveOptions.time.to = searchForm.isMonthly ? null : buildTime(searchForm.to);
+
+      // Flag to generate fake locations
+      const useFakeLocations = true;
 
       // Get garage results from backend
       $http({
@@ -246,6 +236,7 @@
           startDateTime: reserveOptions.time.from,
           endDateTime: reserveOptions.time.to,
           isMonthly: searchForm.isMonthly,
+          useFakeLocations: useFakeLocations,
         },
       })
         .then((results) => {
@@ -254,22 +245,12 @@
 
           // Process results
           results.data?.forEach((garage) => {
-            // TODO Remove - Generates a random position near the user location. Let's us test geolocate anywhere and get results
-            garage.lat =
-              parseFloat(reserveOptions.lat) + (0.5 - Math.random()) * 0.1;
-            garage.lon =
-              parseFloat(reserveOptions.lon) + (0.5 - Math.random()) * 0.1;
-
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
               // Measurements in feet shouldn't be precise to the foot
-              garage.distance = parseFloat(
-                convert(garage.distance, 'meters').to('feet').toPrecision(3)
-              );
+              garage.distance = parseFloat(convert(garage.distance, 'meters').to('feet').toPrecision(3));
             else {
-              garage.distance = convert(garage.distance, 'meters')
-                .to(searchForm.radiusUnit)
-                .toFixed(2);
+              garage.distance = convert(garage.distance, 'meters').to(searchForm.radiusUnit).toFixed(2);
             }
 
             // Add pin and label to map
@@ -326,12 +307,5 @@
   }
 
   var app = angular.module('pageApp', []);
-  app.controller('pageCtrl', [
-    '$scope',
-    '$http',
-    '$document',
-    '$window',
-    '$timeout',
-    pageCtrl,
-  ]);
+  app.controller('pageCtrl', ['$scope', '$http', '$document', '$window', '$timeout', pageCtrl]);
 })(window);

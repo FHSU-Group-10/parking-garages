@@ -6,8 +6,22 @@ const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
 const { Reservation, ReservationStatus, ReservationType, Vehicle, Users, Floor, Garage, Pricing } = sequelize.models;
 
-// Find available parking garages for a given location, radius, time slot, and reservation type
-const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly) => {
+//
+/**
+ * Find available parking garages for a given location, radius, time slot, and reservation type.
+ * Can spoof garage locations to be near search location.
+ *
+ * @param {*} lat - The search position latitude
+ * @param {*} lon - The search position longitude
+ * @param {*} radius - The search radius in meters
+ * @param {*} resTypeId - The reservation type
+ * @param {Date} start - The desired start datetime of the reservation
+ * @param {Date} end - The desired end datetime of the reservation
+ * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
+ * @param {*} useFakeLocations - A flag to spoof locations for garages
+ * @returns {[Object]} - An array of garages that match the requested availability
+ */
+const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly, useFakeLocations) => {
   try {
     // Get all active garages from DB
     let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
@@ -18,8 +32,20 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly)
     // Filter garages based on search radius
     garages = garages
       .map((garage) => {
-        // TODO consider moving mock locations in here for more interesting location testing
-        garageLoc = { latitude: garage.LAT, longitude: garage.LON };
+        if (useFakeLocations) {
+          // Generate fake garage locations near the search point. NOT guaranteed to be within the search radius
+          garageLoc = {
+            latitude: parseFloat(lat) + (0.5 - Math.random()) * 0.1,
+            longitude: parseFloat(lat) + (0.5 - Math.random()) * 0.1,
+          };
+          console.log(
+            `Spoofed garage loc from [${garage.LAT}, ${garage.LON}] to [${garageLoc.latitude}, ${garageLoc.longitude}]`
+          );
+        } else {
+          // Use real garage locations
+          garageLoc = { latitude: garage.LAT, longitude: garage.LON };
+        }
+
         const dist = haversine(searchLoc, garageLoc); // haversine distance function
         // Store distance in garage object
         garage.distance = dist;
@@ -28,7 +54,7 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly)
       .filter((garage) => garage.distance <= radius);
 
     // Use checkAvailability on each garage to find if it is available
-    // TODO may need to send floors if hannah changes it
+    // TODO confirm async works inside filter
     garages = await garages.filter(
       async (garage) => await checkAvailability(garage.GARAGE_ID, resTypeId, garage.IS_ACTIVE, start, end, isMonthly)
     );
@@ -65,7 +91,16 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly)
   }
 };
 
-// Check the availability of a single garage given its ID, time, and reservation type
+/**
+ * Check the availability of a single garage given its ID, time, and reservation type
+ *
+ * @param {*} garageId - The id of the garage to check
+ * @param {*} resTypeId - The reservation type
+ * @param {*} start - The desired start datetime of the reservation
+ * @param {*} end - The desired endtime of the reservation
+ * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
+ * @returns {Boolean} - A flag signifying a garage is available with the requested availability
+ */
 const checkAvailability = async (garageId, resTypeId, start, end, isMonthly) => {
   // TODO
   return true;
@@ -122,6 +157,7 @@ const timeFromLocal = (timeObj, tz) => {
  * @param {Object} startDateTime - The desired start time of the reservation
  * @param {Object} endDateTime - The desired end time of the reservation
  * @param {Boolean} isMonthly - Signals if the reservation is guaranteed/monthly
+ * @param {*} useFakeLocations - A flag to spoof locations for garages
  * @returns {[Object]}  an array of reservation options
  *
  * Preconditions:
@@ -143,6 +179,7 @@ const searchSpace = async (req, res) => {
     let startDateTime = req?.body?.startDateTime;
     let endDateTime = req?.body?.endDateTime;
     const isMonthly = req?.body?.isMonthly;
+    const useFakeLocations = req?.body?.useFakeLocations;
 
     // Return early if any arguments are missing
     if (!req?.body || !(lat && lon && radius && reservationTypeId && startDateTime && (endDateTime || isMonthly))) {
@@ -167,7 +204,8 @@ const searchSpace = async (req, res) => {
       reservationTypeId,
       startDateTime,
       endDateTime,
-      isMonthly
+      isMonthly,
+      useFakeLocations
     );
 
     // Return results
