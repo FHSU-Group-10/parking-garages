@@ -13,7 +13,7 @@ describe('Floor Model', () => {
     expect(resStatus).not.toBe(null);
   });
   test('Raw SQL query', async () => {
-    const [results, metadata] = await sequelize.query('SELECT * FROM FLOORS LIMIT 1');
+    const [results, metadata] = await sequelize.query('SELECT * FROM "g10"."FLOORS" LIMIT 1');
 
     expect(results).not.toBe(null);
   });
