@@ -12,27 +12,12 @@ describe('Garage Model', () => {
 
     console.log('# of garages:  ', garages);
 
-    expect(resStatus).not.toBe(0);
+    expect(garages).not.toBe(0);
   });
   test('Raw SQL query', async () => {
     // Select a single row, check if any rows exist
-    const [results, metadata] = await sequelize.query('SELECT * FROM GARAGES LIMIT 1');
-    console.log(results, metadata);
-    expect(results).not.toBe(null);
-  });
+    const [results, metadata] = await sequelize.query('SELECT * FROM "g10"."GARAGES" LIMIT 1');
 
-  test('Fix table', async () => {
-    const query = sequelize.getQueryInterface();
-    console.log(await query.describeTable({ tableName: 'GARAGES' }));
-    /* const n = await Garage.create({
-      DESCRIPTION: 'Test Garage',
-      FLOOR_COUNT: 3,
-      LAT: '1',
-      LONG: '1',
-      OVERBOOK_RATE: 1.1,
-      IS_ACTIVE: true,
-    }); */
-    const n = sequelize.query('REORG TABLE YHL46872.GARAGES');
-    console.log(n);
+    expect(results).not.toBe(null);
   });
 });

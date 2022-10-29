@@ -39,6 +39,12 @@ const addRelations = (sequelize) => {
           allowNull: false,
         },
       },
+      garageId: {
+        foreignKey: {
+          name: 'GARAGE_ID',
+          allowNull: false,
+        },
+      },
     };
 
     Users.hasMany(Reservation, reservationFK.memberId);
@@ -52,6 +58,9 @@ const addRelations = (sequelize) => {
 
     ReservationStatus.hasMany(Reservation, reservationFK.statusId);
     Reservation.belongsTo(ReservationStatus, reservationFK.statusId);
+
+    Garage.hasMany(Reservation, reservationFK.garageId);
+    Reservation.belongsTo(Garage, reservationFK.garageId);
 
     // Foreign Key on Pricing
     const pricingFK = {

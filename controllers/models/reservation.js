@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       tableName: 'RESERVATIONS',
       timestamps: false,
-      schema: 'YHL46872',
+      schema: 'g10',
       initialized: true,
     }
   );

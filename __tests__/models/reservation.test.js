@@ -13,9 +13,7 @@ describe('Reservation Model', () => {
     expect(reservation).not.toBe(null);
   });
   test('Raw SQL query', async () => {
-    const [results, metadata] = await sequelize.query(
-      'SELECT * FROM RESERVATIONS LIMIT 1'
-    );
+    const [results, metadata] = await sequelize.query('SELECT * FROM "g10"."RESERVATIONS" LIMIT 1');
 
     expect(results).not.toBe(null);
   });
