@@ -177,15 +177,15 @@
                   </tr>
                   <tr ng-if="vm.searchForm.isMonthly">
                     <th>From:</th>
-                    <td>{{vm.reserveOptions.from.specifiedDatetime.toString().slice(0, 15)}}</td>
+                    <td>{{vm.reserveOptions.time.fromStr.slice(0, 10)}}</td>
                   </tr>
                   <tr ng-if="!vm.searchForm.isMonthly">
                     <th>From:</th>
-                    <td>{{vm.reserveOptions.from.specifiedDatetime.toString().slice(0, 21)}}</td>
+                    <td>{{vm.reserveOptions.time.fromStr}}</td>
                   </tr>
                   <tr ng-if="!vm.searchForm.isMonthly">
                     <th>To:</th>
-                    <td>{{vm.reserveOptions.to.specifiedDatetime.toString().slice(0, 21)}}</td>
+                    <td>{{vm.reserveOptions.time.toStr}}</td>
                   </tr>
                   <tr>
                     <th>Type:</th>
@@ -204,7 +204,7 @@
                   </tr>
                   <tr>
                     <th>Total Price:</th>
-                    <td>{{vm.reserveOptions.totalPrice}}</td>
+                    <td>${{vm.reserveOptions.totalPrice}}</td>
                   </tr>
                 </tbody>
               </table>
@@ -389,7 +389,7 @@
             data-bs-target="#reservation-modal"
             ng-click="vm.handleReserveBtn($event, $index)"
           >
-            <h2>${{(garage.price * 3).toFixed(2)}}</h2>
+            <h2>${{garage.price}}</h2>
             <h3>Reserve</h3>
           </button>
         </div>
