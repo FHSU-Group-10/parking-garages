@@ -168,6 +168,9 @@
             garageMarkers.pop().removeFrom(map);
           }
 
+          // Change distance units afteer cleared to prevent confusion, if necessary
+          reserveOptions.radiusUnit = searchForm.radiusUnit;
+
           // Process results
           results.data?.forEach((garage) => {
             // Distance is returned in meters, convert back to user units
