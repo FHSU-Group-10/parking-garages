@@ -10,7 +10,7 @@ describe('Reserve Route', () => {
       const body = {
         lat: 1,
         lon: 1,
-        radius: 1000,
+        radius: 10000,
         reservationTypeId: 1,
         startDateTime: {
           year: 2023,
@@ -27,26 +27,16 @@ describe('Reserve Route', () => {
           minute: 30,
         },
         isMonthly: false,
+        useFakeLocations: true,
       };
 
       const res = await request(app).post('/reserve/search').send(body);
+
       expect(res.status).toBe(200);
-      expect(res.body).toEqual([
-        {
-          garageId: 1,
-          description: 'ParkingSpaceX',
-          lat: 0,
-          lon: 0,
-          distance: 500,
-        },
-        {
-          garageId: 2,
-          description: 'GarageBrand',
-          lat: 1,
-          lon: 1,
-          distance: 3000,
-        },
-      ]);
+      expect(res.body.length).toBeGreaterThan(0);
+      const keys = Object.keys(res.body[0]);
+      const expected = ['garageId', 'description', 'lat', 'lon', 'distance', 'price'];
+      expect(keys).toEqual(expect.arrayContaining(expected));
     });
 
     test('Incomplete query', async () => {
@@ -61,7 +51,7 @@ describe('Reserve Route', () => {
       const params = {
         lat: 1,
         lon: 1,
-        radius: 1000,
+        radius: 10000,
         reservationTypeId: 1,
         startDateTime: {
           year: 2023,
@@ -72,26 +62,16 @@ describe('Reserve Route', () => {
         },
         endDateTime: null,
         isMonthly: true,
+        useFakeLocations: true,
       };
 
       const res = await request(app).post('/reserve/search').send(params);
+
       expect(res.status).toBe(200);
-      expect(res.body).toEqual([
-        {
-          garageId: 1,
-          description: 'ParkingSpaceX',
-          lat: 0,
-          lon: 0,
-          distance: 500,
-        },
-        {
-          garageId: 2,
-          description: 'GarageBrand',
-          lat: 1,
-          lon: 1,
-          distance: 3000,
-        },
-      ]);
+      expect(res.body.length).toBeGreaterThan(0);
+      const keys = Object.keys(res.body[0]);
+      const expected = ['garageId', 'description', 'lat', 'lon', 'distance', 'price'];
+      expect(keys).toEqual(expect.arrayContaining(expected));
     });
 
     test('Incomplete query', async () => {
@@ -129,6 +109,7 @@ describe('Reserve Route', () => {
       };
 
       const res = await request(app).post('/reserve').send(body);
+      console.log(res.status, res.body);
       expect(res.status).toBe(200);
     });
 
