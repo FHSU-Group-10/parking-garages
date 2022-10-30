@@ -163,7 +163,7 @@ const reserveSpace = async (req, res) => {
 
     // Confirm availability before reservation
     const isActive = await Garage.findByPk(garageId);
-    const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, isMonthly);
+    const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, !!isMonthly);
 
     if (!(isActive && isAvailable)) {
       return res.status(400).json({ message: 'Garage unavailable.' });
@@ -335,6 +335,7 @@ const calculatePrice = async (start, end, reservationType) => {
 
 /**
  * Check the availability of a single garage given its ID, time, and reservation type
+ * Naive solution. Does not optimize for compressing partial overlaps, meaning two halves count as 2 spaces, not compressed to one occupancy
  *
  * @param {*} garageId - The id of the garage to check
  * @param {*} resTypeId - The reservation type
@@ -343,11 +344,8 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garageId, resTypeId, start, end, isMonthly, overbookRate) => {
-  // TODO
-  // Naive solution. Does not optimize for compressing partial overlaps, meaning two halves count as 2 spaces, not compressed to one occupancy
-  console.log(garageId, overbookRate);
-  // TODO can overbookRate be passed in from reserveSpace, or should I retrieve it here if null?
+const checkAvailability = async (garageId, resTypeId, start, end = null, isMonthly = false, overbookRate = null) => {
+  // Retrieve overbookRate if it was not passed in
   if (!overbookRate) {
     const result = await Garage.findOne({
       attributes: ['OVERBOOK_RATE'],
@@ -359,7 +357,6 @@ const checkAvailability = async (garageId, resTypeId, start, end, isMonthly, ove
     overbookRate = result.getDataValue('OVERBOOK_RATE');
   }
   // TODO walk-in floors/spaces? what kind of walkins?
-  // TODO doesn't work for making a monthly
 
   // Get total number of spaces for this garage
   let totalSpaces = 0;
@@ -376,30 +373,52 @@ const checkAvailability = async (garageId, resTypeId, start, end, isMonthly, ove
   // Calculate total with overbook rate
   totalSpaces *= overbookRate;
 
-  // Count all monthly reservations that overlap this one
-  // Count all single reservations that overlap this reservation time
-  // Combined into single query, because monthlies could start or end at midnight in a two-day single reservation
-  const reserved = await Reservation.count({
-    where: {
-      // resStart < end &&  (resEnd == null || resEnd > resStart) // Selects all that overlap inside the res window
-      [Op.and]: [
-        {
-          GARAGE_ID: garageId,
-        },
-        {
-          START_TIME: {
-            [Op.lt]: end,
+  // Count all reservations that overlap this one, monthly or otherwise
+  let reserved;
+
+  if (!isMonthly) {
+    // This is making a Single or Walk-In reservation
+    reserved = await Reservation.count({
+      where: {
+        // resStart < end &&  (resEnd == null || resEnd > start) Selects all that overlap inside the res window
+        [Op.and]: [
+          {
+            GARAGE_ID: garageId,
           },
-        },
-        {
-          END_TIME: {
-            [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
+          {
+            START_TIME: {
+              [Op.lt]: end,
+            },
           },
-        },
-      ],
-    },
-  });
-  console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+          {
+            END_TIME: {
+              [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
+            },
+          },
+        ],
+      },
+    });
+  } else {
+    // This is making a Monthly reservation
+    reserved = await Reservation.count({
+      where: {
+        // (resEnd == null || resEnd > resStart) Selects all that overlap inside the res window
+        [Op.and]: [
+          {
+            GARAGE_ID: garageId,
+          },
+          {
+            END_TIME: {
+              [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
+            },
+          },
+        ],
+      },
+    });
+  }
+
+  // console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+
   // Subtract found from total
   totalSpaces -= reserved;
 

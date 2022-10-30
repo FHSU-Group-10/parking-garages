@@ -171,8 +171,11 @@
           // Change distance units afteer cleared to prevent confusion, if necessary
           reserveOptions.radiusUnit = searchForm.radiusUnit;
 
+          // TODO alert if no results and reopen search accordion
+
           // Process results
           results.data?.forEach((garage) => {
+            console.log(garage);
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
               // Measurements in feet shouldn't be precise to the foot
