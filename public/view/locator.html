@@ -189,7 +189,9 @@
                   </tr>
                   <tr>
                     <th>Type:</th>
-                    <td style="text-transform: capitalize">{{vm.searchForm.type}}</td>
+                    <td style="text-transform: capitalize">
+                      {{vm.reserveOptions.type == 1 ? 'Single' : vm.reserveOptions.type == 2 ? 'Monthly' : 'Walk In'}}
+                    </td>
                   </tr>
                   <!-- TODO Should show user vehicles and track selection in reserveOptions -->
                   <tr>

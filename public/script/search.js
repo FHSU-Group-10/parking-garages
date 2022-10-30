@@ -98,8 +98,7 @@
 
       // Turn time objects into readable strings
       reserveOptions.time.fromStr = timeObjToStr(reserveOptions.time.from);
-      reserveOptions.time.toStr = timeObjToStr(reserveOptions.time.to);
-      console.log(reserveOptions.time.from);
+      reserveOptions.time.toStr = reserveOptions.isMonthly ? '' : timeObjToStr(reserveOptions.time.to);
     };
 
     // Submits the reservation to the backend
@@ -168,7 +167,6 @@
 
           // Process results
           results.data?.forEach((garage) => {
-            console.log(garage);
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
               // Measurements in feet shouldn't be precise to the foot
@@ -261,7 +259,7 @@
         if (searchForm.useGeo) {
           // Geolocate
           const location = await getPosition();
-          console.log(location);
+
           reserveOptions.lat = location.coords.latitude;
           reserveOptions.lon = location.coords.longitude;
           reserveOptions.description = 'Your location';
@@ -305,14 +303,13 @@
       let clock, date;
       if (time.day < 10) {
         time.day = '0' + time.day;
-        console.log(time.day);
       }
       if (time.month < 10) {
         time.month = '0' + time.month;
       }
       clock = `${time.hour}:${time.minute}`;
       date = `${time.month}/${time.day}/${time.year}`;
-      console.log(typeof time.day);
+
       return date + ' ' + clock;
     };
 
