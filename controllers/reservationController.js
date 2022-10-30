@@ -1,6 +1,7 @@
 // LIBRARIES
 const luxon = require('luxon');
 const haversine = require('haversine-distance');
+const { Op } = require('sequelize');
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
@@ -161,7 +162,7 @@ const reserveSpace = async (req, res) => {
     }
 
     // Confirm availability before reservation
-    const isActive = await Garage.findByPk(1);
+    const isActive = await Garage.findByPk(garageId);
     const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, isMonthly);
 
     if (!(isActive && isAvailable)) {
@@ -256,6 +257,7 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
           lon: garageLoc.longitude,
           distance: dist,
           price: price,
+          overbookRate: garage.OVERBOOK_RATE,
         };
 
         return newGarage;
@@ -263,29 +265,26 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
       .filter((garage) => garage.distance <= radius);
 
     // Use checkAvailability on each garage to find if it is available
-    // TODO confirm async works inside filter
-    garages = await garages.filter(
-      async (garage) => await checkAvailability(garage.GARAGE_ID, resTypeId, garage.IS_ACTIVE, start, end, isMonthly)
+    garages = await Promise.all(
+      garages.map(async (garage) => {
+        const isAvailable = await checkAvailability(
+          garage.garageId,
+          resTypeId,
+          start,
+          end,
+          isMonthly,
+          garage.overbookRate
+        );
+        if (isAvailable) return { ...garage, overbookRate: null };
+        else return null;
+      })
     );
+    // Filter out unavailable garages
+    garages = garages.filter((garage) => garage);
+
+    // TODO combine those into a single map and filter
 
     return garages;
-
-    /* return [
-      {
-        garageId: 1,
-        description: 'ParkingSpaceX',
-        lat: 0,
-        lon: 0,
-        distance: 500,
-      },
-      {
-        garageId: 2,
-        description: 'GarageBrand',
-        lat: 1,
-        lon: 1,
-        distance: 3000,
-      },
-    ]; */
   } catch (error) {
     console.error(error);
     return [];
@@ -344,9 +343,68 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garageId, resTypeId, start, end, isMonthly) => {
+const checkAvailability = async (garageId, resTypeId, start, end, isMonthly, overbookRate) => {
   // TODO
-  return true;
+  // Naive solution. Does not optimize for compressing partial overlaps, meaning two halves count as 2 spaces, not compressed to one occupancy
+  console.log(garageId, overbookRate);
+  // TODO can overbookRate be passed in from reserveSpace, or should I retrieve it here if null?
+  if (!overbookRate) {
+    const result = await Garage.findOne({
+      attributes: ['OVERBOOK_RATE'],
+      where: {
+        GARAGE_ID: garageId,
+      },
+    });
+
+    overbookRate = result.getDataValue('OVERBOOK_RATE');
+  }
+  // TODO walk-in floors/spaces? what kind of walkins?
+  // TODO doesn't work for making a monthly
+
+  // Get total number of spaces for this garage
+  let totalSpaces = 0;
+  const floors = await Floor.findAll({
+    attributes: ['SPACE_COUNT'],
+    where: {
+      GARAGE_ID: garageId,
+    },
+  });
+  floors.forEach((floor) => {
+    totalSpaces += floor.getDataValue('SPACE_COUNT');
+  });
+
+  // Calculate total with overbook rate
+  totalSpaces *= overbookRate;
+
+  // Count all monthly reservations that overlap this one
+  // Count all single reservations that overlap this reservation time
+  // Combined into single query, because monthlies could start or end at midnight in a two-day single reservation
+  const reserved = await Reservation.count({
+    where: {
+      // resStart < end &&  (resEnd == null || resEnd > resStart) // Selects all that overlap inside the res window
+      [Op.and]: [
+        {
+          GARAGE_ID: garageId,
+        },
+        {
+          START_TIME: {
+            [Op.lt]: end,
+          },
+        },
+        {
+          END_TIME: {
+            [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
+          },
+        },
+      ],
+    },
+  });
+  console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+  // Subtract found from total
+  totalSpaces -= reserved;
+
+  // If totalSpaces is greater than 0, there are spaces available
+  return totalSpaces > 0;
 };
 
 // -------- TIME FUNCTIONS --------
