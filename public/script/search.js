@@ -135,13 +135,6 @@
 
     // Bring in garage data from backend
     const getResults = async () => {
-      // Clear old garages and markers
-      garages.length = 0;
-      while (garageMarkers.length > 0) {
-        // Remove from map and array simultaneously
-        garageMarkers.pop().removeFrom(map);
-      }
-
       // Build datetimes
       reserveOptions.time.from = buildTimeObj(searchForm.from);
       reserveOptions.time.to = searchForm.isMonthly ? null : buildTimeObj(searchForm.to);
@@ -167,6 +160,13 @@
         .then((results) => {
           // Return if status is not OK
           if (results.status != 200) return;
+
+          // Clear old garages and markers
+          garages.length = 0;
+          while (garageMarkers.length > 0) {
+            // Remove from map and array simultaneously
+            garageMarkers.pop().removeFrom(map);
+          }
 
           // Process results
           results.data?.forEach((garage) => {
