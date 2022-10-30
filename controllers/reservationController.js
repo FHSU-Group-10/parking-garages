@@ -301,20 +301,35 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
  * @returns {String} - The total reservation price to two decimal places
  */
 const calculatePrice = async (start, end, reservationType) => {
-  // TODO how to support dailyMax calculations?
-  // Calculate number of half-hour billable periods for desired time period
-  const periods = Math.ceil((end - start) / 1800000);
+  let priceStr;
+  // Monthly reservations calculated differently
+  if (reservationType == 2) {
+    // Monthly
+    const rate = await Pricing.findOne({
+      attributes: ['COST'],
+      where: {
+        RESERVATION_TYPE_ID: reservationType,
+      },
+    });
+    priceStr = `${rate.getDataValue('COST')} / month`;
+  } else {
+    // Single or walk-in
+    // TODO how to support dailyMax calculations?
 
-  // Retrieve the rate for the given reservation type
-  const rate = await Pricing.findOne({
-    attributes: ['COST', 'DAILY_MAX'],
-    where: { RESERVATION_TYPE_ID: reservationType },
-  });
+    // Calculate number of half-hour billable periods for desired time period
+    const periods = Math.ceil((end - start) / 1800000);
 
-  // Calculate the total price
-  const price = parseFloat(rate.dataValues.COST) * periods;
-  // Convert to a string with two decimal places
-  const priceStr = price.toFixed(2);
+    // Retrieve the rate for the given reservation type
+    const rate = await Pricing.findOne({
+      attributes: ['COST', 'DAILY_MAX'],
+      where: { RESERVATION_TYPE_ID: reservationType },
+    });
+
+    // Calculate the total price
+    const price = parseFloat(rate.getDataValue('COST')) * periods;
+    // Convert to a string with two decimal places
+    priceStr = price.toFixed(2);
+  }
 
   return priceStr;
 };
