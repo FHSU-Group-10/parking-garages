@@ -1,5 +1,5 @@
 (function (window) {
-  function pageCtrl($scope, $http, $document, $window, $timeout) {
+  function pageCtrl($http, $window) {
     // -------- LIBRARIES --------
 
     const convert = $window.convert; // Unit conversions
@@ -70,6 +70,9 @@
       //e.preventDefault();
       // TODO validate data
 
+      // Collapse search options in smaller windows
+      document.querySelector('#collapseOne').classList.toggle('show');
+
       // Set user coords by geo or search string
       await setLocation();
 
@@ -80,7 +83,7 @@
       // Get matching garages with availability
       await getResults();
       // Set the map with search location and garage pins and radius circle
-      await setMap();
+      setMap();
     };
 
     // Handle clicking on reserve button in search results
@@ -333,5 +336,5 @@
   }
 
   var app = angular.module('pageApp', []);
-  app.controller('pageCtrl', ['$scope', '$http', '$document', '$window', '$timeout', pageCtrl]);
+  app.controller('pageCtrl', ['$http', '$window', pageCtrl]);
 })(window);

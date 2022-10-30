@@ -70,19 +70,35 @@
         max-width: 1200px;
       }
       #map {
-        border: 5px solid black;
-        border-bottom: 0;
-        height: 400px;
+        height: 300px;
+        margin: 10px;
       }
       #search-form {
-        border: 5px solid black;
-        margin: auto;
+        margin: 0.2em;
         padding: 0.5em;
-        background-color: white;
+
         display: flex;
         flex-direction: column;
         justify-content: center;
       }
+      .form-control,
+      .form-select,
+      .input-group-text {
+        margin-bottom: 0.2em;
+      }
+      #accordionSearch {
+        margin: 10px;
+      }
+      #collapseOne {
+        color: white;
+      }
+      .accordion-item {
+        border: none;
+      }
+      .accordion-button {
+        font-size: large;
+      }
+
       .loc-checkbox {
         margin-right: 0.5em;
       }
@@ -119,6 +135,19 @@
       }
 
       @media only screen and (min-width: 769px) {
+        .accordion-header {
+          display: none;
+        }
+        .accordion-item {
+          border: none;
+        }
+        #accordionSearch {
+          margin: 0;
+          padding: 0;
+        }
+        .collapse {
+          display: inline !important;
+        }
         .mapAndSearch {
           display: flex;
         }
@@ -126,9 +155,15 @@
           width: calc(100% - 350px);
         }
         #map {
-          border: 5px solid black;
           height: 500px;
         }
+        .accordion-item {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
         #search-form {
           border-left: 0;
           margin: 0;
@@ -136,7 +171,7 @@
           width: 350px;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: space-around;
         }
         #search-form > fieldset {
           padding-bottom: 0.5em;
@@ -175,15 +210,15 @@
                       <a ng-href="{{vm.reserveOptions.directionsLink}}">Directions</a>
                     </td>
                   </tr>
-                  <tr ng-if="vm.searchForm.isMonthly">
+                  <tr ng-if="vm.reserveOptions.isMonthly">
                     <th>From:</th>
                     <td>{{vm.reserveOptions.time.fromStr.slice(0, 10)}}</td>
                   </tr>
-                  <tr ng-if="!vm.searchForm.isMonthly">
+                  <tr ng-if="!vm.reserveOptions.isMonthly">
                     <th>From:</th>
                     <td>{{vm.reserveOptions.time.fromStr}}</td>
                   </tr>
-                  <tr ng-if="!vm.searchForm.isMonthly">
+                  <tr ng-if="!vm.reserveOptions.isMonthly">
                     <th>To:</th>
                     <td>{{vm.reserveOptions.time.toStr}}</td>
                   </tr>
@@ -229,152 +264,182 @@
       </div>
 
       <!-- Div to hold map and form -->
-      <div class="mapAndSearch">
-        <!-- Map -->
-        <section id="map-section">
-          <div id="map"></div>
-        </section>
+      <div class="card bg-dark rounded-3 text-white">
+        <div class="mapAndSearch">
+          <!-- <div class="mapAndSearch"> -->
+          <!-- Map -->
+          <section id="map-section">
+            <div id="map"></div>
+          </section>
 
-        <!-- Search Form -->
-        <form id="search-form" class="" validate>
-          <!-- Location and Geolocate -->
-          <fieldset>
-            <legend>Location:</legend>
-            <div class="input-group">
-              <input
-                type="text"
-                class="form-control"
-                id="locationInput"
-                placeholder="Atlanta, GA"
-                ng-model="vm.searchForm.location"
-                ng-disabled="vm.searchForm.useGeo"
-              />
-
-              <span class="input-group-text"
-                ><input
-                  class="form-check-input loc-checkbox"
-                  type="checkbox"
-                  ng-model="vm.searchForm.useGeo"
-                  id="checkUseLocation"
-                /><label class="form-check-label" for="checkUseLocation">My Location</label></span
+          <!-- Search Form -->
+          <div class="accordion" id="accordionSearch">
+            <div class="accordion-item bg-dark">
+              <h2 class="accordion-header" id="headingOne">
+                <button
+                  class="accordion-button bg-light"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseOne"
+                >
+                  Search Options
+                </button>
+              </h2>
+              <div
+                id="collapseOne"
+                class="accordion-collapse collapse show"
+                aria-labelledby="headingOne"
+                data-bs-parent="#accordionSearch"
               >
-            </div>
+                <form id="search-form" class="" validate>
+                  <!-- Location and Geolocate -->
+                  <fieldset>
+                    <legend>Location:</legend>
+                    <div class="input-group">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="locationInput"
+                        placeholder="Atlanta, GA"
+                        ng-model="vm.searchForm.location"
+                        ng-disabled="vm.searchForm.useGeo"
+                      />
 
-            <!-- Search radius -->
-            <div class="input-group">
-              <span class="input-group-text">Within:</span>
-              <input type="text" class="form-control" placeholer="0" ng-model="vm.searchForm.radius" required /><br />
-              <select class="form-select" ng-model="vm.searchForm.radiusUnit">
-                <option selected value="miles">Miles</option>
-                <option value="feet">Feet</option>
-              </select>
-            </div>
-            <!-- Reservation Type -->
-            <div class="input-group">
-              <span class="input-group-text">Reservation Type</span>
-              <select class="form-select" ng-model="vm.searchForm.type" ng-change="vm.checkType()">
-                <option value="1">Single</option>
-                <option value="2">Monthly</option>
-              </select>
-            </div>
-          </fieldset>
+                      <span class="input-group-text"
+                        ><input
+                          class="form-check-input loc-checkbox"
+                          type="checkbox"
+                          ng-model="vm.searchForm.useGeo"
+                          id="checkUseLocation"
+                        /><label class="form-check-label" for="checkUseLocation">My Location</label></span
+                      >
+                    </div>
 
-          <!-- From datetime -->
-          <fieldset class="datetime-fieldset">
-            <legend>From:</legend>
-            <div class="input-group datetime-date">
-              <span class="input-group-text">Date</span>
-              <input type="date" class="form-control" ng-model="vm.searchForm.from.date" required />
-            </div>
-            <div class="input-group datetime-time" id="from-time" ng-if="!vm.searchForm.isMonthly">
-              <span class="input-group-text">Time</span>
-              <select class="form-select datetime-hour" ng-model="vm.searchForm.from.hour">
-                <option value="00">00</option>
-                <option value="01">01</option>
-                <option value="02">02</option>
-                <option value="03">03</option>
-                <option value="04">04</option>
-                <option value="05">05</option>
-                <option value="06">06</option>
-                <option value="07">07</option>
-                <option value="08">08</option>
-                <option value="09">09</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-                <option value="13">13</option>
-                <option value="14">14</option>
-                <option value="15">15</option>
-                <option value="16">16</option>
-                <option value="17">17</option>
-                <option value="18">18</option>
-                <option value="19">19</option>
-                <option value="20">20</option>
-                <option value="21">21</option>
-                <option value="22">22</option>
-                <option value="23">23</option>
-              </select>
-              <span class="input-group-text">:</span>
-              <select class="form-select datetime-minute" ng-model="vm.searchForm.from.minute">
-                <option value="00">00</option>
-                <option value="30">30</option>
-              </select>
-            </div>
-          </fieldset>
+                    <!-- Search radius -->
+                    <div class="input-group">
+                      <span class="input-group-text">Within:</span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        placeholer="0"
+                        ng-model="vm.searchForm.radius"
+                        required
+                      /><br />
+                      <select class="form-select" ng-model="vm.searchForm.radiusUnit">
+                        <option selected value="miles">Miles</option>
+                        <option value="feet">Feet</option>
+                      </select>
+                    </div>
+                    <!-- Reservation Type -->
+                    <div class="input-group">
+                      <span class="input-group-text">Reservation Type</span>
+                      <select class="form-select" ng-model="vm.searchForm.type" ng-change="vm.checkType()">
+                        <option value="1">Single</option>
+                        <option value="2">Monthly</option>
+                      </select>
+                    </div>
+                  </fieldset>
 
-          <!-- To datetime -->
-          <fieldset class="datetime-fieldset" ng-if="!vm.searchForm.isMonthly">
-            <legend>To:</legend>
-            <div class="input-group datetime-date">
-              <span class="input-group-text">Date</span>
-              <input type="date" class="form-control" ng-model="vm.searchForm.to.date" />
-            </div>
-            <div class="input-group datetime-time" id="to-time">
-              <span class="input-group-text">Time</span>
-              <select class="form-select datetime-hour" ng-model="vm.searchForm.to.hour">
-                <option value="00">00</option>
-                <option value="01">01</option>
-                <option value="02">02</option>
-                <option value="03">03</option>
-                <option value="04">04</option>
-                <option value="05">05</option>
-                <option value="06">06</option>
-                <option value="07">07</option>
-                <option value="08">08</option>
-                <option value="09">09</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-                <option value="13">13</option>
-                <option value="14">14</option>
-                <option value="15">15</option>
-                <option value="16">16</option>
-                <option value="17">17</option>
-                <option value="18">18</option>
-                <option value="19">19</option>
-                <option value="20">20</option>
-                <option value="21">21</option>
-                <option value="22">22</option>
-                <option value="23">23</option>
-              </select>
-              <span class="input-group-text">:</span>
-              <select class="form-select w-auto datetime-minute" ng-model="vm.searchForm.to.minute">
-                <option value="00">00</option>
-                <option value="30">30</option>
-              </select>
-            </div>
-          </fieldset>
+                  <!-- From datetime -->
+                  <fieldset class="datetime-fieldset">
+                    <legend>From:</legend>
+                    <div class="input-group datetime-date">
+                      <span class="input-group-text">Date</span>
+                      <input type="date" class="form-control" ng-model="vm.searchForm.from.date" required />
+                    </div>
+                    <div class="input-group datetime-time" id="from-time" ng-if="!vm.searchForm.isMonthly">
+                      <span class="input-group-text">Time</span>
+                      <select class="form-select datetime-hour" ng-model="vm.searchForm.from.hour">
+                        <option value="00">00</option>
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                        <option value="04">04</option>
+                        <option value="05">05</option>
+                        <option value="06">06</option>
+                        <option value="07">07</option>
+                        <option value="08">08</option>
+                        <option value="09">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                      </select>
+                      <span class="input-group-text">:</span>
+                      <select class="form-select datetime-minute" ng-model="vm.searchForm.from.minute">
+                        <option value="00">00</option>
+                        <option value="30">30</option>
+                      </select>
+                    </div>
+                  </fieldset>
 
-          <!-- Search button -->
-          <input
-            class="btn btn-primary"
-            type="submit"
-            id="submitSearch"
-            value="Search"
-            ng-click="vm.handleSearch($event)"
-            ng-disabled="!vm.isFormValid()"
-          />
-        </form>
+                  <!-- To datetime -->
+                  <fieldset class="datetime-fieldset" ng-if="!vm.searchForm.isMonthly">
+                    <legend>To:</legend>
+                    <div class="input-group datetime-date">
+                      <span class="input-group-text">Date</span>
+                      <input type="date" class="form-control" ng-model="vm.searchForm.to.date" />
+                    </div>
+                    <div class="input-group datetime-time" id="to-time">
+                      <span class="input-group-text">Time</span>
+                      <select class="form-select datetime-hour" ng-model="vm.searchForm.to.hour">
+                        <option value="00">00</option>
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                        <option value="04">04</option>
+                        <option value="05">05</option>
+                        <option value="06">06</option>
+                        <option value="07">07</option>
+                        <option value="08">08</option>
+                        <option value="09">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                      </select>
+                      <span class="input-group-text">:</span>
+                      <select class="form-select w-auto datetime-minute" ng-model="vm.searchForm.to.minute">
+                        <option value="00">00</option>
+                        <option value="30">30</option>
+                      </select>
+                    </div>
+                  </fieldset>
+
+                  <!-- Search button -->
+                  <input
+                    class="btn btn-primary"
+                    type="submit"
+                    id="submitSearch"
+                    value="Search"
+                    ng-click="vm.handleSearch($event)"
+                    ng-disabled="!vm.isFormValid()"
+                  />
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Search Results -->
@@ -382,7 +447,7 @@
         <div class="result-tile">
           <div class="result-descrip">
             <h3>{{garage.description}}</h3>
-            <h5>{{garage.distance}} {{vm.searchForm.radiusUnit}} away</h5>
+            <h5>{{garage.distance}} {{vm.reserveOptions.radiusUnit}} away</h5>
           </div>
           <button
             type="button"
