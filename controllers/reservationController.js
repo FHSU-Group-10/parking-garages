@@ -127,12 +127,6 @@ const reserveSpace = async (req, res) => {
 
   // Create the reservation in the DB
   try {
-    // Reservation model will throw an error if any FK is invalid, no need to check first
-
-    // TODO make sure reservations are in the time zone of the garage
-
-    // TODO find a way to join all these precondition db calls
-
     // Convert times to search position local time
     const tz = await timezone(lat, lon);
     startDateTime = timeFromLocal(startDateTime, tz);
@@ -157,7 +151,7 @@ const reserveSpace = async (req, res) => {
 
     // Sequelize returns null if no match found
     if (!user || (vehicleId && !vehicle)) {
-      console.log('user: ' + user + ' vehicle: ' + vehicle);
+      //console.log('user: ' + user + ' vehicle: ' + vehicle);
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
     }
 
@@ -182,8 +176,6 @@ const reserveSpace = async (req, res) => {
       VEHICLE_ID: vehicleId,
       STATUS_ID: reservationStatusId,
     });
-
-    // TODO add the reservation to the timetables
 
     // Return the reservation details after successful creation
     return res.status(200).json(reservation);
@@ -282,7 +274,7 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
     // Filter out unavailable garages
     garages = garages.filter((garage) => garage);
 
-    // TODO combine those into a single map and filter
+    // NOTE: Combining the two above map-and-filter calls broke the map last time it was tried
 
     return garages;
   } catch (error) {
@@ -300,36 +292,37 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
  * @returns {String} - The total reservation price to two decimal places
  */
 const calculatePrice = async (start, end, reservationType) => {
-  let priceStr;
+  // Retrieve the rate for the given reservation type
+  const rate = await Pricing.findOne({
+    attributes: ['COST', 'DAILY_MAX'],
+    where: { RESERVATION_TYPE_ID: reservationType },
+  });
+
   // Monthly reservations calculated differently
+  let priceStr;
+
   if (reservationType == 2) {
     // Monthly
-    const rate = await Pricing.findOne({
-      attributes: ['COST'],
-      where: {
-        RESERVATION_TYPE_ID: reservationType,
-      },
-    });
     priceStr = `${rate.getDataValue('COST')} / month`;
   } else {
     // Single or walk-in
-    // TODO how to support dailyMax calculations?
+
+    // DailyMax treated as per 24-hour period, not per calendar day
+    const milliInDay = 86400000; // 24 hours to milliseconds
+    const milliIn30Min = 1800000; // 30 minutes in milliseconds
+    let resLength = end - start; // Reservation length in milliseconds
+    // Calculate # of 24-hour periods
+    const days = Math.floor(resLength / milliInDay);
+    resLength = resLength % milliInDay;
 
     // Calculate number of half-hour billable periods for desired time period
-    const periods = Math.ceil((end - start) / 1800000);
-
-    // Retrieve the rate for the given reservation type
-    const rate = await Pricing.findOne({
-      attributes: ['COST', 'DAILY_MAX'],
-      where: { RESERVATION_TYPE_ID: reservationType },
-    });
+    const periods = Math.ceil(resLength / milliIn30Min);
 
     // Calculate the total price
-    const price = parseFloat(rate.getDataValue('COST')) * periods;
+    const price = parseFloat(rate.getDataValue('COST')) * periods + parseFloat(rate.getDataValue('DAILY_MAX')) * days;
     // Convert to a string with two decimal places
     priceStr = price.toFixed(2);
   }
-
   return priceStr;
 };
 
@@ -344,7 +337,7 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garageId, resTypeId, start, end = null, isMonthly = false, overbookRate = null) => {
+const checkAvailability = async (garageId, start, end = null, isMonthly = false, overbookRate = null) => {
   // Retrieve overbookRate if it was not passed in
   if (!overbookRate) {
     const result = await Garage.findOne({
@@ -356,7 +349,7 @@ const checkAvailability = async (garageId, resTypeId, start, end = null, isMonth
 
     overbookRate = result.getDataValue('OVERBOOK_RATE');
   }
-  // TODO walk-in floors/spaces? what kind of walkins?
+  // NOTE does not account for walk-in floors/spaces.
 
   // Get total number of spaces for this garage
   let totalSpaces = 0;
@@ -433,7 +426,7 @@ const checkAvailability = async (garageId, resTypeId, start, end = null, isMonth
 function timeout() {
   return new Promise((resolve) => setTimeout(resolve, 1000));
 }
-// TODO Debounce search and reserve
+
 /**  Get the timezone for the search position
  * NOTE - Timezone API is rate-limited to 1 request/second
  *
