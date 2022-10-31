@@ -232,16 +232,28 @@ const addGarage = async (req, res) => {
   
     // separating dataValues from return set
     garage = (garage || {}).dataValues;
-    let floors = {};
+    // init our array
+    let garage_floors = [];
     if (garage) {
-      floors = 
+      // create each floor object for saving
+      for (let i = 0 ; i < floors; i++) {
+        garage_floors.push({
+          GARAGE_ID: garage.GARAGE_ID,
+          FLOOR_NUM: i + 1,
+          SPACE_COUNT: spotsPerFloor[i]
+        })
+      }
+      // pass our array of floors to create
+      let assigned_floors = await Floor.bulkCreate(garage_floors);
+  
+      // remove our data values
+      // using .map since the returned floors is an array of object with dataValues on each object
+      assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
+      garage.floors = assigned_floors
     }
     
-    // Garage created in the DB
-    const result = { message: 'Garage created.' };
-    
     // Return the result
-    return res.status(200).json(result);
+    return res.status(200).json(garage);
   } catch (err) {
     console.error('Garage controller failed.');
     return res.status(500);

@@ -9,5 +9,4 @@ Content-Type: application/json
   "location": ["36.1583", "86.7761"],
   "overbookRate":  1.1,
   "isActive": true
-
 }
