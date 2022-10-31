@@ -11,6 +11,8 @@ const { Sequelize, Op } = require("sequelize");
 // const jwt = require('jsonwebtoken');
 // const {token} = require("morgan");
 const Garage = Db.models.Garage;
+const Floor = Db.models.Floor;
+
 const listGarages = async (req, res) => {
   try {
     // Find pricing for the specified garage
@@ -216,17 +218,9 @@ const addGarage = async (req, res) => {
     return res.status(400).json({ message: 'Overbook rate must be at least 100%.' });
   }
   try{
-    let test = {
-      DESCRIPTION: garageName,
-      FLOOR_COUNT: floors,
-      LAT: location[0],
-      LONG: location[1],
-      OVERBOOK_RATE: overbookRate,
-      IS_ACTIVE: isActive,
-      
-    }
+    
     //not sure how this works. Do we need to set garage?
-    const garage = await Garage.create({
+    let garage = await Garage.create({
       DESCRIPTION: garageName,
       FLOOR_COUNT: floors,
       LAT: location[0],
@@ -235,6 +229,13 @@ const addGarage = async (req, res) => {
       IS_ACTIVE: isActive,
       
     });
+  
+    // separating dataValues from return set
+    garage = (garage || {}).dataValues;
+    let floors = {};
+    if (garage) {
+      floors = 
+    }
     
     // Garage created in the DB
     const result = { message: 'Garage created.' };

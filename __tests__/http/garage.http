@@ -3,7 +3,7 @@ POST http://localhost:3500/garage/add
 Content-Type: application/json
 
 {
-  "name": "Downtown Garage 3",
+  "name": "Downtown Garage 2",
   "numFloors": 3,
   "spotsPerFloor": [10, 10, 10],
   "location": ["36.1583", "86.7761"],
