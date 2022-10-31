@@ -174,8 +174,6 @@ const reserveSpace = async (req, res) => {
       STATUS_ID: reservationStatusId,
     });
 
-    // TODO add the reservation to the timetables
-
     // Return the reservation details after successful creation
     return res.status(200).json(reservation);
   } catch (error) {
@@ -215,65 +213,51 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
 
     // Prepare location objects for distance calcs
     const searchLoc = { latitude: lat, longitude: lon };
-    let garageLoc, newGarage, price;
+    let garageLoc, price;
 
     // Prices are the same for all garages
     price = await calculatePrice(start, end, resTypeId);
 
-    // Filter garages based on search radius
-    garages = garages
-      .map((garage) => {
+    // Check all garages are within search radius and have availability given the search parameters
+    garages = await Promise.all(
+      // Return null for any garages that should be filtered out
+      garages.map(async (garage) => {
         garage = garage.dataValues;
+
+        // DISTANCE
+        // Calculate distance of garage from search location
         if (useFakeLocations) {
-          // Generate fake garage locations near the search point. NOT guaranteed to be within the search radius
           garageLoc = {
+            // Generate fake garage locations near the search point. NOT guaranteed to be within the search radius
             latitude: parseFloat(lat) + (0.5 - Math.random()) * 0.05,
             longitude: parseFloat(lon) + (0.5 - Math.random()) * 0.05,
           };
-          /* console.log(
-            `Spoofed garage loc from [${garage.LAT}, ${garage.LONG}] to [${garageLoc.latitude}, ${garageLoc.longitude}]`
-          ); */
         } else {
-          // Use real garage locations
-          garageLoc = { latitude: garage.LAT, longitude: garage.LONG };
+          garageLoc = { latitude: garage.LAT, longitude: garage.LONG }; // Use real garage locations
         }
 
-        // Calculate the distance between the search location and garage
+        // Reject if too far
         const dist = haversine(searchLoc, garageLoc);
+        if (dist > radius) return null;
 
-        newGarage = {
-          garageId: garage.GARAGE_ID,
-          description: garage.DESCRIPTION,
-          lat: garageLoc.latitude,
-          lon: garageLoc.longitude,
-          distance: dist,
-          price: price,
-          overbookRate: garage.OVERBOOK_RATE,
-        };
-
-        return newGarage;
-      })
-      .filter((garage) => garage.distance <= radius);
-
-    // Use checkAvailability on each garage to find if it is available
-    garages = await Promise.all(
-      garages.map(async (garage) => {
-        const isAvailable = await checkAvailability(
-          garage.garageId,
-          resTypeId,
-          start,
-          end,
-          isMonthly,
-          garage.overbookRate
-        );
-        if (isAvailable) return { ...garage, overbookRate: null };
-        else return null;
+        // AVAILABILITY
+        // Check availability of each garage
+        const isAvailable = await checkAvailability(garage.GARAGE_ID, resTypeId, start, end, isMonthly);
+        if (!isAvailable) return null;
+        else
+          return {
+            garageId: garage.GARAGE_ID,
+            description: garage.DESCRIPTION,
+            lat: garageLoc.latitude,
+            lon: garageLoc.longitude,
+            distance: dist,
+            price: price,
+          };
       })
     );
-    // Filter out unavailable garages
-    garages = garages.filter((garage) => garage);
 
-    // TODO combine those into a single map and filter
+    // Filter out any null values after all promises resolve
+    garages = garages.filter((garage) => garage);
 
     return garages;
   } catch (error) {
@@ -393,7 +377,7 @@ const checkAvailability = async (garageId, resTypeId, start, end = null, isMonth
     });
   }
 
-  console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+  //console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
 
   // Subtract found from total
   totalSpaces -= reserved;
