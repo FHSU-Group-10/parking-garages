@@ -153,8 +153,14 @@ const reserveSpace = async (req, res) => {
     }
 
     // Confirm availability before reservation
-    //const isActive = await Garage.findByPk(garageId); moved into check!
-    const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, !!isMonthly);
+    const garage = await Garage.findOne({
+      attributes: ['GARAGE_ID', 'OVERBOOK_RATE', 'IS_ACTIVE'],
+      where: {
+        GARAGE_ID: garageId,
+      },
+      include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
+    });
+    const isAvailable = await checkAvailability(garage, reservationTypeId, startDateTime, endDateTime, !!isMonthly);
 
     if (!isAvailable) {
       return res.status(400).json({ message: 'Garage unavailable.' });
@@ -209,7 +215,11 @@ const reserveSpace = async (req, res) => {
 const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly, useFakeLocations) => {
   try {
     // Get all active garages from DB
-    let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
+    //let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
+    let garages = await Garage.findAll({
+      where: { IS_ACTIVE: true },
+      include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
+    });
 
     // Prepare location objects for distance calcs
     const searchLoc = { latitude: lat, longitude: lon };
@@ -222,8 +232,8 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
     garages = await Promise.all(
       // Return null for any garages that should be filtered out
       garages.map(async (garage) => {
-        garage = garage.dataValues;
-
+        const data = garage.dataValues;
+        //return [];
         // DISTANCE
         // Calculate distance of garage from search location
         if (useFakeLocations) {
@@ -233,7 +243,7 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
             longitude: parseFloat(lon) + (0.5 - Math.random()) * 0.05,
           };
         } else {
-          garageLoc = { latitude: garage.LAT, longitude: garage.LONG }; // Use real garage locations
+          garageLoc = { latitude: data.LAT, longitude: data.LONG }; // Use real garage locations
         }
 
         // Reject if too far
@@ -242,12 +252,12 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
 
         // AVAILABILITY
         // Check availability of each garage
-        const isAvailable = await checkAvailability(garage.GARAGE_ID, resTypeId, start, end, isMonthly);
+        const isAvailable = await checkAvailability(garage, resTypeId, start, end, isMonthly);
         if (!isAvailable) return null;
         else
           return {
-            garageId: garage.GARAGE_ID,
-            description: garage.DESCRIPTION,
+            garageId: data.GARAGE_ID,
+            description: data.DESCRIPTION,
             lat: garageLoc.latitude,
             lon: garageLoc.longitude,
             distance: dist,
@@ -321,15 +331,15 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garageId, resTypeId, start, end = null, isMonthly = false) => {
+const checkAvailability = async (garage, resTypeId, start, end = null, isMonthly = false) => {
   // Retrieve Garage and all associated floors in one shot. Lazy load the reservations to avoid passing too much data
-  const garage = await Garage.findOne({
+  /* const garage = await Garage.findOne({
     attributes: ['GARAGE_ID', 'OVERBOOK_RATE', 'IS_ACTIVE'],
     where: {
       GARAGE_ID: garageId,
     },
     include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
-  });
+  }); */
 
   // Return early if garage is unavailable
   if (!garage.getDataValue('IS_ACTIVE')) return false;

@@ -77,7 +77,7 @@
 
     // Handles search form submission
     const debouncedSearch = debounce(() => handleSearch());
-    const handleSearch = async () => {
+    const handleSearch = async (e) => {
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
 
@@ -166,6 +166,12 @@
         },
       })
         .then((results) => {
+          // Alert if no results and reopen search accordion
+          if (results.status == 204) {
+            document.querySelector('#collapseOne').classList.toggle('show');
+            alert('There are no garages available matching your request.');
+            return;
+          }
           // Return if status is not OK
           if (results.status != 200) return;
 
@@ -178,12 +184,6 @@
 
           // Change distance units afteer cleared to prevent confusion, if necessary
           reserveOptions.radiusUnit = searchForm.radiusUnit;
-
-          // Alert if no results and reopen search accordion
-          if (!results?.data) {
-            document.querySelector('#collapseOne').classList.toggle('show');
-            alert('There are no garages available matching your request.');
-          }
 
           // Process results
           results.data?.forEach((garage) => {
@@ -349,6 +349,7 @@
       isFormValid,
       handleSubmitReservation,
       debouncedSearch,
+      handleSearch,
     };
   }
 
