@@ -41,7 +41,7 @@
       radiusMeters: null,
       radiusUnit: null,
       user: {
-        memberId: 1, // TODO add users
+        memberId: 1, // TODO add users and vehicles
         vehicleId: null,
       },
       garage: {
@@ -78,9 +78,6 @@
     // Handles search form submission
     const debouncedSearch = debounce(() => handleSearch());
     const handleSearch = async () => {
-      //e.preventDefault();
-      // TODO validate data
-
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
 
@@ -182,7 +179,11 @@
           // Change distance units afteer cleared to prevent confusion, if necessary
           reserveOptions.radiusUnit = searchForm.radiusUnit;
 
-          // TODO alert if no results and reopen search accordion
+          // Alert if no results and reopen search accordion
+          if (!results?.data) {
+            document.querySelector('#collapseOne').classList.toggle('show');
+            alert('There are no garages available matching your request.');
+          }
 
           // Process results
           results.data?.forEach((garage) => {
@@ -207,7 +208,7 @@
 
     // -------- FORM VALIDATION --------
 
-    // TODO Change - Sets isMonthly flag on search to hide certain fields
+    // Sets isMonthly flag on search to hide certain fields
     const checkType = () => {
       searchForm.isMonthly = searchForm.type == '2';
     };
