@@ -6,11 +6,13 @@
 const _ = require("lodash");
 const Db = require('../config/dbConn')();
 const { Sequelize, Op } = require("sequelize");
-//const getModels = Db.getModels;
-//const bcrypt = require("bcrypt");
-//const jwt = require('jsonwebtoken');
-//const {token} = require("morgan");
+// const getModels = Db.getModels;
+// const bcrypt = require("bcrypt");
+// const jwt = require('jsonwebtoken');
+// const {token} = require("morgan");
 const Garage = Db.models.Garage;
+const Floor = Db.models.Floor;
+
 const listGarages = async (req, res) => {
   try {
     // Find pricing for the specified garage
@@ -22,29 +24,29 @@ const listGarages = async (req, res) => {
     return res.status(500);
   }
 }
-  //return res.status(200).json([
-   /*
-    {
-      id: 'garage1',
-      name: 'Parkopolis',
-      location: 'Nowhere',
-      numFloors: 3,
-      spotsPerFloor: [10, 20, 20],
-      overbookRate: 1.05,
-      isActive: true,
-    },
-    {
-      id: 'garage2',
-      name: 'Carmalot',
-      location: 'England',
-      numFloors: 5,
-      spotsPerFloor: [10, 20, 20, 0, 15],
-      overbookRate: 1.1,
-      isActive: false,
-    },*/
+//return res.status(200).json([
+/*
+ {
+   id: 'garage1',
+   name: 'Parkopolis',
+   location: 'Nowhere',
+   numFloors: 3,
+   spotsPerFloor: [10, 20, 20],
+   overbookRate: 1.05,
+   isActive: true,
+ },
+ {
+   id: 'garage2',
+   name: 'Carmalot',
+   location: 'England',
+   numFloors: 5,
+   spotsPerFloor: [10, 20, 20, 0, 15],
+   overbookRate: 1.1,
+   isActive: false,
+ },*/
 
 const getGarageId = async (req, res) => {
-try {
+  try {
     // Find pricing for the specified garage
     const results = await Garage.findAll(GARAGE_ID);
     // Return results
@@ -86,8 +88,8 @@ const updateGarage = async (req, res) => {
   const location = req?.body?.location;
   const overbookRate=req?.body?.overbookRate;
   const isActive=req?.body?.isActive
-
-   // Return early if any arguments are missing
+  
+  // Return early if any arguments are missing
   if (!(garageName && floors && spotsPerFloor && location && isActive)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
@@ -121,9 +123,9 @@ const updateGarage = async (req, res) => {
         },
         {where: {GARAGE_ID: garageId}}
     )
-
-  // Return the result
-  return res.status(200).json(result);
+    
+    // Return the result
+    return res.status(200).json(result);
   }catch (err) {
     console.error('Garage controller failed.');
     return res.status(500);
@@ -144,7 +146,7 @@ const updateGarage = async (req, res) => {
 const deleteGarage = async (req, res) => {
   // Get arguments from request body
   const garageId = req.body.garageId;
-
+  
   // Return early if garageId was not sent
   if (!garageId) {
     return res.status(400).json({ message: 'garageId is required.' });
@@ -154,16 +156,16 @@ const deleteGarage = async (req, res) => {
   if (!validGarages.includes(garageId)) {
     return res.status(400).json({ message: 'garageId does not exist.' });
   }
-try {
-  await Garage.destroy({
-    where: {
-      GARAGE_ID: garageId
-    },
-    force: true
-  });
-  const result = {message: 'Garage deleted.'};
-
-  return res.status(200).json(result);
+  try {
+    await Garage.destroy({
+      where: {
+        GARAGE_ID: garageId
+      },
+      force: true
+    });
+    const result = {message: 'Garage deleted.'};
+    
+    return res.status(200).json(result);
   }catch(err) {
     console.error('Garage controller failed.');
     return res.status(500);
@@ -197,12 +199,11 @@ const addGarage = async (req, res) => {
   const location = req?.body?.location;
   const overbookRate=req?.body?.overbookRate;
   const isActive=req?.body?.isActive
-
+  
   // Return early if any arguments are missing
   if (!(garageName && floors && spotsPerFloor && location)) {
     return res.status(400).json({ message: 'Incomplete request' });
   }
-
   // Check preconditions
   if (floors < 1) {
     return res.status(400).json({ message: 'Number of floors must be >= 1.' });
@@ -217,26 +218,42 @@ const addGarage = async (req, res) => {
     return res.status(400).json({ message: 'Overbook rate must be at least 100%.' });
   }
   try{
+    
     //not sure how this works. Do we need to set garage?
-    const [garage, created] = await Garage.findOrCreate({
-      where: {
-        DESCRIPTION: garageName,
-        FLOOR_COUNT: floors,
-        LAT: location[0],
-        LONG: location[1],
-        OVERBOOK_RATE: overbookRate,
-        IS_ACTIVE: isActive,
+    let garage = await Garage.create({
+      DESCRIPTION: garageName,
+      FLOOR_COUNT: floors,
+      LAT: location[0],
+      LONG: location[1],
+      OVERBOOK_RATE: overbookRate,
+      IS_ACTIVE: isActive,
+      
+    });
+  
+    // separating dataValues from return set
+    garage = (garage || {}).dataValues;
+    // init our array
+    let garage_floors = [];
+    if (garage) {
+      // create each floor object for saving
+      for (let i = 0 ; i < floors; i++) {
+        garage_floors.push({
+          GARAGE_ID: garage.GARAGE_ID,
+          FLOOR_NUM: i + 1,
+          SPACE_COUNT: spotsPerFloor[i]
+        })
       }
-    })
-
-    if (!created) {
-      return res.status(400).json({ message: "Garage Creation Failed." });
+      // pass our array of floors to create
+      let assigned_floors = await Floor.bulkCreate(garage_floors);
+  
+      // remove our data values
+      // using .map since the returned floors is an array of object with dataValues on each object
+      assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
+      garage.floors = assigned_floors
     }
-    // Garage created in the DB
-    const result = { message: 'Garage created.' };
-
+    
     // Return the result
-    return res.status(200).json(result);
+    return res.status(200).json(garage);
   } catch (err) {
     console.error('Garage controller failed.');
     return res.status(500);

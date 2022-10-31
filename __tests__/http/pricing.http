@@ -1,4 +1,4 @@
-// return list prices
+#return list prices
 ###
 GET http://localhost:3500/pricing/getPricing
 Content-Type: application/json
@@ -7,8 +7,9 @@ Content-Type: application/json
     
 }
 
-// Add pricing row to table 
+
 ###
+#Add pricing row to table
 POST http://localhost:3500/pricing/createPricing
 Content-Type: application/json
 
@@ -19,8 +20,8 @@ Content-Type: application/json
     "reservationTypeId": 1
 }
 
-// Add pricing row to table 
 ###
+# Add pricing row to table 
 POST http://localhost:3500/pricing/createPricing
 Content-Type: application/json
 
@@ -31,8 +32,9 @@ Content-Type: application/json
     "reservationTypeId": 1
 }
 
-// Add pricing row to table 
+
 ###
+#Add pricing row to table
 POST http://localhost:3500/pricing/createPricing
 Content-Type: application/json
 
@@ -42,8 +44,9 @@ Content-Type: application/json
     "dailyMax": 15,
     "reservationTypeId": 1
 }
-// update pricing in table
+
 ###
+#update pricing in table
 POST http://localhost:3500/pricing/updatePricing
 Content-Type: application/json
 
@@ -58,7 +61,7 @@ Content-Type: application/json
 }
 
 
-// delete a row in the table
+#delete a row in the table
 ###
 POST http://localhost:3500/pricing/destroyRow
 Content-Type: application/json
