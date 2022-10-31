@@ -41,7 +41,7 @@
       radiusMeters: null,
       radiusUnit: null,
       user: {
-        memberId: 1, // TODO add users
+        memberId: 1, // TODO add users and vehicles
         vehicleId: null,
       },
       garage: {
@@ -62,14 +62,22 @@
       isMonthly: null,
     };
 
+    // -------- DEBOUNCE --------
+    function debounce(func, timeout = 300) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, timeout);
+      };
+    }
+
     // -------- EVENT HANDLERS --------
 
     // Handles search form submission
-    // TODO debounce!
+    const debouncedSearch = debounce(() => handleSearch());
     const handleSearch = async (e) => {
-      //e.preventDefault();
-      // TODO validate data
-
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
 
@@ -158,6 +166,12 @@
         },
       })
         .then((results) => {
+          // Alert if no results and reopen search accordion
+          if (results.status == 204) {
+            document.querySelector('#collapseOne').classList.toggle('show');
+            alert('There are no garages available matching your request.');
+            return;
+          }
           // Return if status is not OK
           if (results.status != 200) return;
 
@@ -171,11 +185,8 @@
           // Change distance units afteer cleared to prevent confusion, if necessary
           reserveOptions.radiusUnit = searchForm.radiusUnit;
 
-          // TODO alert if no results and reopen search accordion
-
           // Process results
           results.data?.forEach((garage) => {
-            console.log(garage);
             // Distance is returned in meters, convert back to user units
             if (searchForm.radiusUnit == 'feet')
               // Measurements in feet shouldn't be precise to the foot
@@ -197,7 +208,7 @@
 
     // -------- FORM VALIDATION --------
 
-    // TODO Change - Sets isMonthly flag on search to hide certain fields
+    // Sets isMonthly flag on search to hide certain fields
     const checkType = () => {
       searchForm.isMonthly = searchForm.type == '2';
     };
@@ -329,7 +340,6 @@
 
     // Return anything needed in the html
     return {
-      handleSearch,
       searchForm,
       garages,
       addGarages: getResults,
@@ -338,6 +348,8 @@
       reserveOptions,
       isFormValid,
       handleSubmitReservation,
+      debouncedSearch,
+      handleSearch,
     };
   }
 

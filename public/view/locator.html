@@ -179,7 +179,7 @@
       }
     </style>
   </head>
-
+  <!-- TODO add nav and login , and pull user and vehicle info to populate res modal and request -->
   <body class="background gradient-custom" ng-app="pageApp" ng-controller="pageCtrl as vm">
     <div id="app">
       <!-- Modal -->
@@ -432,7 +432,7 @@
                     type="submit"
                     id="submitSearch"
                     value="Search"
-                    ng-click="vm.handleSearch($event)"
+                    ng-click="vm.debouncedSearch($event)"
                     ng-disabled="!vm.isFormValid()"
                   />
                 </form>
