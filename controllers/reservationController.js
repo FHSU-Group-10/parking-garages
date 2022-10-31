@@ -117,8 +117,8 @@ const reserveSpace = async (req, res) => {
   const lon = req?.body?.lon;
   let startDateTime = req?.body?.startDateTime;
   let endDateTime = req?.body?.endDateTime;
-  let reservationStatusId = req?.body?.reservationStatusId || 1;
-  const isMonthly = req?.body?.isMonthly || false;
+  let reservationStatusId = req?.body?.reservationStatusId;
+  const isMonthly = req?.body?.isMonthly;
 
   // Return early if any arguments missing (vehicles optional)
   if (!req?.body || !(memberId && reservationTypeId && garageId && startDateTime && (endDateTime || isMonthly))) {
@@ -127,6 +127,12 @@ const reserveSpace = async (req, res) => {
 
   // Create the reservation in the DB
   try {
+    // Reservation model will throw an error if any FK is invalid, no need to check first
+
+    // TODO make sure reservations are in the time zone of the garage
+
+    // TODO find a way to join all these precondition db calls
+
     // Convert times to search position local time
     const tz = await timezone(lat, lon);
     startDateTime = timeFromLocal(startDateTime, tz);
@@ -137,32 +143,29 @@ const reserveSpace = async (req, res) => {
       return res.status(400).json({ message: 'Invalid date or time.' });
     }
 
-    // Check for user, eager loading vehicles to put everything in one request
-    const user = await Users.findOne({
-      attributes: ['MEMBER_ID'],
-      where: { MEMBER_ID: memberId },
-      include: { model: Vehicle, attributes: ['VEHICLE_ID'] },
-    });
+    const user = await Users.findByPk(memberId);
+    const vehicle = vehicleId
+      ? // Vehicle is optional
+        await Vehicle.findOne({
+          where: {
+            // The vehicle must be registered to the user
+            VEHICLE_ID: vehicleId,
+            MEMBER_ID: memberId,
+          },
+        })
+      : null;
 
-    // Check for vehicle-user match only if vehicleId given
-    let count;
-    if (vehicleId) count = await user.countVehicles({ where: { VEHICLE_ID: vehicleId } });
-
-    if (!user || (vehicleId && !count)) {
+    // Sequelize returns null if no match found
+    if (!user || (vehicleId && !vehicle)) {
+      console.log('user: ' + user + ' vehicle: ' + vehicle);
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
     }
 
     // Confirm availability before reservation
-    const garage = await Garage.findOne({
-      attributes: ['GARAGE_ID', 'OVERBOOK_RATE', 'IS_ACTIVE'],
-      where: {
-        GARAGE_ID: garageId,
-      },
-      include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
-    });
-    const isAvailable = await checkAvailability(garage, reservationTypeId, startDateTime, endDateTime, !!isMonthly);
+    const isActive = await Garage.findByPk(garageId);
+    const isAvailable = await checkAvailability(garageId, reservationTypeId, startDateTime, endDateTime, !!isMonthly);
 
-    if (!isAvailable) {
+    if (!(isActive && isAvailable)) {
       return res.status(400).json({ message: 'Garage unavailable.' });
     }
 
@@ -179,6 +182,8 @@ const reserveSpace = async (req, res) => {
       VEHICLE_ID: vehicleId,
       STATUS_ID: reservationStatusId,
     });
+
+    // TODO add the reservation to the timetables
 
     // Return the reservation details after successful creation
     return res.status(200).json(reservation);
@@ -215,59 +220,69 @@ const reserveSpace = async (req, res) => {
 const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly, useFakeLocations) => {
   try {
     // Get all active garages from DB
-    //let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
-    let garages = await Garage.findAll({
-      where: { IS_ACTIVE: true },
-      include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
-    });
+    let garages = await Garage.findAll({ where: { IS_ACTIVE: true } });
 
     // Prepare location objects for distance calcs
     const searchLoc = { latitude: lat, longitude: lon };
-    let garageLoc, price;
+    let garageLoc, newGarage, price;
 
     // Prices are the same for all garages
     price = await calculatePrice(start, end, resTypeId);
 
-    // Check all garages are within search radius and have availability given the search parameters
-    garages = await Promise.all(
-      // Return null for any garages that should be filtered out
-      garages.map(async (garage) => {
-        const data = garage.dataValues;
-        //return [];
-        // DISTANCE
-        // Calculate distance of garage from search location
+    // Filter garages based on search radius
+    garages = garages
+      .map((garage) => {
+        garage = garage.dataValues;
         if (useFakeLocations) {
+          // Generate fake garage locations near the search point. NOT guaranteed to be within the search radius
           garageLoc = {
-            // Generate fake garage locations near the search point. NOT guaranteed to be within the search radius
             latitude: parseFloat(lat) + (0.5 - Math.random()) * 0.05,
             longitude: parseFloat(lon) + (0.5 - Math.random()) * 0.05,
           };
+          /* console.log(
+            `Spoofed garage loc from [${garage.LAT}, ${garage.LONG}] to [${garageLoc.latitude}, ${garageLoc.longitude}]`
+          ); */
         } else {
-          garageLoc = { latitude: data.LAT, longitude: data.LONG }; // Use real garage locations
+          // Use real garage locations
+          garageLoc = { latitude: garage.LAT, longitude: garage.LONG };
         }
 
-        // Reject if too far
+        // Calculate the distance between the search location and garage
         const dist = haversine(searchLoc, garageLoc);
-        if (dist > radius) return null;
 
-        // AVAILABILITY
-        // Check availability of each garage
-        const isAvailable = await checkAvailability(garage, resTypeId, start, end, isMonthly);
-        if (!isAvailable) return null;
-        else
-          return {
-            garageId: data.GARAGE_ID,
-            description: data.DESCRIPTION,
-            lat: garageLoc.latitude,
-            lon: garageLoc.longitude,
-            distance: dist,
-            price: price,
-          };
+        newGarage = {
+          garageId: garage.GARAGE_ID,
+          description: garage.DESCRIPTION,
+          lat: garageLoc.latitude,
+          lon: garageLoc.longitude,
+          distance: dist,
+          price: price,
+          overbookRate: garage.OVERBOOK_RATE,
+        };
+
+        return newGarage;
+      })
+      .filter((garage) => garage.distance <= radius);
+
+    // Use checkAvailability on each garage to find if it is available
+    garages = await Promise.all(
+      garages.map(async (garage) => {
+        const isAvailable = await checkAvailability(
+          garage.garageId,
+          resTypeId,
+          start,
+          end,
+          isMonthly,
+          garage.overbookRate
+        );
+        if (isAvailable) return { ...garage, overbookRate: null };
+        else return null;
       })
     );
-
-    // Filter out any null values after all promises resolve
+    // Filter out unavailable garages
     garages = garages.filter((garage) => garage);
+
+    // TODO combine those into a single map and filter
 
     return garages;
   } catch (error) {
@@ -285,34 +300,32 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
  * @returns {String} - The total reservation price to two decimal places
  */
 const calculatePrice = async (start, end, reservationType) => {
-  // Retrieve the rate for the given reservation type
-  const rate = await Pricing.findOne({
-    attributes: ['COST', 'DAILY_MAX'],
-    where: { RESERVATION_TYPE_ID: reservationType },
-  });
-
-  // Monthly reservations calculated differently
   let priceStr;
-
+  // Monthly reservations calculated differently
   if (reservationType == 2) {
     // Monthly
+    const rate = await Pricing.findOne({
+      attributes: ['COST'],
+      where: {
+        RESERVATION_TYPE_ID: reservationType,
+      },
+    });
     priceStr = `${rate.getDataValue('COST')} / month`;
   } else {
     // Single or walk-in
-
-    // DailyMax treated as per 24-hour period, not per calendar day
-    const milliInDay = 86400000; // 24 hours to milliseconds
-    const milliIn30Min = 1800000; // 30 minutes in milliseconds
-    let resLength = end - start; // Reservation length in milliseconds
-    // Calculate # of 24-hour periods
-    const days = Math.floor(resLength / milliInDay);
-    resLength = resLength % milliInDay;
+    // TODO how to support dailyMax calculations?
 
     // Calculate number of half-hour billable periods for desired time period
-    const periods = Math.ceil(resLength / milliIn30Min);
+    const periods = Math.ceil((end - start) / 1800000);
+
+    // Retrieve the rate for the given reservation type
+    const rate = await Pricing.findOne({
+      attributes: ['COST', 'DAILY_MAX'],
+      where: { RESERVATION_TYPE_ID: reservationType },
+    });
 
     // Calculate the total price
-    const price = parseFloat(rate.getDataValue('COST')) * periods + parseFloat(rate.getDataValue('DAILY_MAX')) * days;
+    const price = parseFloat(rate.getDataValue('COST')) * periods;
     // Convert to a string with two decimal places
     priceStr = price.toFixed(2);
   }
@@ -331,37 +344,47 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garage, resTypeId, start, end = null, isMonthly = false) => {
-  // Retrieve Garage and all associated floors in one shot. Lazy load the reservations to avoid passing too much data
-  /* const garage = await Garage.findOne({
-    attributes: ['GARAGE_ID', 'OVERBOOK_RATE', 'IS_ACTIVE'],
-    where: {
-      GARAGE_ID: garageId,
-    },
-    include: [{ model: Floor, attributes: ['SPACE_COUNT'] }],
-  }); */
+const checkAvailability = async (garageId, resTypeId, start, end = null, isMonthly = false, overbookRate = null) => {
+  // Retrieve overbookRate if it was not passed in
+  if (!overbookRate) {
+    const result = await Garage.findOne({
+      attributes: ['OVERBOOK_RATE'],
+      where: {
+        GARAGE_ID: garageId,
+      },
+    });
 
-  // Return early if garage is unavailable
-  if (!garage.getDataValue('IS_ACTIVE')) return false;
-
+    overbookRate = result.getDataValue('OVERBOOK_RATE');
+  }
   // TODO walk-in floors/spaces? what kind of walkins?
 
   // Get total number of spaces for this garage
   let totalSpaces = 0;
-  garage.dataValues.Floors.forEach((floor) => (totalSpaces += floor.dataValues.SPACE_COUNT));
+  const floors = await Floor.findAll({
+    attributes: ['SPACE_COUNT'],
+    where: {
+      GARAGE_ID: garageId,
+    },
+  });
+  floors.forEach((floor) => {
+    totalSpaces += floor.getDataValue('SPACE_COUNT');
+  });
 
   // Calculate total with overbook rate
-  totalSpaces *= garage.getDataValue('OVERBOOK_RATE');
+  totalSpaces *= overbookRate;
 
   // Count all reservations that overlap this one, monthly or otherwise
   let reserved;
 
   if (!isMonthly) {
     // This is making a Single or Walk-In reservation
-    reserved = await garage.countReservations({
+    reserved = await Reservation.count({
       where: {
         // resStart < end &&  (resEnd == null || resEnd > start) Selects all that overlap inside the res window
         [Op.and]: [
+          {
+            GARAGE_ID: garageId,
+          },
           {
             START_TIME: {
               [Op.lt]: end,
@@ -377,17 +400,24 @@ const checkAvailability = async (garage, resTypeId, start, end = null, isMonthly
     });
   } else {
     // This is making a Monthly reservation
-    reserved = await garage.countReservations({
+    reserved = await Reservation.count({
       where: {
         // (resEnd == null || resEnd > resStart) Selects all that overlap inside the res window
-        END_TIME: {
-          [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
-        },
+        [Op.and]: [
+          {
+            GARAGE_ID: garageId,
+          },
+          {
+            END_TIME: {
+              [Op.or]: [{ [Op.is]: null }, { [Op.gt]: start }],
+            },
+          },
+        ],
       },
     });
   }
 
-  //console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+  // console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
 
   // Subtract found from total
   totalSpaces -= reserved;
@@ -403,7 +433,7 @@ const checkAvailability = async (garage, resTypeId, start, end = null, isMonthly
 function timeout() {
   return new Promise((resolve) => setTimeout(resolve, 1000));
 }
-
+// TODO Debounce search and reserve
 /**  Get the timezone for the search position
  * NOTE - Timezone API is rate-limited to 1 request/second
  *
