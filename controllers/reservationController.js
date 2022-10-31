@@ -291,32 +291,34 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
  * @returns {String} - The total reservation price to two decimal places
  */
 const calculatePrice = async (start, end, reservationType) => {
-  let priceStr;
+  // Retrieve the rate for the given reservation type
+  const rate = await Pricing.findOne({
+    attributes: ['COST', 'DAILY_MAX'],
+    where: { RESERVATION_TYPE_ID: reservationType },
+  });
+
   // Monthly reservations calculated differently
+  let priceStr;
+
   if (reservationType == 2) {
     // Monthly
-    const rate = await Pricing.findOne({
-      attributes: ['COST'],
-      where: {
-        RESERVATION_TYPE_ID: reservationType,
-      },
-    });
     priceStr = `${rate.getDataValue('COST')} / month`;
   } else {
     // Single or walk-in
-    // TODO how to support dailyMax calculations?
+
+    // DailyMax treated as per 24-hour period, not per calendar day
+    const milliInDay = 86400000; // 24 hours to milliseconds
+    const milliIn30Min = 1800000; // 30 minutes in milliseconds
+    let resLength = end - start; // Reservation length in milliseconds
+    // Calculate # of 24-hour periods
+    const days = Math.floor(resLength / milliInDay);
+    resLength = resLength % milliInDay;
 
     // Calculate number of half-hour billable periods for desired time period
-    const periods = Math.ceil((end - start) / 1800000);
-
-    // Retrieve the rate for the given reservation type
-    const rate = await Pricing.findOne({
-      attributes: ['COST', 'DAILY_MAX'],
-      where: { RESERVATION_TYPE_ID: reservationType },
-    });
+    const periods = Math.ceil(resLength / milliIn30Min);
 
     // Calculate the total price
-    const price = parseFloat(rate.getDataValue('COST')) * periods;
+    const price = parseFloat(rate.getDataValue('COST')) * periods + parseFloat(rate.getDataValue('DAILY_MAX')) * days;
     // Convert to a string with two decimal places
     priceStr = price.toFixed(2);
   }
