@@ -407,7 +407,7 @@ const checkAvailability = async (garageId, resTypeId, start, end = null, isMonth
 function timeout() {
   return new Promise((resolve) => setTimeout(resolve, 1000));
 }
-// TODO Debounce search and reserve
+
 /**  Get the timezone for the search position
  * NOTE - Timezone API is rate-limited to 1 request/second
  *

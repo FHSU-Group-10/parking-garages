@@ -62,11 +62,22 @@
       isMonthly: null,
     };
 
+    // -------- DEBOUNCE --------
+    function debounce(func, timeout = 300) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, timeout);
+      };
+    }
+
     // -------- EVENT HANDLERS --------
 
     // Handles search form submission
-    // TODO debounce!
-    const handleSearch = async (e) => {
+    const debouncedSearch = debounce(() => handleSearch());
+    const handleSearch = async () => {
       //e.preventDefault();
       // TODO validate data
 
@@ -329,7 +340,6 @@
 
     // Return anything needed in the html
     return {
-      handleSearch,
       searchForm,
       garages,
       addGarages: getResults,
@@ -338,6 +348,7 @@
       reserveOptions,
       isFormValid,
       handleSubmitReservation,
+      debouncedSearch,
     };
   }
 
