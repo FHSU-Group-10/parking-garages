@@ -6,17 +6,22 @@
     const DateTime = $window.luxon.DateTime; // Datetime conversions
     const bs = $window.bootstrap;
 
-    // -------- DATA --------
-
-    let map, userMarker, radiusCircle;
-    let garages = [];
-    let garageMarkers = [];
-
+    // -------- MODALS --------
     const errorModal = {
       message: '',
       status: '',
       modal: new bs.Modal(document.querySelector('#error-modal')),
     };
+
+    const successModal = {
+      modal: new bs.Modal(document.querySelector('#success-modal')),
+    };
+
+    // -------- DATA --------
+
+    let map, userMarker, radiusCircle;
+    let garages = [];
+    let garageMarkers = [];
 
     // Form fields
     const searchForm = {
@@ -139,13 +144,16 @@
         },
       })
         .then(() => {
-          // Modal is closed automatically by html
-          // Show status alert
-          alert('Reservation successful!');
-          // Window reloads after successful reservation
-          $window.location.reload();
+          // Reservation modal is closed automatically by html
+          // Show success modal
+          successModal.modal.show();
         })
-        .catch((err) => alert(err.message));
+        .catch((err) => {
+          // Show error modal
+          errorModal.status = err.status;
+          errorModal.message = err.data?.message || 'Unknown';
+          errorModal.modal.show();
+        });
     };
 
     // -------- API REQUESTS --------
@@ -379,6 +387,7 @@
       handleSubmitReservation,
       debouncedSearch,
       handleSearch,
+      successModal,
     };
   }
 

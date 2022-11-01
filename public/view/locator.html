@@ -219,6 +219,35 @@
         </div>
       </div>
 
+      <!-- Successful reservation modal -->
+      <div class="modal fade" id="success-modal" data-bs-backdrop="static" tabindex="1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header text-bg-success">
+              <h1 class="modal-title">Reservation successful!</h1>
+              <button
+                type="button"
+                onclick="window.location.reload()"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#success-modal"
+                ng-click="window.location.reload()"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Reservation Modal -->
       <div class="modal fade" id="reservation-modal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
