@@ -60,6 +60,7 @@
       totalPrice: null,
       directionsLink: null,
       isMonthly: null,
+      useFakeLocations: true, // Flag to generate fake locations
     };
 
     // -------- DEBOUNCE --------
@@ -146,9 +147,6 @@
       // Build datetimes
       reserveOptions.time.from = buildTimeObj(searchForm.from);
       reserveOptions.time.to = searchForm.isMonthly ? null : buildTimeObj(searchForm.to);
-
-      // Flag to generate fake locations
-      const useFakeLocations = true;
 
       // Get garage results from backend
       $http({

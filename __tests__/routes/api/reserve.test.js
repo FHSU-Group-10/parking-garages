@@ -165,7 +165,7 @@ describe('Reserve Route', () => {
         memberId: 1,
         reservationTypeId: 1,
         vehicleId: null,
-        garageId: 1,
+        garageId: 2,
         lat: 1,
         lon: 1,
         startDateTime: null,
@@ -248,17 +248,17 @@ describe('Reserve Route', () => {
     });
 
     test('FKs must be valid PKs in their respective tables', async () => {
-      (options.memberId = 1000),
-        (options.reservationTypeId = 1000),
-        (options.vehicleId = 1000),
-        (options.garageId = 1000),
-        (options.startDateTime = {
-          year: 2024,
-          month: 6,
-          day: 6,
-          hour: 0,
-          minute: 0,
-        });
+      options.memberId = 1000;
+      options.reservationTypeId = 1000;
+      options.vehicleId = 1000;
+      options.garageId = 1000;
+      options.startDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
       options.endDateTime = {
         year: 2024,
         month: 6,
@@ -283,7 +283,7 @@ describe('Reserve Route', () => {
         memberId: 1,
         reservationTypeId: 1,
         vehicleId: null,
-        garageId: 1,
+        garageId: 2,
         lat: 1,
         lon: 1,
         startDateTime: null,

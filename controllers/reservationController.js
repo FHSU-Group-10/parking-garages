@@ -208,6 +208,9 @@ const reserveSpace = async (req, res) => {
  * @param {Boolean} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @param {Boolean} useFakeLocations - A flag to spoof locations for garages
  * @returns {[Object]} - An array of garages that match the requested availability
+ *
+ * Preconditions:
+ * - All parameters have values
  */
 const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly, useFakeLocations) => {
   try {
@@ -312,6 +315,7 @@ const calculatePrice = async (start, end, reservationType) => {
     const milliInDay = 86400000; // 24 hours to milliseconds
     const milliIn30Min = 1800000; // 30 minutes in milliseconds
     let resLength = end - start; // Reservation length in milliseconds
+    console.log(resLength, start, end);
     // Calculate # of 24-hour periods
     const days = Math.floor(resLength / milliInDay);
     resLength = resLength % milliInDay;
@@ -338,7 +342,7 @@ const calculatePrice = async (start, end, reservationType) => {
  * @param {Boolean} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
-const checkAvailability = async (garageId, start, end = null, isMonthly = false, overbookRate = null) => {
+const checkAvailability = async (garageId, resTypeId, start, end = null, isMonthly = false, overbookRate = null) => {
   // Retrieve overbookRate if it was not passed in
   if (!overbookRate) {
     const result = await Garage.findOne({
@@ -410,7 +414,7 @@ const checkAvailability = async (garageId, start, end = null, isMonthly = false,
       },
     });
   }
-
+  console.log(`Start: ${start}, End: ${end}`);
   console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
 
   // Subtract found from total
