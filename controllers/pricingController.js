@@ -84,6 +84,7 @@ const updatePricing = async (req, res) => {
         }
       );
     }
+    return res.status(200).json({});
   } catch (err) {
     console.error('Pricing controller failed.');
     return res.status(500);
