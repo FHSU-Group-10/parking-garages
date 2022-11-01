@@ -21,7 +21,7 @@ const { Reservation, ReservationStatus, ReservationType, Vehicle, Users, Floor, 
  * @param {Object} startDateTime - The desired start time of the reservation
  * @param {Object} endDateTime - The desired end time of the reservation
  * @param {Boolean} isMonthly - Signals if the reservation is guaranteed/monthly
- * @param {*} useFakeLocations - A flag to spoof locations for garages
+ * @param {Boolean} useFakeLocations - A flag to spoof locations for garages
  * @returns {[Object]}  an array of reservation options
  *
  * Preconditions:
@@ -102,7 +102,7 @@ const searchSpace = async (req, res) => {
  *  - memberId, reservationTypeId, vehicleId, garageId, and reservationStatusId are valid keys in the DB
  *  - lat, lon, and startDateTime are not null
  *  - Either isMonthly is true or endDateTime is not null
- *  - startDateTime < endDateTime
+ *  - !isMonthly && startDateTime < endDateTime
  *  - startDateTime >= current datetime
  * Postconditions:
  *  - A reservation is created in the system matching the given characteristics
@@ -199,14 +199,14 @@ const reserveSpace = async (req, res) => {
  * Find available parking garages for a given location, radius, time slot, and reservation type.
  * Can spoof garage locations to be near search location.
  *
- * @param {*} lat - The search position latitude
- * @param {*} lon - The search position longitude
- * @param {*} radius - The search radius in meters
- * @param {*} resTypeId - The reservation type
+ * @param {Number} lat - The search position latitude
+ * @param {Number} lon - The search position longitude
+ * @param {Number} radius - The search radius in meters
+ * @param {Number} resTypeId - The reservation type
  * @param {Date} start - The desired start datetime of the reservation
  * @param {Date} end - The desired end datetime of the reservation
- * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
- * @param {*} useFakeLocations - A flag to spoof locations for garages
+ * @param {Boolean} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
+ * @param {Boolean} useFakeLocations - A flag to spoof locations for garages
  * @returns {[Object]} - An array of garages that match the requested availability
  */
 const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly, useFakeLocations) => {
@@ -231,9 +231,6 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
             latitude: parseFloat(lat) + (0.5 - Math.random()) * 0.05,
             longitude: parseFloat(lon) + (0.5 - Math.random()) * 0.05,
           };
-          /* console.log(
-            `Spoofed garage loc from [${garage.LAT}, ${garage.LONG}] to [${garageLoc.latitude}, ${garageLoc.longitude}]`
-          ); */
         } else {
           // Use real garage locations
           garageLoc = { latitude: garage.LAT, longitude: garage.LONG };
@@ -286,10 +283,14 @@ const findAvailable = async (lat, lon, radius, resTypeId, start, end, isMonthly,
 /**
  * Calculates the projected total price of a reservation
  *
- * @param {*} start - The start datetime
- * @param {*} end - The end datetime
- * @param {*} reservationType - The reservation type
+ * @param {Date} start - The start datetime
+ * @param {Date} end - The end datetime
+ * @param {Number} reservationType - The reservation type
  * @returns {String} - The total reservation price to two decimal places
+ *
+ * Preconditions:
+ * - start < end
+ * - reservationType is a valid type in the system
  */
 const calculatePrice = async (start, end, reservationType) => {
   // Retrieve the rate for the given reservation type
@@ -330,11 +331,11 @@ const calculatePrice = async (start, end, reservationType) => {
  * Check the availability of a single garage given its ID, time, and reservation type
  * Naive solution. Does not optimize for compressing partial overlaps, meaning two halves count as 2 spaces, not compressed to one occupancy
  *
- * @param {*} garageId - The id of the garage to check
- * @param {*} resTypeId - The reservation type
- * @param {*} start - The desired start datetime of the reservation
- * @param {*} end - The desired endtime of the reservation
- * @param {*} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
+ * @param {Number} garageId - The id of the garage to check
+ * @param {Number} resTypeId - The reservation type
+ * @param {Date} start - The desired start datetime of the reservation
+ * @param {Date} end - The desired endtime of the reservation
+ * @param {Boolean} isMonthly - A flag signifying a reservation is for a monthly/guaranteed space
  * @returns {Boolean} - A flag signifying a garage is available with the requested availability
  */
 const checkAvailability = async (garageId, start, end = null, isMonthly = false, overbookRate = null) => {
@@ -410,7 +411,7 @@ const checkAvailability = async (garageId, start, end = null, isMonthly = false,
     });
   }
 
-  // console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
+  console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
 
   // Subtract found from total
   totalSpaces -= reserved;
@@ -422,7 +423,7 @@ const checkAvailability = async (garageId, start, end = null, isMonthly = false,
 // -------- TIME FUNCTIONS --------
 
 // Timezone API is rate-limited to 1 request per second.
-// Each Timezone API request must happen with a 1-second delay to avoid rate-limiting
+// Each Timezone API request must happen with a 1-second delay to avoid rate-limiting, wrapped in a Promise for readability
 function timeout() {
   return new Promise((resolve) => setTimeout(resolve, 1000));
 }
@@ -465,6 +466,7 @@ module.exports = {
   searchSpace,
   reserveSpace,
   findAvailable,
+  calculatePrice,
   checkAvailability,
   timezone,
   timeFromLocal,
