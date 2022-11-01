@@ -178,15 +178,13 @@
           // Remove 'searching' message
           document.querySelector('#loading-message').classList.toggle('hidden');
 
-          // Alert if no results and reopen search accordion
+          // Return if status is not OK
+
           if (results.status == 204) {
+            // Alert if no results and reopen search accordion
             document.querySelector('#collapseOne').classList.toggle('show');
             alert('There are no garages available matching your request.');
-            return;
           }
-
-          // Return if status is not OK
-          if (results.status != 200) return;
 
           /* // Clear old garages and markers
           garages.length = 0;
@@ -221,8 +219,9 @@
           document.querySelector('#loading-message').classList.toggle('hidden');
           // Reopen search accordion
           document.querySelector('#collapseOne').classList.toggle('show');
-          // Log error
-          console.error(error);
+          // Communicate the error
+          alert(`The request failed.\nReason: ${error?.data?.message || 'Server error'}`);
+          return;
         });
     };
 
