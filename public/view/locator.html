@@ -137,6 +137,25 @@
         margin: 0;
       }
 
+      .hidden {
+        display: none;
+      }
+
+      @keyframes blink {
+        0% {
+          opacity: 20%;
+        }
+        50% {
+          opacity: 100%;
+        }
+        100% {
+          opacity: 20%;
+        }
+      }
+      .blinker {
+        animation: blink normal 2s infinite ease-in-out;
+      }
+
       @media only screen and (min-width: 769px) {
         .accordion-header {
           display: none;
@@ -442,6 +461,12 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="loading-message" class="hidden card text-bg-dark" style="margin-top: 0.5em">
+        <div class="card-body blinker" style="margin: auto">
+          <h3>Searching...</h3>
         </div>
       </div>
 

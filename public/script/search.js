@@ -80,7 +80,8 @@
     const handleSearch = async (e) => {
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
-
+      // Show 'searching' message
+      document.querySelector('#loading-message').classList.toggle('hidden');
       // Set user coords by geo or search string
       await setLocation();
 
@@ -90,6 +91,7 @@
 
       // Get matching garages with availability
       await getResults();
+
       // Set the map with search location and garage pins and radius circle
       setMap();
     };
@@ -150,6 +152,13 @@
       // Flag to generate fake locations
       const useFakeLocations = true;
 
+      // Clear old garages and markers
+      garages.length = 0;
+      while (garageMarkers.length > 0) {
+        // Remove from map and array simultaneously
+        garageMarkers.pop().removeFrom(map);
+      }
+
       // Get garage results from backend
       $http({
         method: 'POST',
@@ -166,21 +175,25 @@
         },
       })
         .then((results) => {
+          // Remove 'searching' message
+          document.querySelector('#loading-message').classList.toggle('hidden');
+
           // Alert if no results and reopen search accordion
           if (results.status == 204) {
             document.querySelector('#collapseOne').classList.toggle('show');
             alert('There are no garages available matching your request.');
             return;
           }
+
           // Return if status is not OK
           if (results.status != 200) return;
 
-          // Clear old garages and markers
+          /* // Clear old garages and markers
           garages.length = 0;
           while (garageMarkers.length > 0) {
             // Remove from map and array simultaneously
             garageMarkers.pop().removeFrom(map);
-          }
+          } */
 
           // Change distance units afteer cleared to prevent confusion, if necessary
           reserveOptions.radiusUnit = searchForm.radiusUnit;
@@ -203,7 +216,14 @@
             garageMarkers.push(pin);
           });
         })
-        .catch((error) => console.error(error));
+        .catch((error) => {
+          // Remove 'searching' message
+          document.querySelector('#loading-message').classList.toggle('hidden');
+          // Reopen search accordion
+          document.querySelector('#collapseOne').classList.toggle('show');
+          // Log error
+          console.error(error);
+        });
     };
 
     // -------- FORM VALIDATION --------
