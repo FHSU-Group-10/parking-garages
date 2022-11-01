@@ -10,3 +10,20 @@ Content-Type: application/json
   "overbookRate":  1.1,
   "isActive": true
 }
+
+###
+POST http://localhost:3500/garage/
+Content-Type: application/json
+
+{
+    "id": 2,
+    "description": "testAgain",
+    "overbookRate": 1.1,
+    "isActive": true
+}
+
+
+###
+GET http://localhost:3500/garage/
+Content-Type: application/json
+
