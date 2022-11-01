@@ -160,7 +160,7 @@
           startDateTime: reserveOptions.time.from,
           endDateTime: reserveOptions.time.to,
           isMonthly: searchForm.isMonthly,
-          useFakeLocations: useFakeLocations,
+          useFakeLocations: reserveOptions.useFakeLocations,
         },
       })
         .then((results) => {

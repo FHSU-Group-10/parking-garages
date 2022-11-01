@@ -151,7 +151,6 @@ const reserveSpace = async (req, res) => {
 
     // Sequelize returns null if no match found
     if (!user || (vehicleId && !vehicle)) {
-      //console.log('user: ' + user + ' vehicle: ' + vehicle);
       return res.status(400).json({ message: 'Invalid ID(s) provided.' });
     }
 
@@ -315,7 +314,7 @@ const calculatePrice = async (start, end, reservationType) => {
     const milliInDay = 86400000; // 24 hours to milliseconds
     const milliIn30Min = 1800000; // 30 minutes in milliseconds
     let resLength = end - start; // Reservation length in milliseconds
-    console.log(resLength, start, end);
+
     // Calculate # of 24-hour periods
     const days = Math.floor(resLength / milliInDay);
     resLength = resLength % milliInDay;
@@ -414,7 +413,7 @@ const checkAvailability = async (garageId, resTypeId, start, end = null, isMonth
       },
     });
   }
-  console.log(`Start: ${start}, End: ${end}`);
+  console.log(`Reservation Start: ${start}, End: ${end}`);
   console.log(`Garage ${garageId}: Total: ${totalSpaces}, Reserved: ${reserved}`);
 
   // Subtract found from total
