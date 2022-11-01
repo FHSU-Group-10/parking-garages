@@ -4,7 +4,7 @@ const reservationController = require('../../controllers/reservationController')
 const request = require('supertest');
 const app = require('../../app');
 
-jest.setTimeout(20000);
+jest.setTimeout(30000);
 
 describe('Reservation Controller', () => {
   // reservationController.findAvailable()

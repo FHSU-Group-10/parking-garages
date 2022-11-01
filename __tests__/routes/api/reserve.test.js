@@ -192,6 +192,8 @@ describe('Reserve Route', () => {
       };
 
       const res = await request(app).post('/reserve').send(options);
+
+      expect(res.body).not.toEqual({ message: 'Garage unavailable.' });
       expect(res.status).toBe(200);
     });
 
@@ -303,6 +305,7 @@ describe('Reserve Route', () => {
       };
 
       const res = await request(app).post('/reserve').send(options);
+      expect(res.body).not.toEqual({ message: 'Garage unavailable.' });
       expect(res.status).toBe(200);
     });
 
