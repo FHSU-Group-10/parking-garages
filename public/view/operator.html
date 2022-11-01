@@ -18,6 +18,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular.js"></script>
   
   
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
   <script src="https://use.fontawesome.com/da8f2a3609.js"></script>
   
   <script src="../script/operator.js"></script>
@@ -45,6 +48,15 @@
   
   .forgot-password:hover {
     color: white !important;
+  }
+  
+  th {
+    color: white !important;
+    white-space: nowrap !important;
+  }
+  
+  .condensed{
+    font-size: 13px;
   }
   
   
@@ -87,10 +99,21 @@
 </style>
 
 <body ng-app="priceApp" ng-controller="priceCtrl as vm">
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="modal fade loading-modal-lg" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content" style="width: 48px">
+      <span style="color: white" class="fa fa-spinner fa-spin fa-3x"></span>
+    </div>
+  </div>
+</div>
+
+
 <section id="fadeshow1" class="vh-100 gradient-custom">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
-      <div class="col-xl-10">
+      <div class="col-xl-12">
         <div class="card bg-dark rounded-3 text-white">
           <div class="row g-0">
             <div class="col-lg-6">
@@ -122,17 +145,121 @@
                 </div>
               </nav>
               <div class="card-body p-md-5 mx-md-4">
-                
-                
                 <div class="text-center">
                   <h2 class="fw-bold mb-2 text-uppercase">Operator</h2>
                 </div>
-              
+                <table class="table table-dark condensed">
+                  <thead>
+                  <tr>
+                    <th>
+                      Description
+                    </th>
+                    <th>
+                      Floor Count
+                    </th>
+                    <th>
+                      Active
+                    </th>
+                    <th>
+                      Overbook Rate
+                    </th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr id="{{garage.GARAGE_ID}}" ng-repeat="garage in vm.garages.list | orderBy : garage.GARAGE_ID">
+                    <td style="color: white !important;">{{garage.DESCRIPTION}}</td>
+                    <td style="color: white !important;">{{garage.FLOOR_COUNT}}</td>
+                    <td style="color: white !important;">{{garage.IS_ACTIVE}}</td>
+                    <td style="color: white !important;">{{garage.OVERBOOK_RATE}}</td>
+                    <td>
+                      <button ng-click="vm.editGarage(garage.GARAGE_ID)" type="button" class="btn btn-info btn-sm">
+                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="text" class="form-control form-control-sm">
+                    </td>
+                    <td>
+                      <input type="text" class="w-50 form-control form-control-sm">
+                    </td>
+                    <td>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="w-50 form-control form-control-sm">
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-success btn-sm">
+                        <i class="fa fa-plus" aria-hidden="true"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
               
               </div>
             </div>
             <div class="col-lg-6 d-flex justify-content-center align-items-center gradient-custom-2" style="background: black !important;" >
-              <div class="col-lg-6 d-flex justify-content-center align-items-center gradient-custom-2 right-div">
+              <div class="card-body p-md-5 mx-md-4">
+                <div class="col-lg-12 d-flex justify-content-center align-items-center gradient-custom-2 right-div">
+                  <table class="table table-striped">
+                    <thead>
+                    <tr>
+                      <th>
+                        Description
+                      </th>
+                      <th>
+                        Daily Max
+                      </th>
+                      <th>
+                        Cost
+                      </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr id="price-{{price.PRICING_ID}}" ng-repeat="price in vm.price.options | orderBy : price.PRICING_ID">
+                      <td style="color: white !important;">{{price.DESCRIPTION}}</td>
+                      <td ng-if="price.PRICING_ID != 2" style="color: white !important;"><span>{{vm.price.dailyMax}}</span></td>
+                      <td ng-if="price.PRICING_ID == 2" style="color: white !important;">N/A</td>
+                      <td style="color: white !important;">{{price.COST | currency}}</td>
+                      <td>
+                        <button ng-click="vm.editPrice(price.PRICING_ID)" type="button" class="btn btn-info btn-sm">
+                          <i class="fa fa-pencil" aria-hidden="true"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="text" ng-model="vm.price.currentEdit.DESCRIPTION" class="form-control form-control-sm" ng-disabled="true">
+                      </td>
+                      <td>
+                        <input ng-if="vm.price.currentEdit.PRICING_ID != 2" type="text" ng-model="vm.price.dailyMax" class="w-50 form-control form-control-sm" ng-model="vm.price.currentEdit.DAILY_MAX" ng-disabled="!vm.price.currentEdit.PRICING_ID">
+                        <input ng-if="vm.price.currentEdit.PRICING_ID == 2" type="text" ng-value="'N/A'" class="w-50 form-control form-control-sm" ng-model="vm.price.currentEdit.DAILY_MAX" ng-disabled="true">
+                      </td>
+                      <td>
+                        <input type="text" ng-model="vm.price.currentEdit.COST" class="w-100 form-control form-control-sm" ng-model="vm.price.currentEdit.COST" ng-disabled="!vm.price.currentEdit.PRICING_ID">
+                      </td>
+                      <td>
+                        <button type="button" ng-click="vm.savePriceEdit()" class="btn btn-success btn-sm" ng-disabled="!vm.price.currentEdit.PRICING_ID">
+                          <i class="fa fa-plus" aria-hidden="true"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-xs-12">
+                  <button
+                      type="button"
+                      ng-click="vm.submitPriceUpdate()"
+                      class="btn btn-success btn-sm"
+                      >Submit Pricing Updates
+                  </button>
+                </div>
               </div>
             </div>
           </div>
