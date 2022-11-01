@@ -103,24 +103,27 @@
         margin-right: 0.5em;
       }
       .result-tile {
-        background-color: white;
+        background-color: #212529;
         width: 100%;
         display: flex;
         justify-content: space-between;
-        border: 5px solid black;
         margin-top: 0.5em;
+        padding: 5px;
+        color: white;
+        border-radius: 5px;
       }
       .reserve-btn {
+        margin: 3px;
         background-color: greenyellow;
-        border: 0;
         padding: 0 1em;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         padding: 1em;
+        border: 3px solid greenyellow;
       }
       .reserve-btn:hover {
-        background-color: black;
+        background-color: #212529;
         color: greenyellow;
       }
       .result-descrip {
@@ -132,6 +135,25 @@
       .result-descrip > h3,
       .result-descrip > h5 {
         margin: 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @keyframes blink {
+        0% {
+          opacity: 20%;
+        }
+        50% {
+          opacity: 100%;
+        }
+        100% {
+          opacity: 20%;
+        }
+      }
+      .blinker {
+        animation: blink normal 2s infinite ease-in-out;
       }
 
       @media only screen and (min-width: 769px) {
@@ -182,23 +204,73 @@
   <!-- TODO add nav and login , and pull user and vehicle info to populate res modal and request -->
   <body class="background gradient-custom" ng-app="pageApp" ng-controller="pageCtrl as vm">
     <div id="app">
-      <!-- Modal -->
+      <!-- Error Modal -->
+      <div class="modal fade" id="error-modal" tabindex="1" style="backdrop-filter: blur(1px)">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header text-bg-danger">
+              <h1 class="modal-title">Request failed ({{vm.errorModal.status}})</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Reason: {{vm.errorModal.message}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Successful reservation modal -->
+      <div
+        class="modal fade"
+        id="success-modal"
+        data-bs-backdrop="static"
+        tabindex="1"
+        style="backdrop-filter: blur(1px)"
+      >
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header text-bg-success">
+              <h1 class="modal-title">Reservation successful!</h1>
+              <button
+                type="button"
+                onclick="window.location.reload()"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#success-modal"
+                ng-click="window.location.reload()"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reservation Modal -->
       <div
         class="modal fade"
         id="reservation-modal"
         data-bs-backdrop="static"
         tabindex="-1"
-        aria-labelledby="exampleModalLabel"
         aria-hidden="true"
+        style="backdrop-filter: blur(1px)"
       >
         <div class="modal-dialog">
-          <div class="modal-content">
+          <div class="modal-content text-bg-light">
             <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Confirm Reservation</h5>
+              <h5 class="modal-title">Confirm Reservation</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <table class="table reservationDetails">
+              <table class="table table-light table-striped reservationDetails">
                 <tbody>
                   <tr>
                     <th>Garage:</th>
@@ -251,7 +323,7 @@
               <!-- Data fields help Bootstrap close modal -->
               <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-success"
                 data-bs-toggle="modal"
                 data-bs-target="#reservation-modal"
                 ng-click="vm.handleSubmitReservation()"
@@ -439,6 +511,12 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="loading-message" class="hidden card text-bg-dark" style="margin-top: 0.5em">
+        <div class="card-body blinker" style="margin: auto">
+          <h3>Searching...</h3>
         </div>
       </div>
 
