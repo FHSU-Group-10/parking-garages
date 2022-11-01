@@ -4,12 +4,19 @@
 
     const convert = $window.convert; // Unit conversions
     const DateTime = $window.luxon.DateTime; // Datetime conversions
+    const bs = $window.bootstrap;
 
     // -------- DATA --------
 
     let map, userMarker, radiusCircle;
     let garages = [];
     let garageMarkers = [];
+
+    const errorModal = {
+      message: '',
+      status: '',
+      modal: new bs.Modal(document.querySelector('#error-modal')),
+    };
 
     // Form fields
     const searchForm = {
@@ -219,8 +226,10 @@
           document.querySelector('#loading-message').classList.toggle('hidden');
           // Reopen search accordion
           document.querySelector('#collapseOne').classList.toggle('show');
-          // Communicate the error
-          alert(`The request failed.\nReason: ${error?.data?.message || 'Server error'}`);
+          // Communicate the error in the error modal
+          errorModal.message = error.data?.message || 'Unknown';
+          errorModal.status = error.status;
+          errorModal.modal.show();
           return;
         });
     };
@@ -361,6 +370,7 @@
     return {
       searchForm,
       garages,
+      errorModal,
       addGarages: getResults,
       checkType,
       handleReserveBtn,
