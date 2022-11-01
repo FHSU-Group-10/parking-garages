@@ -205,8 +205,8 @@
   <body class="background gradient-custom" ng-app="pageApp" ng-controller="pageCtrl as vm">
     <div id="app">
       <!-- Error Modal -->
-      <div class="modal fade" id="error-modal" tabindex="1">
-        <div class="modal-dialog">
+      <div class="modal fade" id="error-modal" tabindex="1" style="backdrop-filter: blur(1px)">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header text-bg-danger">
               <h1 class="modal-title">Request failed ({{vm.errorModal.status}})</h1>
@@ -220,8 +220,14 @@
       </div>
 
       <!-- Successful reservation modal -->
-      <div class="modal fade" id="success-modal" data-bs-backdrop="static" tabindex="1">
-        <div class="modal-dialog">
+      <div
+        class="modal fade"
+        id="success-modal"
+        data-bs-backdrop="static"
+        tabindex="1"
+        style="backdrop-filter: blur(1px)"
+      >
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header text-bg-success">
               <h1 class="modal-title">Reservation successful!</h1>
@@ -249,15 +255,22 @@
       </div>
 
       <!-- Reservation Modal -->
-      <div class="modal fade" id="reservation-modal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+      <div
+        class="modal fade"
+        id="reservation-modal"
+        data-bs-backdrop="static"
+        tabindex="-1"
+        aria-hidden="true"
+        style="backdrop-filter: blur(1px)"
+      >
         <div class="modal-dialog">
-          <div class="modal-content">
+          <div class="modal-content text-bg-dark">
             <div class="modal-header">
               <h5 class="modal-title">Confirm Reservation</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <table class="table reservationDetails">
+              <table class="table table-dark table-striped reservationDetails">
                 <tbody>
                   <tr>
                     <th>Garage:</th>
@@ -310,7 +323,7 @@
               <!-- Data fields help Bootstrap close modal -->
               <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-success"
                 data-bs-toggle="modal"
                 data-bs-target="#reservation-modal"
                 ng-click="vm.handleSubmitReservation()"
