@@ -93,6 +93,14 @@
     const handleSearch = async (e) => {
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
+
+      // Clear old garages and markers
+      garages.length = 0;
+      while (garageMarkers.length > 0) {
+        // Remove from map and array simultaneously
+        garageMarkers.pop().removeFrom(map);
+      }
+
       // Show 'searching' message
       document.querySelector('#loading-message').classList.toggle('hidden');
       // Set user coords by geo or search string
@@ -164,13 +172,6 @@
       // Build datetimes
       reserveOptions.time.from = buildTimeObj(searchForm.from);
       reserveOptions.time.to = searchForm.isMonthly ? null : buildTimeObj(searchForm.to);
-
-      // Clear old garages and markers
-      garages.length = 0;
-      while (garageMarkers.length > 0) {
-        // Remove from map and array simultaneously
-        garageMarkers.pop().removeFrom(map);
-      }
 
       // Get garage results from backend
       $http({
