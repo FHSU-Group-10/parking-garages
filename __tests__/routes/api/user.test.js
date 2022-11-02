@@ -1,24 +1,39 @@
 const request = require('supertest');
-const assert = require('assert');
-const express = require('express');
-
 const app = require('../../../app');
 
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({extended: true}));
+describe('User Route', () => {
+  describe('Login', () => {
+    let body = {
+      Login: {
+        username: 'user1',
+        password: 'aaaa',
+      },
+    };
 
-describe('User Controller', () => {
-    describe('Get single user information', () => {
-        let obj = {
-            usernname: 'user1',
-            password: 'aaaa'
-        };
-    
-        test('Valid query', async () => {
-           let result = request(app).post('/user/login').send(obj);
-        });
-        
-        
-        
+    test('Valid query', async () => {
+      let result = await request(app).post('/user/login').send(body);
+
+      expect(result.status).toBe(200);
+      expect(result.body.username).toEqual(body.Login.username);
     });
+  });
+
+  describe('Register', () => {
+    let body = {
+      username: 'User' + Math.random(),
+      password: '1234',
+      first_name: 'People',
+      last_name: 'Person',
+      email: 'user@domain.com',
+      phone: '1234561212',
+      is_operator: false,
+    };
+
+    test('Valid query', async () => {
+      let result = await request(app).post('/user/register').send(body);
+      console.log(result.body);
+      expect(result.status).toBe(200);
+      expect(result.body.FIRST_NAME).toEqual(body.first_name);
+    });
+  });
 });
