@@ -2,62 +2,84 @@
 const request = require('supertest');
 const app = require('../../../app');
 
+jest.setTimeout(30000);
+
 describe('Pricing Route', () => {
-  describe('Get pricing for a garage', () => {
-    const url = (query) => {
-      return `/pricing?garageId=${query.garageId}`;
-    };
+  describe('Get pricing', () => {
+    const url = '/pricing/getPricing';
 
     test('Valid query', async () => {
-      const query = url({
-        garageId: 'garage1',
-      });
-
-      const res = await request(app).get(query);
+      const res = await request(app).get(url);
+      console.log(res.body);
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({
-        reserveHourly: 10.5,
-        contractHourly: 8.0,
-        walkinHourly: 15.99,
-      });
-    });
-
-    test('Invalid query', async () => {
-      const query = url({
-        garageId: '',
-      });
-
-      const res = await request(app).get(query);
-      expect(res.status).toBe(400);
-      expect(res.body).toEqual({ message: 'garageId is required.' });
+      for (param in res.body) {
+        expect(res.body[param]).not.toBe(null);
+      }
     });
   });
 
-  describe('Update pricing for a garage', () => {
-    const url = '/pricing';
+  describe('Update pricing', () => {
+    const url = '/pricing/updatePricing';
 
-    test('Valid query', async () => {
-      const body = {
-        garageId: 'garage1',
-        priceType: 'reserveHourly',
-        newPrice: 12.5,
-      };
+    test('Increment all prices', async () => {
+      const existing = await request(app).get('/pricing/getPricing');
+      const body = { price: { dailyMax: parseInt(existing.body[0].DAILY_MAX) + 1 } };
 
-      const res = await request(app).patch(url).send(body);
+      existing.body.forEach((obj) => {
+        body.price[`${obj.DESCRIPTION}Res`] = obj.DESCRIPTION;
+        body.price[`${obj.DESCRIPTION}Cost`] = parseFloat(obj.COST) + 1;
+      });
+
+      const res = await request(app).post(url).send(body);
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ message: 'Pricing updated.' });
+      expect(res.body).toEqual({});
     });
 
-    test('Invalid query', async () => {
-      const body = {
-        garageId: null,
-        priceType: null,
-        newPrice: null,
-      };
+    test('Decrement all prices', async () => {
+      const existing = await request(app).get('/pricing/getPricing');
+      const body = { price: { dailyMax: parseInt(existing.body[0].DAILY_MAX) - 1 } };
 
-      const res = await request(app).patch(url).send(body);
+      existing.body.forEach((obj) => {
+        body.price[`${obj.DESCRIPTION}Res`] = obj.DESCRIPTION;
+        body.price[`${obj.DESCRIPTION}Cost`] = parseFloat(obj.COST) - 1;
+      });
+
+      const res = await request(app).post(url).send(body);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({});
+    });
+  });
+
+  describe('Create new pricing', () => {
+    const url = '/pricing/createPricing';
+
+    const body = {
+      description: 'invalidPricing',
+      cost: 5,
+      dailyMax: 10,
+      reservationTypeId: 1,
+    };
+
+    test('Incomplete request', async () => {
+      const res = await request(app).post(url).send({});
+
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ message: 'Incomplete request' });
+    });
+
+    test('Reservation Type ID invalid', async () => {
+      const res = await request(app)
+        .post(url)
+        .send({ ...body, reservationTypeId: 1000 });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ message: 'princingController: Reservation type id invalid' });
+    });
+
+    test('Duplicate: Reservation Type ID already used', async () => {
+      const res = await request(app).post(url).send(body);
+
+      expect(res.status).toBe(500);
     });
   });
 });

@@ -53,7 +53,7 @@
       radiusMeters: null,
       radiusUnit: null,
       user: {
-        memberId: 1, // TODO add users and vehicles
+        memberId: 16, // TODO add users and vehicles
         vehicleId: null,
       },
       garage: {
@@ -93,6 +93,14 @@
     const handleSearch = async (e) => {
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
+
+      // Clear old garages and markers
+      garages.length = 0;
+      while (garageMarkers.length > 0) {
+        // Remove from map and array simultaneously
+        garageMarkers.pop().removeFrom(map);
+      }
+
       // Show 'searching' message
       document.querySelector('#loading-message').classList.toggle('hidden');
       // Set user coords by geo or search string
@@ -190,13 +198,6 @@
             // Alert if no results and reopen search accordion
             document.querySelector('#collapseOne').classList.toggle('show');
             alert('There are no garages available matching your request.');
-          }
-
-          // Clear old garages and markers
-          garages.length = 0;
-          while (garageMarkers.length > 0) {
-            // Remove from map and array simultaneously
-            garageMarkers.pop().removeFrom(map);
           }
 
           // Change distance units afteer cleared to prevent confusion, if necessary

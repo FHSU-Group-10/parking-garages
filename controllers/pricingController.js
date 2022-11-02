@@ -20,7 +20,7 @@ const getPricing = async (req, res) => {
     return res.status(200).json(results);
   } catch (err) {
     console.error('Pricing controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 
@@ -87,7 +87,7 @@ const updatePricing = async (req, res) => {
     return res.status(200).json({});
   } catch (err) {
     console.error('Pricing controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
   // TODO Check preconditions
 
@@ -174,7 +174,7 @@ const createPricing = async (req, res) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error('Pricing controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 

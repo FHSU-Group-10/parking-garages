@@ -3,6 +3,8 @@ const connectDB = require('../../config/dbConn');
 const sequelize = connectDB();
 const { Pricing } = sequelize.models;
 
+jest.setTimeout(10000);
+
 describe('Pricing Model', () => {
   test('DB contains a record', async () => {
     // Query for a single row
