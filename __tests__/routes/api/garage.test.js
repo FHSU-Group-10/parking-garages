@@ -8,7 +8,7 @@ describe('Garage Route', () => {
 
   describe('List all garages', () => {
     test('Returns results', async () => {
-      const results = await request(app).get(url);
+      const results = await request(app).post(url + '/getGarages');
       expect(results.status).toBe(200);
       expect(results.body.length).toBeGreaterThanOrEqual(0);
     });
