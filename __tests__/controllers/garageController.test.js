@@ -1,6 +1,8 @@
 // Controller to test
 const garageController = require('../../controllers/garageController');
 
+jest.setTimeout(10000);
+
 describe('Garage Controller', () => {
   describe('List all garages', () => {
     let req, res;
