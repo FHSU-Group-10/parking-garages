@@ -1,544 +1,132 @@
 // Controller to test
 const reservationController = require('../../controllers/reservationController');
+// Requests to get pricing from route
+const request = require('supertest');
+const app = require('../../app');
 
-jest.setTimeout(20000);
+jest.setTimeout(30000);
 
 describe('Reservation Controller', () => {
-  // reservationController.searchSpace()
-  describe('Search for a single space', () => {
-    let req, res;
-
-    // Set mock request and response items before each test
-    beforeEach(async () => {
-      req = {
-        body: {
-          lat: null,
-          lon: null,
-          radius: null,
-          reservationTypeId: null,
-          startDateTime: {
-            year: null,
-            month: null,
-            day: null,
-            hour: null,
-            minute: null,
-          },
-          endDateTime: {
-            year: null,
-            month: null,
-            day: null,
-            hour: null,
-            minute: null,
-          },
-          isMonthly: null,
-        },
-      };
-
-      res = {
-        json: (json) => {
-          res.body = json;
-          return res;
-        },
-        status: (statusCode) => {
-          res.status = statusCode;
-          return res;
-        },
-        body: null,
-      };
-    });
-
-    test('Incomplete query fails', async () => {
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Incomplete query.' });
-    });
-
-    test('Complete query succeeds', async () => {
-      req.body = {
-        lat: 1,
-        lon: 1,
-        radius: 1000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        isMonthly: false,
-      };
-
-      const results = await reservationController.searchSpace(req, res);
-
-      expect(results.body).toEqual([
-        {
-          garageId: 1,
-          description: 'ParkingSpaceX',
-          lat: 0,
-          lon: 0,
-          distance: 500,
-        },
-        {
-          garageId: 2,
-          description: 'GarageBrand',
-          lat: 1,
-          lon: 1,
-          distance: 3000,
-        },
-      ]);
-      expect(results.status).toBe(200);
-    });
-
-    test('Starting datetime must be before ending datetime', async () => {
-      req.body = {
-        lat: 1,
-        lon: 1,
-        radius: 1000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        isMonthly: false,
-      };
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-
-    test('Starting datetime must be >= current datetime', async () => {
-      req.body = {
-        lat: 1,
-        lon: 1,
-        radius: 1000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2021,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        isMonthly: false,
-      };
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-  });
-
-  // reservationController.searchSpace()
-  describe('Search for a guaranteed space', () => {
-    let req, res;
-
-    // Set mock request and response objects before each test
-    beforeEach(async () => {
-      req = {
-        query: {
-          location: null,
-          startDate: null,
-          endDate: null,
-          startTime: null,
-          endTime: null,
-          frequency: null,
-        },
-      };
-
-      res = {
-        json: (json) => {
-          res.body = json;
-          return res;
-        },
-        status: (status) => {
-          res.status = status;
-          return res;
-        },
-        body: null,
-      };
-    });
-
-    test('Incomplete query fails', async () => {
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Incomplete query.' });
-    });
-
-    test('Complete query succeeds', async () => {
-      req.body = {
-        lat: 1,
-        lon: 1,
-        radius: 1000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
-        isMonthly: true,
-      };
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(200);
-      expect(results.body).toEqual([
-        {
-          garageId: 1,
-          description: 'ParkingSpaceX',
-          lat: 0,
-          lon: 0,
-          distance: 500,
-        },
-        {
-          garageId: 2,
-          description: 'GarageBrand',
-          lat: 1,
-          lon: 1,
-          distance: 3000,
-        },
-      ]);
-    });
-
-    test('Starting datetime must be >= current datetime', async () => {
-      req.body = {
-        lat: 1,
-        lon: 1,
-        radius: 1000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2021,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
-        isMonthly: true,
-      };
-      const results = await reservationController.searchSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-  });
-
-  // reservationController.reserveSpace()
-  describe('Reserve a single space', () => {
-    let req, res;
-
-    // Set mock request and response objects before each test
-    beforeEach(async () => {
-      req = {
-        body: {
-          memberId: null,
-          reservationTypeId: null,
-          vehicleId: null,
-          garageId: null,
-          lat: null,
-          lon: null,
-          startDateTime: null,
-          endDateTime: null,
-          reservationStatusId: null,
-          isMonthly: null,
-        },
-      };
-
-      res = {
-        json: (json) => {
-          res.body = json;
-          return res;
-        },
-        status: (status) => {
-          res.status = status;
-          return res;
-        },
-        body: null,
-      };
-    });
-
-    test('Incomplete request fails', async () => {
-      const reservation = await reservationController.reserveSpace(req, res);
-      expect(reservation.status).toBe(400);
-      expect(reservation.body).toEqual({ message: 'Incomplete request.' });
-    });
-
-    test('Complete request succeeds', async () => {
-      req.body = {
-        memberId: 1,
-        reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        reservationStatusId: 1,
-        isMonthly: false,
-      };
-      const reservation = await reservationController.reserveSpace(req, res);
-      // console.log(reservation);
-      expect(reservation.status).toBe(200);
-    });
-
-    test('Starting datetime must be before ending datetime', async () => {
-      req.body = {
-        memberId: 1,
-        reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2024,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        reservationStatusId: 1,
-        isMonthly: false,
-      };
-      const results = await reservationController.reserveSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-
-    test('Starting datetime must be >= current datetime', async () => {
-      req.body = {
-        memberId: 1,
-        reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2020,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        reservationStatusId: 1,
-        isMonthly: false,
-      };
-      const results = await reservationController.reserveSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-
-    test('FKs must be valid PKs in their respective tables', async () => {
-      req.body = {
-        memberId: 1000,
-        reservationTypeId: 1000,
-        vehicleId: 1000,
-        garageId: 1000,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        reservationStatusId: 1000,
-        isMonthly: false,
-      };
-      const results = await reservationController.reserveSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Invalid ID(s) provided.' });
-    });
-  });
-
-  // reservationController.reserveSpace()
-  describe('Reserve a guaranteed space', () => {
-    let req, res;
-
-    // Set mock request and response objects before each test
-    beforeEach(async () => {
-      req = {
-        body: {
-          memberId: null,
-          reservationTypeId: null,
-          vehicleId: null,
-          garageId: null,
-          startDateTime: null,
-          endDateTime: null,
-          spotNumber: null,
-          reservationStatusId: null,
-          extraGrace: null,
-        },
-      };
-
-      res = {
-        json: (json) => {
-          res.body = json;
-          return res;
-        },
-        status: (status) => {
-          res.status = status;
-          return res;
-        },
-        body: null,
-      };
-    });
-
-    test('Incomplete request fails', async () => {
-      const reservation = await reservationController.reserveSpace(req, res);
-      expect(reservation.status).toBe(400);
-      expect(reservation.body).toEqual({ message: 'Incomplete request.' });
-    });
-
-    test('Complete request succeeds', async () => {
-      req.body = {
-        memberId: 1,
-        reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
-        reservationStatusId: 1,
-        isMonthly: true,
-      };
-      const reservation = await reservationController.reserveSpace(req, res);
-      expect(reservation.status).toBe(200);
-      expect(reservation.body).not.toBe(null);
-    });
-
-    test('Starting datetime must be >= current datetime', async () => {
-      req.body = {
-        memberId: 1,
-        reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2020,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
-        reservationStatusId: 1,
-        isMonthly: true,
-      };
-      const results = await reservationController.reserveSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({
-        message: 'Invalid date or time.',
-      });
-    });
-
-    test('FKs must be valid PKs in their respective tables', async () => {
-      req.body = {
-        memberId: 1000,
-        reservationTypeId: 1000,
-        vehicleId: 1000,
-        garageId: 1000,
-        lat: 1,
-        lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
-        reservationStatusId: 1000,
-        isMonthly: true,
-      };
-      const results = await reservationController.reserveSpace(req, res);
-      expect(results.status).toBe(400);
-      expect(results.body).toEqual({ message: 'Invalid ID(s) provided.' });
-    });
-  });
-
   // reservationController.findAvailable()
   describe('Find available garages', () => {
-    // TODO
+    test('Valid single request succeeds', async () => {
+      const res = await reservationController.findAvailable(
+        1,
+        1,
+        10000,
+        1,
+        new Date(Date.now() + 86400000),
+        new Date(Date.now() + 86400000 * 2),
+        false,
+        true
+      );
+
+      expect(res.length).toBeGreaterThan(0);
+      const keys = Object.keys(res[0]);
+      const expected = ['garageId', 'description', 'lat', 'lon', 'distance', 'price'];
+      expect(keys).toEqual(expect.arrayContaining(expected));
+    });
+
+    test('Valid guaranteed request succeeds', async () => {
+      const res = await reservationController.findAvailable(
+        1,
+        1,
+        10000,
+        1,
+        new Date(Date.now() + 86400000),
+        null,
+        true,
+        true
+      );
+
+      expect(res.length).toBeGreaterThan(0);
+      const keys = Object.keys(res[0]);
+      const expected = ['garageId', 'description', 'lat', 'lon', 'distance', 'price'];
+      expect(keys).toEqual(expect.arrayContaining(expected));
+    });
+
+    test('Tiny search radius yields no results', async () => {
+      const res = await reservationController.findAvailable(
+        1,
+        1,
+        1,
+        1,
+        new Date(Date.now() + 86400000),
+        new Date(Date.now() + 86400000 * 2),
+        false,
+        true
+      );
+
+      expect(res.length).toBe(0);
+    });
+  });
+
+  // reservationController.calculatePrice()
+  describe('Calculate reservation price', () => {
+    let prices = [{}, {}, {}];
+
+    beforeAll(async () => {
+      const res = await request(app).get('/pricing/getPricing');
+      // Ensure results are sorted by price ID
+      res.body.forEach((entry) => {
+        prices[entry.PRICING_ID] = entry;
+      });
+    });
+
+    test('24 hours yields a single dailyMax price', async () => {
+      const singleMax = prices[1].DAILY_MAX;
+      const start = 0;
+      const end = 86400000;
+      const price = await reservationController.calculatePrice(start, end, 1);
+
+      expect(price).toEqual(parseFloat(singleMax).toFixed(2));
+    });
+
+    test('25 hours yields a single dailyMax price + 2 periods', async () => {
+      const singleMax = prices[1].DAILY_MAX;
+      const rate = prices[1].COST;
+      const start = 0;
+      const end = 86400000 + 1800000 * 2;
+      const price = await reservationController.calculatePrice(start, end, 1);
+
+      expect(price).toEqual(parseFloat(singleMax + rate * 2).toFixed(2));
+    });
+
+    test('2 hours yields a single 4-period rate', async () => {
+      const rate = prices[1].COST;
+      const start = 0;
+      const end = 1800000 * 4;
+      const price = await reservationController.calculatePrice(start, end, 1);
+
+      expect(price).toEqual(parseFloat(rate * 4).toFixed(2));
+    });
+
+    test('Monthly reservation returns the rate string', async () => {
+      const rate = prices[2].COST;
+      const start = 0;
+      const end = 1;
+      const price = await reservationController.calculatePrice(start, end, 2);
+
+      expect(price).toEqual(`${rate} / month`);
+    });
   });
 
   // reservationController.checkAvailability()
-  describe('Check if a garage is available', () => {
-    // TODO
+  describe('Check if a garage has available parking spaces', () => {
+    test('Far in the future, where no reservation has gone before', async () => {
+      const start = new Date('2100-02-14T18:00');
+      const end = new Date('2100-02-14T22:00');
+      const res = await reservationController.checkAvailability(4, 2, start, end, true, null);
+
+      expect(res).toBe(true);
+    });
+
+    test('Permanent vacation', async () => {
+      const start = new Date('2056-06-01T12:00');
+      const res = await reservationController.checkAvailability(4, 2, start, null, true, null);
+
+      expect(res).toBe(true);
+    });
   });
 
   // reservationController.timezone()

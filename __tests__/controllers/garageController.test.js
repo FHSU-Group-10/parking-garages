@@ -28,7 +28,7 @@ describe('Garage Controller', () => {
     });
   });
 
-  describe('Add new garages', () => {
+  /* describe('Add new garages', () => {
     let req, res;
 
     beforeEach(() => {
@@ -305,6 +305,6 @@ describe('Garage Controller', () => {
       const result = await garageController.deleteGarage(req, res);
       expect(result.status).toBe(200);
       expect(result.body).toEqual({ message: 'Garage deleted.' });
-    });
-  });
+    }); 
+  });*/
 });

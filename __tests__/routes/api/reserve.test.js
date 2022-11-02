@@ -6,31 +6,39 @@ jest.setTimeout(10000);
 
 describe('Reserve Route', () => {
   describe('Search Single Space', () => {
-    test('Valid query', async () => {
-      const body = {
-        lat: 1,
+    // Shared object for requests
+    let options;
+
+    beforeEach(() => {
+      options = {
+        lat: 1, // The search location. Defaults to center of the US.
         lon: 1,
-        radius: 10000,
+        radius: null,
+        startDateTime: null,
+        endDateTime: null,
         reservationTypeId: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
         isMonthly: false,
-        useFakeLocations: true,
+        useFakeLocations: true, // Flag to generate fake locations
+      };
+    });
+    test('Valid query succeeds', async () => {
+      options.radius = 10000;
+      options.startDateTime = {
+        year: 2023,
+        month: 1,
+        day: 1,
+        hour: 12,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2023,
+        month: 1,
+        day: 1,
+        hour: 15,
+        minute: 30,
       };
 
-      const res = await request(app).post('/reserve/search').send(body);
+      const res = await request(app).post('/reserve/search').send(options);
 
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
@@ -39,33 +47,85 @@ describe('Reserve Route', () => {
       expect(keys).toEqual(expect.arrayContaining(expected));
     });
 
-    test('Incomplete query', async () => {
+    test('Incomplete query fails', async () => {
       const res = await request(app).post('/reserve/search').send({});
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ message: 'Incomplete query.' });
+    });
+
+    test('Starting datetime must be before ending datetime', async () => {
+      options.radius = 10000;
+      options.startDateTime = {
+        year: 2023,
+        month: 12,
+        day: 1,
+        hour: 12,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2023,
+        month: 1,
+        day: 1,
+        hour: 15,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve/search').send(options);
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ message: 'Invalid date or time.' });
+    });
+
+    test('Starting datetime must be >= current datetime', async () => {
+      options.radius = 10000;
+      options.startDateTime = {
+        year: 2022,
+        month: 1,
+        day: 1,
+        hour: 12,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2023,
+        month: 1,
+        day: 1,
+        hour: 15,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve/search').send(options);
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ message: 'Invalid date or time.' });
     });
   });
 
   describe('Search Guaranteed Space', () => {
-    test('Valid query', async () => {
-      const params = {
-        lat: 1,
+    // Shared object for requests
+    let options;
+
+    beforeEach(() => {
+      options = {
+        lat: 1, // The search location. Defaults to center of the US.
         lon: 1,
-        radius: 10000,
-        reservationTypeId: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: null,
+        radius: null,
+        startDateTime: null,
+        reservationTypeId: 2,
         isMonthly: true,
-        useFakeLocations: true,
+        useFakeLocations: true, // Flag to generate fake locations
+      };
+    });
+    test('Valid query succeeds', async () => {
+      options.radius = 10000;
+      options.startDateTime = {
+        year: 2023,
+        month: 1,
+        day: 1,
+        hour: 12,
+        minute: 0,
       };
 
-      const res = await request(app).post('/reserve/search').send(params);
+      const res = await request(app).post('/reserve/search').send(options);
 
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
@@ -74,89 +134,221 @@ describe('Reserve Route', () => {
       expect(keys).toEqual(expect.arrayContaining(expected));
     });
 
-    test('Incomplete query', async () => {
+    test('Incomplete query fails', async () => {
       const res = await request(app).post('/reserve/search').send({});
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ message: 'Incomplete query.' });
     });
+
+    test('Starting datetime must be >= current datetime', async () => {
+      options.radius = 10000;
+      options.startDateTime = {
+        year: 2022,
+        month: 1,
+        day: 1,
+        hour: 12,
+        minute: 0,
+      };
+
+      const res = await request(app).post('/reserve/search').send(options);
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ message: 'Invalid date or time.' });
+    });
   });
 
   describe('Reserve Single Space', () => {
-    test('Valid query', async () => {
-      const body = {
+    let options;
+
+    beforeEach(() => {
+      options = {
         memberId: 1,
         reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
+        vehicleId: null,
+        garageId: 2,
         lat: 1,
         lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
-        endDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 15,
-          minute: 30,
-        },
-        reservationStatusId: 1,
+        startDateTime: null,
+        endDateTime: null,
+        reservationStatusId: null,
         isMonthly: false,
       };
+    });
 
-      const res = await request(app).post('/reserve').send(body);
-      console.log(res.status, res.body);
+    test('Complete request succeeds', async () => {
+      options.startDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 6,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+
+      expect(res.body).not.toEqual({ message: 'Garage unavailable.' });
       expect(res.status).toBe(200);
     });
 
-    test('Invalid query', async () => {
-      const body = {
-        nothing: null,
-      };
-
-      const res = await request(app).post('/reserve').send(body);
+    test('Incomplete request fails', async () => {
+      const res = await request(app).post('/reserve').send(options);
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ message: 'Incomplete request.' });
+    });
+
+    test('Starting datetime must be before ending datetime', async () => {
+      options.startDateTime = {
+        year: 2025,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 6,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: 'Invalid date or time.',
+      });
+    });
+
+    test('Starting datetime must be >= current datetime', async () => {
+      options.startDateTime = {
+        year: 2020,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 6,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: 'Invalid date or time.',
+      });
+    });
+
+    test('FKs must be valid PKs in their respective tables', async () => {
+      options.memberId = 1000;
+      options.reservationTypeId = 1000;
+      options.vehicleId = 1000;
+      options.garageId = 1000;
+      options.startDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+      options.endDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 6,
+        minute: 30,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: 'Invalid ID(s) provided.',
+      });
     });
   });
 
   describe('Reserve Guaranteed Space', () => {
-    test('Valid query', async () => {
-      const body = {
+    let options;
+
+    beforeEach(() => {
+      options = {
         memberId: 1,
         reservationTypeId: 1,
-        vehicleId: 1,
-        garageId: 1,
+        vehicleId: null,
+        garageId: 2,
         lat: 1,
         lon: 1,
-        startDateTime: {
-          year: 2023,
-          month: 1,
-          day: 1,
-          hour: 12,
-          minute: 0,
-        },
+        startDateTime: null,
         endDateTime: null,
-        reservationStatusId: 1,
+        reservationStatusId: null,
         isMonthly: true,
       };
+    });
 
-      const res = await request(app).post('/reserve').send(body);
+    test('Complete request succeeds', async () => {
+      options.startDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.body).not.toEqual({ message: 'Garage unavailable.' });
       expect(res.status).toBe(200);
     });
 
-    test('Invalid query', async () => {
-      const body = {
-        nothing: null,
-      };
-
-      const res = await request(app).post('/reserve').send(body);
+    test('Incomplete request fails', async () => {
+      const res = await request(app).post('/reserve').send(options);
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ message: 'Incomplete request.' });
+    });
+
+    test('Starting datetime must be >= current datetime', async () => {
+      options.startDateTime = {
+        year: 2020,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: 'Invalid date or time.',
+      });
+    });
+
+    test('FKs must be valid PKs in their respective tables', async () => {
+      options.memberId = 1000;
+      options.reservationTypeId = 1000;
+      options.vehicleId = 1000;
+      options.garageId = 1000;
+      options.startDateTime = {
+        year: 2024,
+        month: 6,
+        day: 6,
+        hour: 0,
+        minute: 0,
+      };
+
+      const res = await request(app).post('/reserve').send(options);
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: 'Invalid ID(s) provided.',
+      });
     });
   });
 });
