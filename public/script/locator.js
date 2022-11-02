@@ -4,6 +4,18 @@
 
     const convert = $window.convert; // Unit conversions
     const DateTime = $window.luxon.DateTime; // Datetime conversions
+    const bs = $window.bootstrap;
+
+    // -------- MODALS --------
+    const errorModal = {
+      message: '',
+      status: '',
+      modal: new bs.Modal(document.querySelector('#error-modal')),
+    };
+
+    const successModal = {
+      modal: new bs.Modal(document.querySelector('#success-modal')),
+    };
 
     // -------- DATA --------
 
@@ -81,7 +93,8 @@
     const handleSearch = async (e) => {
       // Collapse search options in smaller windows
       document.querySelector('#collapseOne').classList.toggle('show');
-
+      // Show 'searching' message
+      document.querySelector('#loading-message').classList.toggle('hidden');
       // Set user coords by geo or search string
       await setLocation();
 
@@ -91,6 +104,7 @@
 
       // Get matching garages with availability
       await getResults();
+
       // Set the map with search location and garage pins and radius circle
       setMap();
     };
@@ -131,13 +145,16 @@
         },
       })
         .then(() => {
-          // Modal is closed automatically by html
-          // Show status alert
-          alert('Reservation successful!');
-          // Window reloads after successful reservation
-          $window.location.reload();
+          // Reservation modal is closed automatically by html
+          // Show success modal
+          successModal.modal.show();
         })
-        .catch((err) => alert(err.message));
+        .catch((err) => {
+          // Show error modal
+          errorModal.status = err.status;
+          errorModal.message = err.data?.message || 'Unknown';
+          errorModal.modal.show();
+        });
     };
 
     // -------- API REQUESTS --------
@@ -164,14 +181,16 @@
         },
       })
         .then((results) => {
-          // Alert if no results and reopen search accordion
+          // Remove 'searching' message
+          document.querySelector('#loading-message').classList.toggle('hidden');
+
+          // Return if status is not OK
+
           if (results.status == 204) {
+            // Alert if no results and reopen search accordion
             document.querySelector('#collapseOne').classList.toggle('show');
             alert('There are no garages available matching your request.');
-            return;
           }
-          // Return if status is not OK
-          if (results.status != 200) return;
 
           // Clear old garages and markers
           garages.length = 0;
@@ -201,7 +220,17 @@
             garageMarkers.push(pin);
           });
         })
-        .catch((error) => console.error(error));
+        .catch((error) => {
+          // Remove 'searching' message
+          document.querySelector('#loading-message').classList.toggle('hidden');
+          // Reopen search accordion
+          document.querySelector('#collapseOne').classList.toggle('show');
+          // Communicate the error in the error modal
+          errorModal.message = error.data?.message || 'Unknown';
+          errorModal.status = error.status;
+          errorModal.modal.show();
+          return;
+        });
     };
 
     // -------- FORM VALIDATION --------
@@ -340,6 +369,7 @@
     return {
       searchForm,
       garages,
+      errorModal,
       addGarages: getResults,
       checkType,
       handleReserveBtn,
@@ -348,6 +378,7 @@
       handleSubmitReservation,
       debouncedSearch,
       handleSearch,
+      successModal,
     };
   }
 
