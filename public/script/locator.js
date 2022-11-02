@@ -165,6 +165,13 @@
       reserveOptions.time.from = buildTimeObj(searchForm.from);
       reserveOptions.time.to = searchForm.isMonthly ? null : buildTimeObj(searchForm.to);
 
+      // Clear old garages and markers
+      garages.length = 0;
+      while (garageMarkers.length > 0) {
+        // Remove from map and array simultaneously
+        garageMarkers.pop().removeFrom(map);
+      }
+
       // Get garage results from backend
       $http({
         method: 'POST',
@@ -190,13 +197,6 @@
             // Alert if no results and reopen search accordion
             document.querySelector('#collapseOne').classList.toggle('show');
             alert('There are no garages available matching your request.');
-          }
-
-          // Clear old garages and markers
-          garages.length = 0;
-          while (garageMarkers.length > 0) {
-            // Remove from map and array simultaneously
-            garageMarkers.pop().removeFrom(map);
           }
 
           // Change distance units afteer cleared to prevent confusion, if necessary
