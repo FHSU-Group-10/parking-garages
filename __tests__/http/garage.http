@@ -1,0 +1,43 @@
+###
+POST http://localhost:3500/garage/add
+Content-Type: application/json
+
+{
+  "name": "Downtown Garage 3",
+  "numFloors": 3,
+  "spotsPerFloor": [10, 10, 10],
+  "location": ["36.1583", "86.7761"],
+  "overbookRate":  1.1,
+  "isActive": true
+}
+
+###
+POST http://localhost:3500/garage/
+Content-Type: application/json
+
+{
+    "id": 2,
+    "description": "testAgain",
+    "overbookRate": 1.1,
+    "isActive": true
+}
+
+
+###
+GET http://localhost:3500/garage/
+Content-Type: application/json
+
+###
+POST http://localhost:3500/garage/udpateGarage
+Content-Type: application/json
+
+{
+  "id": 81,
+  "description": "Downtown Garage 3",
+  "numFloors": 4,
+  "spotsPerFloor": [5, 10, 7, 10],
+  "location": ["36.1583", "86.7761"],
+  "overbookRate":  1.1,
+  "isActive": true
+}
+
