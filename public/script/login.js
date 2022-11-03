@@ -41,7 +41,7 @@
             loading_modal.show(); // show our loading icon
             $http.post(URLS.login, {Login})
                 .then((resp) => {
-                    if (resp.data.is_operator) window.location.href = "http://localhost:3500/view/operator?user=" + resp.data.username // TODO: replace with our final real URL
+                    if (resp.data.is_operator) window.location.href = "./operator?user=" + resp.data.username // TODO: replace with our final real URL
                 }, (reject) => {
                     error_modal.show(reject);
                 })
