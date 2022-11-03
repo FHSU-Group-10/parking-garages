@@ -109,7 +109,7 @@ const listGarages = async (req, res) => {
     return res.status(200).json(garages);
   } catch (err) {
     console.error('Garage controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 
@@ -168,7 +168,7 @@ const updateGarage = async (req, res) => {
   } catch (err) {
     console.error('Garage controller failed.');
     console.error(err);
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 /**
@@ -208,7 +208,7 @@ const deleteGarage = async (req, res) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error('Garage controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 
@@ -296,7 +296,7 @@ const addGarage = async (req, res) => {
     return res.status(200).json(garage);
   } catch (err) {
     console.error('Garage controller failed.');
-    return res.status(500);
+    return res.status(500).send();
   }
 };
 /**

@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../../../app');
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 describe('Garage Route', () => {
   const url = '/garage';
@@ -103,13 +103,20 @@ describe('Garage Route', () => {
   });
 
   describe('Update a garage', () => {
+    const url = '/garage/updateGarage';
+    const body = {
+      id: 1,
+      description: 'Spotula',
+      overbookRate: 1.5,
+      numFloors: 3,
+      spotsPerFloor: 10,
+      location: [1, 1],
+      isActive: true,
+
+    };
+    
     test('Valid request', async () => {
-      const body = {
-        id: 1,
-        description: 'Spotula',
-        overbookRate: 1.5,
-        isActive: true,
-      };
+      
       const result = await request(app).post(url).send(body);
       console.log(result.body);
       expect(result.status).toBe(200);
@@ -121,34 +128,17 @@ describe('Garage Route', () => {
 
     test('Invalid request', async () => {
       const result = await request(app).post(url).send({});
-      expect(result.status).toBe(400);
-      expect(result.body).toEqual({ message: 'Select an item to update' });
+      expect(result.status).toBe(500);
     });
 
     test('Invalid overbook rate', async () => {
       const body = {
-        id: 1,
-        description: 'Spotula',
         overbookRate: 0.5,
-        isActive: true,
       };
       const result = await request(app).post(url).send(body);
 
       expect(result.status).toBe(400);
       expect(result.body).toEqual({ message: 'Overbook rate must be at least 100%.' });
-    });
-    // TODO
-    test('Invalid garage ID', async () => {
-      const body = {
-        id: 100000,
-        description: 'Spotula',
-        overbookRate: 1.5,
-        isActive: true,
-      };
-      const result = await request(app).post(url).send(body);
-
-      expect(result.status).toBe(400);
-      expect(result.body).toEqual({ message: 'garageId does not exist.' });
     });
   });
 
