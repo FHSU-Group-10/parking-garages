@@ -123,8 +123,8 @@
 
       reserveOptions.garage.id = chosenGarage.garageId;
       reserveOptions.garage.description = chosenGarage.description;
-      reserveOptions.garage.lat = chosenGarage.lat;
-      reserveOptions.garage.lon = chosenGarage.lon;
+      reserveOptions.garage.lat = reserveOptions.lat;
+      reserveOptions.garage.lon = reserveOptions.lon;
       reserveOptions.directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${chosenGarage.lat},${chosenGarage.lon}`;
 
       reserveOptions.isMonthly = searchForm.isMonthly;
