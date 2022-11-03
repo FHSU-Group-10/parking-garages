@@ -112,7 +112,7 @@
           <div class="col-xl-12">
             <div class="card bg-dark rounded-3 text-white">
               <div class="row g-0">
-                <div class="col-lg-6">
+                <div class="col-lg-8">
                   <nav style="padding-left: 1.5em" class="navbar navbar-expand-lg navbar-dark primary-color">
                     <a class="navbar-brand" href="#"><i class="fa fa-user" aria-hidden="true"></i></a>
                     <button
@@ -154,7 +154,9 @@
                         <tr>
                           <th>Description</th>
                           <th>Floor Count</th>
+                          <th>Spots</th>
                           <th>Active</th>
+                          <th>Location</th>
                           <th>Overbook Rate</th>
                         </tr>
                       </thead>
@@ -165,7 +167,9 @@
                         >
                           <td style="color: white !important">{{garage.DESCRIPTION}}</td>
                           <td style="color: white !important">{{garage.FLOOR_COUNT}}</td>
+                          <td style="color: white !important">{{garage.spotsPerFloor}}</td>
                           <td style="color: white !important">{{garage.IS_ACTIVE}}</td>
+                          <td style="color: white !important">{{garage.LAT}} {{garage.LONG}}</td>
                           <td style="color: white !important">{{garage.OVERBOOK_RATE}}</td>
                           <td>
                             <button
@@ -193,6 +197,13 @@
                             />
                           </td>
                           <td>
+                            <input
+                                type="text"
+                                class="w-75 form-control form-control-sm"
+                                ng-model="vm.garages.currentEdit.spotsPerFloor"
+                            />
+                          </td>
+                          <td>
                             <div class="form-check form-switch">
                               <input
                                 class="form-check-input"
@@ -203,14 +214,18 @@
                             </div>
                           </td>
                           <td>
+                            <input placeholder="LAT" ng-model="vm.garages.currentEdit.LAT" type="text" class="w-100 form-control form-control-sm">
+                            <input placeholder="LONG" ng-model="vm.garages.currentEdit.LONG" type="text" class="w-100 form-control form-control-sm">
+                          </td>
+                          <td>
                             <input
                               type="text"
-                              class="w-50 form-control form-control-sm"
+                              class="w-175 form-control form-control-sm"
                               ng-model="vm.garages.currentEdit.OVERBOOK_RATE"
                             />
                           </td>
                           <td>
-                            <button type="button" class="btn btn-success btn-sm">
+                            <button ng-click="vm.updateGarage()" type="button" class="btn btn-success btn-sm">
                               <i class="fa fa-plus" aria-hidden="true"></i>
                             </button>
                           </td>
@@ -220,7 +235,7 @@
                   </div>
                 </div>
                 <div
-                  class="col-lg-6 d-flex justify-content-center align-items-center gradient-custom-2"
+                  class="col-lg-4 d-flex justify-content-center align-items-center gradient-custom-2"
                   style="background: black !important"
                 >
                   <div class="card-body p-md-5 mx-md-4">

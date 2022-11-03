@@ -2,9 +2,11 @@
     function priceCtrl($scope, $http, $document, $timeout) {
 
         const URLS = {
+            addGarage: '/garage/add',
             getGarages: '/garage/getGarages',
             getPricing: '/pricing/getPricing',
-            pricing: '/pricing/updatePricing'
+            pricing: '/pricing/updatePricing',
+            updateGarage: '/garage/udpateGarage'
         };
         
         const data = {
@@ -59,17 +61,24 @@
             }
             
         }
-        
+        /*
+            Finds the current price for editing.
+            
+            Removes from the row in the table.
+            
+            Takes removed value and places into the input boxes for editing.
+         */
         function editPrice (priceId) {
             let match = _.find(price.options, (p) => p.PRICING_ID == priceId);
-    
             if (match) {
                 price.currentEdit = _.cloneDeep(match);
-                console.dir(price); // debug - remove
                 removePriceFromlist(priceId);
             }
         }
         
+        /*
+            Gets the current list of garages.
+         */
         async function getGarages () {
             loading_modal.show(); // show our loading icon
             $http.post(URLS.getGarages, {  })
@@ -82,6 +91,9 @@
                 });
         }
         
+        /*
+            Fetch all the pricing models for the types of reservations.
+         */
         async function getPricing() {
             loading_modal.show(); // show our loading icon
             $http.get(URLS.getPricing, {  })
@@ -94,7 +106,6 @@
                         if (p.DESCRIPTION === 'walkIn') price.walkInCost = p.COST;
                     }
                     price.dailyMax = price.options[0].DAILY_MAX;
-                    console.dir(price); // debug - remove
                 }, (reject) => {
                     loading_modal.hide();
                     error_modal.show(reject);
@@ -128,13 +139,9 @@
 
         function submitPriceUpdate() {
             loading_modal.show(); // show our loading icon
-            console.log(price.currentEdit)
-            
-            console.log('form submitted', {price});
             $http.post(URLS.pricing, {price})
                 .then((resp) => {
                     loading_modal.hide();
-                    console.log('****', resp);
                 }, (reject) => {
                     error_modal.show(reject);
                 })
@@ -151,21 +158,51 @@
             _.remove(price.options, (p) => p.PRICING_ID == pricingId);
             $(`#price-${pricingId}`).remove();
         }
+        
+       async function updateGarage () {
+            loading_modal.show(); // show our loading icon
+            let garage = {
+                id: garages?.currentEdit?.id || null,
+                description: garages.currentEdit.DESCRIPTION,
+                overbookRate: garages.currentEdit.OVERBOOK_RATE,
+                numFloors: garages.currentEdit.FLOOR_COUNT,
+                spotsPerFloor: garages.currentEdit.spotsPerFloor,
+                location: [garages.currentEdit.LAT, garages.currentEdit.LONG],
+                isActive: garages.currentEdit.IS_ACTIVE,
+            }
+            
+            
+            $http.post(URLS.updateGarage, garage)
+                .then(async (resp) => {
+                    for (let prop in garages.currentEdit) {
+                        garages.currentEdit[prop] = '';
+                    }
+                    garages.list.push(resp.data);
+                    garages.list = _.orderBy(garages.list, ["GARAGE_ID"], ["asc"])
+                    loading_modal.hide();
+                }, (reject) => {
+                    loading_modal.hide();
+                    error_modal.show(reject);
+                })
+                .finally(loading_modal.hide)
+        }
     
         // init the page
         angular.element(document).ready(async function () {
-            console.log('init'); // debug - remove
             await getPricing();
             const params = new Proxy(new URLSearchParams(window.location.search), {
                 get: (searchParams, prop) => searchParams.get(prop),
             });
             
+            // TODO: use JStoken to verify if user looking at this page is an admin
+            // force user to leave page if they are not coming there through the login page.
+            if (!params.user) {
+                window.location.href = "http://localhost:3500/view/not-found"
+            }
+            
             // Get the value of "some_key" in eg "https://example.com/?some_key=some_value"
             //let value = params.some_key; // "some_value"
-            console.dir(params.user); // debug - remove
             data.operator.set("name", params.user); // set our operator name
-            
-            console.dir(data); // debug - remove
             
             await getGarages();
             
@@ -182,7 +219,8 @@
             loading,
             savePriceEdit,
             submitPriceUpdate,
-            price
+            price,
+            updateGarage
         };
         
         
