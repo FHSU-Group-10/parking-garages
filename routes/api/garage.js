@@ -6,6 +6,6 @@ router.route('/add').post(garageController.addGarage);
 
 router.route('/getGarages').post(garageController.listGarages);
 
-router.route('/udpateGarage').post(garageController.updateGarage);
+router.route('/updateGarage').post(garageController.updateGarage);
 
 module.exports = router;

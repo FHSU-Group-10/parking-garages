@@ -6,7 +6,7 @@
             getGarages: '/garage/getGarages',
             getPricing: '/pricing/getPricing',
             pricing: '/pricing/updatePricing',
-            updateGarage: '/garage/udpateGarage'
+            updateGarage: '/garage/updateGarage'
         };
         
         const data = {
