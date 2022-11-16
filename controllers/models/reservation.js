@@ -31,6 +31,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         field: 'EXTRA_GRACE',
       },
+      RES_CODE: {
+        type: DataTypes.STRING(8),
+        allowNull: false,
+        field: 'RES_CODE',
+        unique: true,
+      },
     },
     {
       tableName: 'RESERVATIONS',
