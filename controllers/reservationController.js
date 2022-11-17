@@ -2,6 +2,9 @@
 const luxon = require('luxon');
 const haversine = require('haversine-distance');
 const { Op } = require('sequelize');
+const { customAlphabet } = require('nanoid');
+// Create custom nanoid definition for short, easy reservation ids
+const nanoid = customAlphabet('ABCDEFGHJKMNPQRSTUVWXYZ', 8);
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
@@ -165,6 +168,9 @@ const reserveSpace = async (req, res) => {
     // Set default status
     if (!reservationStatusId) reservationStatusId = 1;
 
+    // Generate a unique reservation code
+    const resCode = nanoid();
+
     // Create the reservation
     const reservation = await Reservation.create({
       GARAGE_ID: garageId,
@@ -174,6 +180,7 @@ const reserveSpace = async (req, res) => {
       RESERVATION_TYPE_ID: reservationTypeId,
       VEHICLE_ID: vehicleId,
       STATUS_ID: reservationStatusId,
+      RES_CODE: resCode,
     });
 
     // Return the reservation details after successful creation
