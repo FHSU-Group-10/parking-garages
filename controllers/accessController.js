@@ -110,8 +110,8 @@ const updateState = (reservation) => {
 const assignSpace = async (reservation) => {
   // TODO space assignment
   return {
-    spaceNumber: 0,
-    floorNumber: 0,
+    spaceNumber: null,
+    floorNumber: null,
   };
 };
 
@@ -128,7 +128,6 @@ const callElevator = async (garageId, floorNumber) => {
 // Export functions
 module.exports = {
   enter,
-  enterByCode,
   reservationSearch,
   reservationCodeSearch,
   updateState,
