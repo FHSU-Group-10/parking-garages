@@ -26,20 +26,20 @@ describe('Access Controller', () => {
   });
 
   describe('assignSpace', () => {
+    let reservation;
+
+    beforeEach(() => {
+      reservation = {};
+    });
     test('TODO', async () => {
       expect(true).toBe(false);
     });
   });
 
   describe('callElevator', () => {
-    test('TODO', async () => {
-      expect(true).toBe(false);
-    });
-  });
-
-  describe('updatePlate', () => {
-    test('TODO', () => {
-      expect(true).toBe(false);
+    test('Function exists', async () => {
+      accessController.callElevator();
+      expect(true).toBe(true);
     });
   });
 });

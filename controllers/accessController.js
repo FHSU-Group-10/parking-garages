@@ -12,12 +12,14 @@ const { Space, SpaceStatus, Reservation, ReservationType, Garage } = sequelize.m
  *
  * @async
  * @param {Number} garageId - The ID of the garage the vehicle is attempting to enter
- * @param {String} plateNumber - The license plate number of the vehicle attempting entry
- * @param {String} plateState - The license plate state of the vehicle attempting entry
+ * @param {String} plateNumber - Optional. The license plate number of the vehicle attempting entry
+ * @param {String} plateState - Optional. The license plate state of the vehicle attempting entry
+ * @param {String} reservationCode - Optional. A string given to users when they make a successful reservation, used for lookup
  * @returns {Object} - Reservation details and parking space assignment
  *
  * Preconditions:
  * - Access key matches an entry terminal registered to the given garage
+ * - Either a reservation code or plate state and plate number must be provided
  * Postconditions:
  * - The reservation status and space assignment are updated, and the vehicle is allowed entry
  */
@@ -26,14 +28,22 @@ const enter = async (req, res) => {
   const garageId = req?.body?.garageId;
   const plateNumber = req?.body?.plateNumber;
   const plateState = req?.body?.plateState;
+  const reservationCode = req?.body?.reservationCode;
 
   // Return early if any arguments are missing
-  if (!req?.body || !(garageId && plateNumber && plateState)) {
+  if (!(req?.body && garageId && ((plateNumber && plateState) || reservationCode))) {
     return res.status(400).json({ message: 'Incomplete request.' });
   }
 
   // Search for a matching reservation in the DB
-  const reservation = await reservationSearch(garageId, plateNumber, plateState);
+  let reservation;
+  if (reservationCode) {
+    // Search for a match by reservation code
+    reservation = await reservationCodeSearch(garageId, reservationCode);
+  } else {
+    // Search for a match by plate number and plate state
+    reservation = await reservationSearch(garageId, plateNumber, plateState);
+  }
 
   // If no match is found, return failure
   if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
@@ -43,62 +53,6 @@ const enter = async (req, res) => {
 
   // Assign an empty space
   const spaceAssigned = await assignSpace(reservation);
-
-  // Save updated reservation
-  await reservation.save();
-
-  // Call the elevator
-  await callElevator(garageId, spaceAssigned.floorNumber);
-
-  // Return success with space assignment
-  return res.status(200).json({ spaceNumber: spaceAssigned.spaceNumber });
-};
-
-/**
- * Attempt to enter a garage with a reservation using a reservation code
- * POST request
- * // TODO add a secure access key per terminal and check for match before processing
- *
- * @async
- * @param {Number} garageId - The ID of the garage the vehicle is attempting to enter
- * @param {String} reservationCode - A string given to users when they make a successful reservation, used for lookup
- * @param {String} plateNumber - Optional. The license plate number of the vehicle attempting entry
- * @param {String} plateState - Optional. The license plate state of the vehicle attempting entry
- *
- * @returns {Object} - Reservation details and parking space assignment
- *
- * Preconditions:
- * - Access key matches an entry camera registered to the given garage
- * Postconditions:
- * - The reservation status and space assignment are updated, and the vehicle is allowed entry
- * - The license plate is updated in the reservation if available
- */
-const enterByCode = async (req, res) => {
-  // Get arguments from POST request body
-  const garageId = req?.body?.garageId;
-  const reservationCode = req?.body?.reservationCode;
-  const plateNumber = req?.body?.plateNumber;
-  const plateState = req?.body?.plateState;
-
-  // Return early if any required arguments are missing
-  if (!req?.body || !(garageId && reservationCode)) {
-    return res.status(400).json({ message: 'Incomplete request.' });
-  }
-
-  // Search for a matching reservation in the DB
-  const reservation = await reservationCodeSearch(garageId, reservationCode);
-
-  // If no match is found, return failure
-  if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
-
-  // Change reservation state code
-  updateState(reservation);
-
-  // Assign an empty space
-  const spaceAssigned = await assignSpace(reservation);
-
-  // Update license plate information on reservation if available
-  if (plateNumber && plateState) updatePlate(reservation, plateNumber, plateState);
 
   // Save updated reservation
   await reservation.save();
@@ -171,20 +125,13 @@ const callElevator = async (garageId, floorNumber) => {
   return;
 };
 
-/**
- * Assigns a parking space to a reservation when the vehicle enters the garage
- *
- * @param {Reservation} reservation - A reservation record
- * @param {String} plateNumber - The vehicle license plate number
- * @param {String} plateState - The issuing authority of the vehicle license plate
- */
-const updatePlate = (reservation, plateNumber, plateState) => {
-  // TODO
-  return;
-};
-
 // Export functions
 module.exports = {
   enter,
   enterByCode,
+  reservationSearch,
+  reservationCodeSearch,
+  updateState,
+  assignSpace,
+  callElevator,
 };
