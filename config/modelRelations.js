@@ -1,7 +1,18 @@
 const addRelations = (sequelize) => {
   // Get needed models
   // Any added models should be named here before establishing relations
-  const { Users, Reservation, ReservationStatus, ReservationType, Vehicle, Pricing, Garage, Floor } = sequelize.models;
+  const {
+    Users,
+    Reservation,
+    ReservationStatus,
+    ReservationType,
+    Vehicle,
+    Pricing,
+    Garage,
+    Floor,
+    Space,
+    SpaceStatus,
+  } = sequelize.models;
 
   try {
     // Relationships
@@ -84,6 +95,7 @@ const addRelations = (sequelize) => {
         },
       },
     };
+
     Users.hasMany(Vehicle, vehicleFK.memberId);
     Vehicle.belongsTo(Users, vehicleFK.memberId);
 
@@ -96,8 +108,40 @@ const addRelations = (sequelize) => {
         },
       },
     };
+
     Garage.hasMany(Floor, floorFK.garageId);
     Floor.belongsTo(Garage, floorFK.garageId);
+
+    // Foreign keys on Space
+    const spaceFK = {
+      garageId: {
+        foreignKey: {
+          name: 'GARAGE_ID',
+          allowNull: false,
+        },
+      },
+      floorId: {
+        foreignKey: {
+          name: 'FLOOR_ID',
+          allowNull: false,
+        },
+      },
+      statusId: {
+        foreignKey: {
+          name: 'STATUS_ID',
+          allowNUll: false,
+        },
+      },
+    };
+
+    Garage.hasMany(Space, spaceFK.garageId);
+    Space.belongsTo(Garage, spaceFK.garageId);
+
+    Floor.hasMany(Space, spaceFK.floorId);
+    Space.belongsTo(Floor, spaceFK.floorId);
+
+    SpaceStatus.hasMany(Space, spaceFK.statusId);
+    Space.belongsTo(SpaceStatus, spaceFK.statusId);
 
     console.log('Relations added to models.');
   } catch (error) {
