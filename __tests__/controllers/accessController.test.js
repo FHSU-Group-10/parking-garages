@@ -125,31 +125,31 @@ describe('Access Controller', () => {
 
     test('Entering with valid single reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 1, STATUS_ID: 1 }; // single, created
-      accessController.updateState(reservation);
+      accessController.updateState('entry', reservation);
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
     test('Entering with valid guaranteed reservation for the first time', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 1 }; // guaranteed, created
-      accessController.updateState(reservation);
+      accessController.updateState('entry', reservation);
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
     test('Entering with valid guaranteed reservation that has been used before', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 4 }; // guaranteed, valid
-      accessController.updateState(reservation);
+      accessController.updateState('entry', reservation);
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
     test('Exiting with single reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 1, STATUS_ID: 3 }; // single, inGarage
-      accessController.updateState(reservation);
+      accessController.updateState('exit', reservation);
       expect(reservation.STATUS_ID).toBe(5); // complete
     });
 
     test('Exiting with guaranteed reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 3 }; // guaranteed, inGarage
-      accessController.updateState(reservation);
+      accessController.updateState('exit', reservation);
       expect(reservation.STATUS_ID).toBe(4); // valid
     });
   });

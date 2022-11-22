@@ -49,7 +49,7 @@ const enter = async (req, res) => {
   if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
 
   // Change reservation state code
-  updateState(reservation);
+  updateState('entry', reservation);
 
   // Assign an empty space
   const spaceAssigned = await assignSpace(reservation);
@@ -94,10 +94,27 @@ const reservationCodeSearch = async (garageId, reservationCode) => {
 /**
  * Updates the reservationState of the given reservation
  *
+ * @param {String} gateType - The type of gate, either entry or exit
  * @param {Reservation} reservation - The reservation to update
  */
-const updateState = (reservation) => {
-  // TODO change reservation state code
+const updateState = (gateType, reservation) => {
+  // Current state possibilities: entering one a valid single, entering on a valid monthly, exiting with a single, exiting with a monthly
+  // Enter on a valid single or monthly reservation
+  if (gateType == 'entry' && (reservation.STATUS_ID == 1 || reservation.STATUS_ID == 4)) {
+    reservation.STATUS_ID = 3; // inGarage
+  }
+  // Exit with a single reservation
+  else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 1 && reservation.STATUS_ID == 3) {
+    reservation.STATUS_ID = 5; // complete
+    // TODO free the space
+  }
+  // Exit with a monthly reservation
+  else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 2 && reservation.STATUS_ID == 3) {
+    reservation.STATUS_ID = 4;
+    // TODO free space
+  } else {
+    throw new Error('InvalidStateTransition');
+  }
   return;
 };
 
@@ -128,6 +145,8 @@ const assignSpace = async (reservation) => {
   } catch (e) {
     console.error(e);
   }
+
+  // Assign space to reservation if available
 
   // Return null values if space is undefined
   if (!space)
