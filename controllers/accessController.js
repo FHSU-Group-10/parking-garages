@@ -1,7 +1,7 @@
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
-const { Sequelize, Op } = require('sequelize');
-const { Space, SpaceStatus, Floor, Reservation, ReservationType, Garage } = sequelize.models;
+const { Op } = require('sequelize');
+const { Space, Floor, Reservation, Vehicle } = sequelize.models;
 
 // -------- API FUNCTIONS --------
 
@@ -76,7 +76,32 @@ const enter = async (req, res) => {
  */
 const reservationSearch = async (garageId, plateNumber, plateState) => {
   // TODO reservation search by license plate
-  return null;
+  let reservation;
+  try {
+    // TODO consider restricting attributes returned
+    reservation = await Reservation.findOne({
+      where: {
+        // Match garage
+        GARAGE_ID: garageId,
+        // License Plate is a match
+        '$Vehicle.PLATE_NUMBER$': plateNumber,
+        '$Vehicle.PLATE_STATE$': plateState,
+        // Reservation is still valid
+        STATUS_ID: { [Op.in]: [1, 4] },
+        // Check that this is an appropriate time for the reservation
+        START_TIME: { [Op.lte]: Date.now() },
+        END_TIME: { [Op.gt]: Date.now() },
+      },
+      include: {
+        model: Vehicle,
+        attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
+      },
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  return reservation;
 };
 
 /**
@@ -87,8 +112,26 @@ const reservationSearch = async (garageId, plateNumber, plateState) => {
  * @returns {Object} - A matching reservation
  */
 const reservationCodeSearch = async (garageId, reservationCode) => {
-  // TODO reservation search by code
-  return null;
+  let reservation;
+  try {
+    // TODO consider restricting attributes returned
+    reservation = await Reservation.findOne({
+      where: {
+        // Match garage and reservation code
+        RES_CODE: reservationCode,
+        GARAGE_ID: garageId,
+        // Reservation is still valid
+        STATUS_ID: { [Op.in]: [1, 4] },
+        // Check that this is an appropriate time for the reservation
+        START_TIME: { [Op.lte]: Date.now() },
+        END_TIME: { [Op.gt]: Date.now() },
+      },
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  return reservation;
 };
 
 /**
