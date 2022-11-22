@@ -46,6 +46,7 @@ app.use('/reserve', require('./routes/api/reserve'));
 app.use('/user', require('./routes/api/user'));
 app.use('/garage', require('./routes/api/garage'));
 app.use('/pricing', require('./routes/api/pricing'));
+app.use('/access', require('./routes/api/access'));
 
 // serve our images
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
