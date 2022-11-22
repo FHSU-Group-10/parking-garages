@@ -1,7 +1,7 @@
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
 const { Sequelize, Op } = require('sequelize');
-const { Space, SpaceStatus, Reservation, ReservationType, Garage } = sequelize.models;
+const { Space, SpaceStatus, Floor, Reservation, ReservationType, Garage } = sequelize.models;
 
 // -------- API FUNCTIONS --------
 
@@ -111,23 +111,37 @@ const assignSpace = async (reservation) => {
   // TODO space assignment
 
   // Find lowest floor with availability in the garage
-  const space = await sequelize.query(`
-    SELECT 
-        f.FLOOR_NUM,
-        s.SPACE_ID,
-        s.STATUS_ID,
-        s.SPACE_NUM
-    FROM SPACES s INNER JOIN FLOORS f 
-    ON f.FLOOR_ID = s.FLOOR_ID
-    WHERE
-        f.GARAGE_ID = ${reservation.GARAGE_ID} AND s.STATUS_ID = 0 
-    ORDER BY f.FLOOR_NUM
-    LIMIT 1
-    `);
+  let space;
+  try {
+    space = await Space.findOne({
+      attributes: ['SPACE_ID', 'SPACE_NUM', 'STATUS_ID'],
+      where: {
+        GARAGE_ID: reservation.GARAGE_ID,
+        STATUS_ID: 0,
+      },
+      include: {
+        model: Floor,
+        attributes: ['FLOOR_NUM'],
+      },
+      order: [[Floor, 'FLOOR_NUM', 'ASC']],
+    });
+  } catch (e) {
+    console.error(e);
+  }
 
+  // Return null values if space is undefined
+  if (!space)
+    space = {
+      SPACE_NUM: null,
+      Floor: {
+        FLOOR_NUM: null,
+      },
+    };
+
+  // Return only space and floor numbers
   return {
     spaceNumber: space.SPACE_NUM,
-    floorNumber: space.FLOOR_NUM,
+    floorNumber: space.Floor.FLOOR_NUM,
   };
 };
 
