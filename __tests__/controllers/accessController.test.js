@@ -1,7 +1,5 @@
 // Controller to test
 const accessController = require('../../controllers/accessController');
-// Other controllers involved in tests
-const reservationController = require('../../controllers/reservationController');
 // Models involved
 const connectDB = require('../../config/dbConn');
 const sequelize = connectDB();
@@ -120,7 +118,7 @@ describe('Access Controller', () => {
           GARAGE_ID: 1,
         });
       } catch (e) {
-        console.error('****', e);
+        console.error(e);
       }
     });
 
