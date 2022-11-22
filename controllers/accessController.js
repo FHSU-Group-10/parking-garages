@@ -61,7 +61,7 @@ const enter = async (req, res) => {
   await callElevator(garageId, spaceAssigned.floorNumber);
 
   // Return success with space assignment
-  return res.status(200).json({ spaceNumber: spaceAssigned.spaceNumber });
+  return res.status(200).json({ spaceNumber: spaceAssigned.spaceNumber, floorNumber: spaceAssigned.floorNumber });
 };
 
 // -------- HELPER FUNCTIONS --------
@@ -109,9 +109,25 @@ const updateState = (reservation) => {
  */
 const assignSpace = async (reservation) => {
   // TODO space assignment
+
+  // Find lowest floor with availability in the garage
+  const space = await sequelize.query(`
+    SELECT 
+        f.FLOOR_NUM,
+        s.SPACE_ID,
+        s.STATUS_ID,
+        s.SPACE_NUM
+    FROM SPACES s INNER JOIN FLOORS f 
+    ON f.FLOOR_ID = s.FLOOR_ID
+    WHERE
+        f.GARAGE_ID = ${reservation.GARAGE_ID} AND s.STATUS_ID = 0 
+    ORDER BY f.FLOOR_NUM
+    LIMIT 1
+    `);
+
   return {
-    spaceNumber: null,
-    floorNumber: null,
+    spaceNumber: space.SPACE_NUM,
+    floorNumber: space.FLOOR_NUM,
   };
 };
 
