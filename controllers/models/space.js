@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false,
         field: 'WALK_IN',
       },
+      SPACE_NUM: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'SPACE_NUM',
+      },
     },
     {
       tableName: 'SPACE',
