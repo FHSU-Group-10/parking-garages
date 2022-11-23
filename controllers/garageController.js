@@ -324,7 +324,6 @@ const addSpaces = async (spotsPerFloor, floors) => {
         SPACE_NUM: j,
         GARAGE_ID: floors[i].GARAGE_ID,
         FLOOR_ID: floors[i].FLOOR_ID,
-        STATUS_ID: 0,
       })      
     }
 

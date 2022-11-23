@@ -129,7 +129,7 @@ const addRelations = (sequelize) => {
       statusId: {
         foreignKey: {
           name: 'STATUS_ID',
-          allowNUll: false,
+          defaultValue: 0,
         },
       },
     };
