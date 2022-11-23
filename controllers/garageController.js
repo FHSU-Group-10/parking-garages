@@ -10,8 +10,8 @@ const { Sequelize, Op } = require("sequelize");
 // const bcrypt = require("bcrypt");
 // const jwt = require('jsonwebtoken');
 // const {token} = require("morgan");
-const Garage = Db.models.Garage;
-const Floor = Db.models.Floor;
+const {Garage, Floor, Space} = Db.models
+
 
 /*
   Add the number of floors for each garage.
@@ -290,6 +290,9 @@ const addGarage = async (req, res) => {
       // using .map since the returned floors is an array of object with dataValues on each object
       assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
       garage.floors = assigned_floors;
+
+      // Create new spaces for the floors
+      let assignedSpaces = await addSpaces(spotsPerFloor, garage.floors);
     }
     
     // Return the result
@@ -299,6 +302,49 @@ const addGarage = async (req, res) => {
     return res.status(500).send();
   }
 };
+
+/**
+ * Create the spaces for the garage, linked to their floors
+ * 
+ * @param {[Number]} spotsPerFloor - An array with the space for each floor
+ * @param {[Obect]} floors - The floors
+ * @returns {[Object]} - An array of space objects after creation
+ */
+const addSpaces = async (spotsPerFloor, floors) => {
+  // A two-dimensional array of created spaces
+  let spaces = [];
+
+  for (let i = 0; i < floors.length; i++) {
+    let floorSpaces = [];
+
+    // Create each space object for bulk creation
+    for (let j = 1; j <= spotsPerFloor[i]; j++) {
+      floorSpaces.push({
+        WALK_IN: false,
+        SPACE_NUM: j,
+        GARAGE_ID: floors[i].GARAGE_ID,
+        FLOOR_ID: floors[i].FLOOR_ID,
+        STATUS_ID: 0,
+      })      
+    }
+
+    // Bulk create this floor's spaces in DB
+    let assignedSpaces
+    try{
+    assignedSpaces = await Space.bulkCreate(floorSpaces)
+    } catch(e) {
+      console.error(e);
+    }
+    // Keep only the data values of each sequelize object
+    assignedSpaces = (assignedSpaces || []).map(space => space.dataValues);
+    
+    // Push data values to the return array
+    spaces.push[assignedSpaces];
+  }
+
+  return spaces;
+}
+
 /**
  * updates a specified garage
  *
