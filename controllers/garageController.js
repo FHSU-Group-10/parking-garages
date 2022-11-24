@@ -65,6 +65,18 @@ const addFloors = async (garage,floors,spotsPerFloor) => {
     // using .map since the returned floors is an array of object with dataValues on each object
     assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
 
+    // Remove any floors numbered above the current number of floors
+    if (assigned_floors.length > floors) {
+      await Floor.destroy({
+        where: {
+          GARAGE_ID: garage.GARAGE_ID,
+          FLOOR_NUM: {
+            [Op.gt]: floors
+          }
+        }
+      })
+    }
+
     // Update the spaces for the floors
     await updateSpaces(assigned_floors);
 
