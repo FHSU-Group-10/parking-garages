@@ -19,8 +19,6 @@ describe('Access Controller', () => {
       const startTime = new Date();
       let endTime = new Date();
       endTime.setTime(endTime.getTime() + 2 * 60 * 60 * 1000);
-      //endTime.setHours(endTime.getHours() + 4);
-      const a = await Reservation.findOne();
 
       try {
         reservation = await Reservation.create({

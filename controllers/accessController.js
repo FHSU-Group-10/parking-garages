@@ -75,7 +75,6 @@ const enter = async (req, res) => {
  * @returns {Object} - A matching reservation
  */
 const reservationSearch = async (garageId, plateNumber, plateState) => {
-  // TODO reservation search by license plate
   let reservation;
   try {
     // TODO consider restricting attributes returned
@@ -189,16 +188,24 @@ const assignSpace = async (reservation) => {
     console.error(e);
   }
 
-  // Assign space to reservation if available
+  // A space was found
+  if (space) {
+    // Update state of space and save
+    space.STATUS_ID = 1;
+    space.save();
 
-  // Return null values if space is undefined
-  if (!space)
+    // Assign space to reservation if available
+    reservation.SPACE_ID = space.SPACE_ID;
+    // NOTE reservation must me saved back to DB after this function is called
+  } else {
+    // A space was not found
     space = {
       SPACE_NUM: null,
       Floor: {
         FLOOR_NUM: null,
       },
     };
+  }
 
   // Return only space and floor numbers
   return {
