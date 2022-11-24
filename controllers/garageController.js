@@ -65,11 +65,87 @@ const addFloors = async (garage,floors,spotsPerFloor) => {
     // using .map since the returned floors is an array of object with dataValues on each object
     assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
 
+    // Update the spaces for the floors
+    await updateSpaces(assigned_floors);
+
     return [assigned_floors, spotsPerFloor];
   } catch (err) {
     throw err;
   }
 };
+
+/**
+ * Update parking spaces when updating garages
+ * WARNING - will remove parking spaces, even if they are currently occupied! Do not update garages that are "in use"
+ * 
+ * @param {[Object]} floors - An array of floor records to update spaces for
+ * @returns {[Object]} - An array of space data objects
+ */
+const updateSpaces = async (floors) => {
+  // Track all floor IDs for final delete operation
+  let floorIds = [];
+
+  // Iterate over each floor
+  for (let i = 0; i < floors.length; i++) {
+    // Store this floor ID
+    floorIds.push(floors[i].FLOOR_ID);
+
+    // Retrieve a count of all existing spaces
+    let existingSpaces = await Space.count({
+      where: {
+        GARAGE_ID: floors[i].GARAGE_ID,
+        FLOOR_ID: floors[i].FLOOR_ID,
+      }
+    })
+
+    // Decide to add, remove, or leave the existing spaces
+    if (existingSpaces == floors[i].SPACE_COUNT) continue; // Skip this floor if it is unchanged
+    else if (existingSpaces < floors[i].SPACE_COUNT) {
+      // Need to add spaces
+      let newSpaces = [];
+      
+      // Iterate over each new space needed for this floor
+      for (let j = existingSpaces + 1; j <= floors[i].SPACE_COUNT; j++) {
+        newSpaces.push({
+          WALK_IN: false,
+          SPACE_NUM: j,
+          GARAGE_ID: floors[i].GARAGE_ID,
+          FLOOR_ID: floors[i].FLOOR_ID,
+        })
+      }
+
+      // Bulk create the spaces for this floor
+      try {
+        await Space.bulkCreate(newSpaces);
+      } catch(e) {
+        console.error(e);
+      }
+      // Finished, continue to the next floor
+      continue;
+    } else {
+      // Need to remove spaces
+      await Space.destroy({
+        where: {
+          GARAGE_ID: floors[i].GARAGE_ID,
+          FLOOR_ID: floors[i].FLOOR_ID,
+          SPACE_NUM: {
+            [Op.gt]: floors[i].SPACE_COUNT,
+          }
+        }
+      })
+    }
+  }
+
+  // Delete all spaces for any floors that were removed from this garage
+  await Space.destroy({
+    where: {
+      GARAGE_ID: floors[0].GARAGE_ID,
+      FLOOR_ID: {
+        [Op.notIn]: [...floorIds],
+      }
+    }
+  })
+}
 
 const getSpotNumber = async () => {
   try {
@@ -142,7 +218,7 @@ const updateGarage = async (req, res) => {
   const floors = req?.body?.numFloors;
   const spotsPerFloor = req?.body?.spotsPerFloor;
   const location = req?.body?.location;
-  const isActive = req?.body?.isActive;
+  const isActive = req?.body?.isActive || true; // Missing on front end, default here to true
   
   // Return early if any arguments are missing
   if (overbookRate < 1.0) {
@@ -310,7 +386,7 @@ const addGarage = async (req, res) => {
  * @param {[Obect]} floors - The floors
  * @returns {[Object]} - An array of space objects after creation
  */
-const addSpaces = async (spotsPerFloor, floors) => {
+const addSpaces = async (floors) => {
   // A two-dimensional array of created spaces
   let spaces = [];
 
@@ -318,7 +394,7 @@ const addSpaces = async (spotsPerFloor, floors) => {
     let floorSpaces = [];
 
     // Create each space object for bulk creation
-    for (let j = 1; j <= spotsPerFloor[i]; j++) {
+    for (let j = 1; j <= floors[i].FLOOR_COUNT; j++) {
       floorSpaces.push({
         WALK_IN: false,
         SPACE_NUM: j,
@@ -330,7 +406,7 @@ const addSpaces = async (spotsPerFloor, floors) => {
     // Bulk create this floor's spaces in DB
     let assignedSpaces
     try{
-    assignedSpaces = await Space.bulkCreate(floorSpaces)
+      assignedSpaces = await Space.bulkCreate(floorSpaces)
     } catch(e) {
       console.error(e);
     }
@@ -343,24 +419,6 @@ const addSpaces = async (spotsPerFloor, floors) => {
 
   return spaces;
 }
-
-/**
- * updates a specified garage
- *
- * @param {number} id - garageId
- * @param {string} name - The name of the garage to delete
- * @param {number} numFloors  -floors in the garage
- * @param {[number]} spotsPerFloor -number of spots on each floor
- * @param {[string]} location - [latitude, longitude]
- * @param {number} overbookRate - if null then 0
- * @param {boolean} isActive - if true then garage is active
- * @returns {Object} - Signals whether the garage was successfully created
- *
- * Preconditions:
- *  - Garage does exist in the database
- * Postconditions:
- *  - Garage is updated
- */
 
 
 
