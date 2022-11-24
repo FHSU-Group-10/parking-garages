@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'SPACE',
+      tableName: 'SPACES',
       timestamps: false,
       schema: 'g10',
       initialized: true,
