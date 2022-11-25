@@ -37,23 +37,26 @@ const enter = async (req, res) => {
 
   // Search for a matching reservation in the DB
   let reservation = await entryResSearch(garageId, { plateNumber, plateState, reservationCode });
-
   // If no match is found, return failure
   if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
 
   // Assign an empty space after ensuring there is an open parking space
   const spaceAssigned = await assignSpace(reservation);
-
   // If assigned space is null, no spaces are free to park in. Communicate the issue to the user and do not allow entry.
-  if (spaceAssigned.spaceNumber == null || spaceAssigned.floorNumber == null) {
-    return res.status(409).json({ message: 'No empty parking spaces at this time.' });
+  if (!reservation.SPACE_ID) return res.status(409).json({ message: 'No empty parking spaces at this time.' });
+
+  // Change reservation state code and save updated reservation
+  try {
+    await updateState('entry', reservation);
+    await reservation.save();
+  } catch (e) {
+    if (e == 'InvalidStateTransition') {
+      return res.status(400).json({ message: 'Reservation state could not be modified.' });
+    } else {
+      console.error(e);
+      return res.status(400).json({ message: 'Reservation failed to update.' });
+    }
   }
-
-  // Change reservation state code
-  await updateState('entry', reservation);
-
-  // Save updated reservation
-  await reservation.save();
 
   // Call the elevator
   await callElevator(garageId, spaceAssigned.floorNumber);
@@ -94,119 +97,38 @@ const exit = async (req, res) => {
     return res.status(400).json({ message: 'Incomplete request.' });
   }
 
-  // Search for a matching reservation in the DB
-  let reservation;
-  if (reservationCode) {
-    // Search for a match by reservation code
-    reservation = await reservationCodeSearch(garageId, reservationCode);
-  } else {
-    // Search for a match by plate number and plate state
-    reservation = await entryResSearch(garageId, { plateNumber, plateState, reservationCode });
+  // Search for a matching reservation and space in the DB
+  let reservation = await exitResSearch(garageId, { plateNumber, plateState, reservationCode });
+  let space = await Space.findByPk(reservation.spaceId);
+  // If no matches are found, return failure
+  if (!reservation) return res.status(404).json({ message: 'No valid reservation found.' });
+  if (!space) return res.status(400).json({ message: 'Failed to find the space assigned to the reservation.' });
+
+  // Change reservation state code and space assignments
+  try {
+    await updateState('exit', reservation, space);
+  } catch (e) {
+    if (e == 'InvalidStateTransition') {
+      return res.status(400).json({ message: 'Reservation state could not be modified.' });
+    } else {
+      throw e;
+    }
   }
 
-  // If no match is found, return failure
-  if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
+  // Save updated reservation and space
+  try {
+    await reservation.save();
+    await space.save();
+  } catch (e) {
+    console.error(e);
+    return res.status(400).json({ message: 'Failed to update reservation and parking space.' });
+  }
+
+  // Return success
+  return res.sendStatus(200);
 };
 
 // -------- HELPER FUNCTIONS --------
-
-/**
- * Retrieves a reservation based on a vehicle's license plate
- *
- * @param {Number} garageId - The ID of the garage to check reservations for
- * @param {Object} options - An object containing optional query arguments
- * {
- *    @param {String} plateNumber - The license plate number of the vehicle attempting entry
- *    @param {String} plateState - The license plate issuing authority of the vehicle attempting entry
- *    @param {String} reservationCode - A reservation code to search by
- * }
- * @returns {Object} - A matching reservation
- */
-const entryResSearch = async (garageId, options) => {
-  let reservation;
-
-  // Both search types share some parameters
-  let query = {
-    where: {
-      // Match garage
-      GARAGE_ID: garageId,
-      // Reservation is still valid
-      STATUS_ID: { [Op.in]: [1, 4] },
-      // Check that this is an appropriate time for the reservation
-      START_TIME: { [Op.lte]: Date.now() },
-      END_TIME: { [Op.gt]: Date.now() },
-    },
-  };
-
-  // Specific fields by search type
-  // Search by either license plate or reservation code
-  if (options.reservationCode) {
-    // Use to searching by reservation code if available
-    query.where.RES_CODE = options.reservationCode;
-  } else {
-    // Otherwise try license plate
-    query.where['$Vehicle.PLATE_NUMBER$'] = options.plateNumber;
-    query.where['$Vehicle.PLATE_STATE$'] = options.plateState;
-    query.include = {
-      model: Vehicle,
-      attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
-    };
-  }
-  // Search the DB for a matching reservation
-  try {
-    // TODO consider restricting attributes returned
-    reservation = await Reservation.findOne(query);
-  } catch (e) {
-    console.error(e);
-  }
-
-  return reservation;
-};
-
-/**
- * Updates the reservationState of the given reservation
- *
- * @param {String} gateType - The type of gate, either entry or exit
- * @param {Reservation} reservation - The reservation to update
- */
-const updateState = async (gateType, reservation) => {
-  // Current state possibilities: entering one a valid single, entering on a valid monthly, exiting with a single, exiting with a monthly
-  // Enter on a valid single or monthly reservation
-  if (gateType == 'entry' && (reservation.STATUS_ID == 1 || reservation.STATUS_ID == 4)) {
-    reservation.STATUS_ID = 3; // inGarage
-  }
-  // Exit with a single reservation
-  else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 1 && reservation.STATUS_ID == 3) {
-    reservation.STATUS_ID = 5; // complete
-    // Free the space
-    await Space.update(
-      { STATUS_ID: 0 },
-      {
-        where: {
-          GARAGE_ID: reservation.GARAGE_ID,
-          SPACE_ID: reservation.SPACE_ID,
-        },
-      }
-    );
-  }
-  // Exit with a monthly reservation
-  else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 2 && reservation.STATUS_ID == 3) {
-    reservation.STATUS_ID = 4;
-    // Free the space
-    await Space.update(
-      { STATUS_ID: 0 },
-      {
-        where: {
-          GARAGE_ID: reservation.GARAGE_ID,
-          SPACE_ID: reservation.SPACE_ID,
-        },
-      }
-    );
-  } else {
-    throw new Error('InvalidStateTransition');
-  }
-  return;
-};
 
 /**
  * Assigns a parking space to a reservation when the vehicle enters the garage
@@ -275,12 +197,159 @@ const callElevator = async (garageId, floorNumber) => {
   return;
 };
 
+/**
+ * Retrieves a reservation for a vehicle entering the garage
+ *
+ * @param {Number} garageId - The ID of the garage to check reservations for
+ * @param {Object} options - An object containing optional query arguments
+ * {
+ *    @param {String} plateNumber - The license plate number of the vehicle attempting entry
+ *    @param {String} plateState - The license plate issuing authority of the vehicle attempting entry
+ *    @param {String} reservationCode - A reservation code to search by
+ * }
+ * @returns {Reservation} - A matching reservation
+ */
+const entryResSearch = async (garageId, options) => {
+  let reservation;
+
+  // Both search types share some parameters
+  let query = {
+    where: {
+      // Match garage
+      GARAGE_ID: garageId,
+      // Reservation is still valid
+      STATUS_ID: { [Op.in]: [1, 4] },
+      // Check that this is an appropriate time for the reservation
+      START_TIME: { [Op.lte]: Date.now() },
+      END_TIME: { [Op.gt]: Date.now() },
+    },
+  };
+
+  // Specific fields by search type
+  // Search by either license plate or reservation code
+  if (options.reservationCode) {
+    // Search by reservation code if available
+    query.where.RES_CODE = options.reservationCode;
+  } else {
+    // Otherwise try license plate
+    query.where['$Vehicle.PLATE_NUMBER$'] = options.plateNumber;
+    query.where['$Vehicle.PLATE_STATE$'] = options.plateState;
+    query.include = {
+      model: Vehicle,
+      attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
+    };
+  }
+  // Search the DB for a matching reservation
+  try {
+    // TODO consider restricting attributes returned
+    reservation = await Reservation.findOne(query);
+  } catch (e) {
+    console.error(e);
+  }
+
+  return reservation;
+};
+
+/**
+ * Retrieves a reservation for a vehicle exiting the garagge
+ *
+ * @param {Number} garageId - The ID of the garage to check reservations for
+ * @param {Object} options - An object containing iptional query arguments
+ * {
+ *    @param {String} plateNumber - The license plate number of the vehicle attempting entry
+ *    @param {String} plateState - The license plate issuing authority of the vehicle attempting entry
+ *    @param {String} reservationCode - A reservation code to search by
+ * }
+ * @returns {Reservation} - A matching reservation
+ */
+const exitResSearch = async (garageId, options) => {
+  let reservation;
+
+  // Search params shared by both search types
+  let query = {
+    where: {
+      // Match garage
+      GARAGE_ID: garageId,
+      // Reservation is marked as inGarage
+      STATUS_ID: 3,
+    },
+  };
+
+  // Specific search params by type
+  if (options.reservationCode) {
+    // Search by reservation code if given
+    query.where.RES_CODE = options.reservationCode;
+  } else {
+    // Search by license plate
+    query.where['$Vehicle.PLATE_NUMBER$'] = options.plateNumber;
+    query.where['$Vehicle.PLATE_STATE$'] = options.plateState;
+    query.include = {
+      model: Vehicle,
+      attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
+    };
+  }
+
+  // Search the DB for a matching reservation
+  try {
+    // TODO consider restricting attributes returned
+    reservation = await Reservation.findOne(query);
+  } catch (e) {
+    console.error(e);
+  }
+
+  return reservation;
+};
+
+/**
+ * Updates the reservationState of the given reservation
+ *
+ * @param {String} gateType - The type of gate, either entry or exit
+ * @param {Reservation} reservation - The reservation to update
+ */
+const updateState = async (gateType, reservation, space) => {
+  // Current state possibilities: entering one a valid single, entering on a valid monthly, exiting with a single, exiting with a monthly
+
+  // Enter on a valid single or monthly reservation
+  if (gateType == 'entry' && (reservation.STATUS_ID == 1 || reservation.STATUS_ID == 4)) {
+    reservation.STATUS_ID = 3; // inGarage
+    return;
+  }
+
+  // Exiting the garage
+  if (gateType == 'exit') {
+    // Update space status and remove assignment from reservation
+    space.STATUS_ID = 0;
+    reservation.SPACE_ID = null;
+
+    // Leaving late should adjust the exit time, but leaving early should not
+    if (reservation.END_TIME < Date.now()) {
+      reservation.END_TIME = Date.now();
+    }
+
+    // Update reservation state
+    if (reservation.RESERVATION_TYPE_ID == 1 && reservation.STATUS_ID == 3) {
+      // Exit with a single reservation
+      // Mark as complete
+      reservation.STATUS_ID = 5;
+      return;
+    } else if (reservation.RESERVATION_TYPE_ID == 2 && reservation.STATUS_ID == 3) {
+      // Exit with a monthly reservation
+      // Mark as valid (reusable)
+      reservation.STATUS_ID = 4;
+      return;
+    }
+  }
+  // No valid state transition was found (all transitions return early)
+  throw new Error('InvalidStateTransition');
+};
+
 // Export functions
 module.exports = {
   enter,
   exit,
-  entryResSearch,
-  updateState,
   assignSpace,
   callElevator,
+  entryResSearch,
+  exitResSearch,
+  updateState,
 };
