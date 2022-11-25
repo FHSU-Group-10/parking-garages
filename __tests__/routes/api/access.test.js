@@ -26,10 +26,14 @@ describe('Access Route', () => {
           RES_CODE: 'ABCDEFGH',
           MEMBER_ID: 16,
           RESERVATION_TYPE_ID: 1,
-          VEHICLE_ID: null,
+          VEHICLE_ID: 2,
           STATUS_ID: 1,
           GARAGE_ID: 1,
+          SPACE_ID: null,
         });
+
+        plateNumber = 'NOBR8X';
+        plateState = 'AK';
       } catch (e) {
         console.error(e);
       }
@@ -37,10 +41,14 @@ describe('Access Route', () => {
       // Attempt to enter with that reservation
       const body = {
         garageId: reservation.GARAGE_ID,
-        reservationCode: reservation.RES_CODE,
+        plateNumber: plateNumber,
+        plateState: plateState,
       };
       const results = await request(app).post(url).send(body);
-      //console.log(results);
+
+      // Reload the reservation after space assignment
+      reservation.reload();
+
       expect(results.status).toBe(200);
       expect(results.body.spaceNumber).not.toBeNull();
       expect(results.body.floorNumber).not.toBeNull();
@@ -87,6 +95,9 @@ describe('Access Route', () => {
       };
       const results = await request(app).post(url).send(body);
 
+      // Reload the reservation after space assignment
+      reservation.reload();
+
       expect(results.status).toBe(404);
       expect(results.body?.message).toEqual('No valid reservation found.');
     });
@@ -106,15 +117,16 @@ describe('Access Route', () => {
       // Remove the reservation
       if (reservation?.RESERVATION_ID) {
         // Free the space
-        await Space.update(
-          { STATUS_ID: 0 },
-          {
-            where: {
-              GARAGE_ID: reservation.GARAGE_ID,
-              SPACE_ID: reservation.SPACE_ID,
-            },
-          }
-        );
+        if (reservation.SPACE_ID)
+          await Space.update(
+            { STATUS_ID: 0 },
+            {
+              where: {
+                GARAGE_ID: reservation.GARAGE_ID,
+                SPACE_ID: reservation.SPACE_ID,
+              },
+            }
+          );
         // Destroy the reservation
         await Reservation.destroy({
           where: {
@@ -156,7 +168,10 @@ describe('Access Route', () => {
         reservationCode: reservation.RES_CODE,
       };
       const results = await request(app).post(url).send(body);
-      //console.log(results);
+
+      // Reload the reservation after space assignment
+      reservation.reload();
+
       expect(results.status).toBe(200);
       expect(results.body.spaceNumber).not.toBeNull();
       expect(results.body.floorNumber).not.toBeNull();
@@ -200,6 +215,9 @@ describe('Access Route', () => {
         reservationCode: reservation.RES_CODE,
       };
       const results = await request(app).post(url).send(body);
+
+      // Reload the reservation after space assignment
+      reservation.reload();
 
       expect(results.status).toBe(404);
       expect(results.body?.message).toEqual('No valid reservation found.');

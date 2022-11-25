@@ -145,7 +145,6 @@ const reservationCodeSearch = async (garageId, reservationCode) => {
  * @param {Reservation} reservation - The reservation to update
  */
 const updateState = async (gateType, reservation) => {
-  console.log(reservation);
   // Current state possibilities: entering one a valid single, entering on a valid monthly, exiting with a single, exiting with a monthly
   // Enter on a valid single or monthly reservation
   if (gateType == 'entry' && (reservation.STATUS_ID == 1 || reservation.STATUS_ID == 4)) {
@@ -193,25 +192,27 @@ const updateState = async (gateType, reservation) => {
 const assignSpace = async (reservation) => {
   // Find lowest floor and lowest space number with availability in the garage
   let space;
-  try {
-    space = await Space.findOne({
-      attributes: ['SPACE_ID', 'SPACE_NUM', 'STATUS_ID'],
-      where: {
-        GARAGE_ID: reservation.GARAGE_ID,
-        STATUS_ID: 0,
-      },
-      include: {
-        model: Floor,
-        attributes: ['FLOOR_NUM'],
-      },
-      order: [
-        [Floor, 'FLOOR_NUM', 'ASC'],
-        ['SPACE_NUM', 'ASC'],
-      ],
-    });
-  } catch (e) {
-    console.error(e);
-  }
+
+  if (reservation.GARAGE_ID)
+    try {
+      space = await Space.findOne({
+        attributes: ['SPACE_ID', 'SPACE_NUM', 'STATUS_ID'],
+        where: {
+          GARAGE_ID: reservation.GARAGE_ID,
+          STATUS_ID: 0,
+        },
+        include: {
+          model: Floor,
+          attributes: ['FLOOR_NUM'],
+        },
+        order: [
+          [Floor, 'FLOOR_NUM', 'ASC'],
+          ['SPACE_NUM', 'ASC'],
+        ],
+      });
+    } catch (e) {
+      console.error(e);
+    }
 
   // A space was found
   if (space) {

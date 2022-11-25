@@ -80,7 +80,6 @@ describe('Access Controller', () => {
       } catch (e) {
         console.error('****', e);
       }
-      console.log(reservation);
 
       // Try to use tomorrow's reservation
       const match = await accessController.reservationSearch(reservation.GARAGE_ID, plate.number, plate.state);
@@ -164,7 +163,6 @@ describe('Access Controller', () => {
       } catch (e) {
         console.error('****', e);
       }
-      console.log(reservation);
 
       // Try to use tomorrow's reservation
       const match = await accessController.reservationCodeSearch(reservation.GARAGE_ID, reservation.RES_CODE);
@@ -236,7 +234,7 @@ describe('Access Controller', () => {
     });
 
     test('Invalid garageID', async () => {
-      reservation.GARAGE_ID = 0;
+      reservation.GARAGE_ID = 10000;
       reservation.assigned = await accessController.assignSpace(reservation);
 
       expect(reservation.assigned.spaceNumber).toBeNull();
@@ -245,14 +243,13 @@ describe('Access Controller', () => {
 
     afterEach(async () => {
       // Cleanup spaces
-      if (reservation.assigned.spaceNumber)
-        Space.update(
+      if (reservation.SPACE_ID)
+        await Space.update(
           { STATUS_ID: 0 },
           {
             where: {
               GARAGE_ID: reservation.GARAGE_ID,
-              SPACE_NUM: reservation.assigned.spaceNumber,
-              FLOOR_NUM: reservation.assigned.floorNumber,
+              SPACE_ID: reservation.SPACE_ID,
             },
           }
         );
