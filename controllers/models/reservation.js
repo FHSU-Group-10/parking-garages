@@ -71,5 +71,11 @@ Reservation.belongsTo(ReservationStatus, {
     allowNull: false,
   },
 });
+Reservation.belongsTo(Space, {
+  foreignKey: {
+    name: 'SPACE_ID',
+    allowNull: true,
+  },
+});
  */
 };
