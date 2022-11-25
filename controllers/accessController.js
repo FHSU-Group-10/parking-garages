@@ -36,14 +36,7 @@ const enter = async (req, res) => {
   }
 
   // Search for a matching reservation in the DB
-  let reservation;
-  if (reservationCode) {
-    // Search for a match by reservation code
-    reservation = await reservationCodeSearch(garageId, reservationCode);
-  } else {
-    // Search for a match by plate number and plate state
-    reservation = await reservationSearch(garageId, plateNumber, plateState);
-  }
+  let reservation = await entryResSearch(garageId, { plateNumber, plateState, reservationCode });
 
   // If no match is found, return failure
   if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
@@ -69,68 +62,100 @@ const enter = async (req, res) => {
   return res.status(200).json({ spaceNumber: spaceAssigned.spaceNumber, floorNumber: spaceAssigned.floorNumber });
 };
 
+/**
+ * Attempt to exit a garage with a reservation
+ * POST request
+ * // TODO add a secure access key per terminal and check for match before processing
+ *
+ * @async
+ * @param {Number} garageId - The ID of the garage the vehicle is attempting to enter
+ * @param {String} plateNumber - Optional. The license plate number of the vehicle attempting entry
+ * @param {String} plateState - Optional. The license plate state of the vehicle attempting entry
+ * @param {String} reservationCode - Optional. A string given to users when they make a successful reservation, used for lookup
+ * @returns {Object} - Status code and message
+ *
+ * Preconditions:
+ * - The vehicle is currently known to be parked in the specified garage
+ * - Access key matches an entry terminal registered to the given garage
+ * - Either a reservation code or plate state and plate number must be provided
+ * Postconditions:
+ * - The reservation status and space assignment are updated
+ * - The vehicle is allowed to exit
+ */
+const exit = async (req, res) => {
+  // Get arguments from POST request body
+  const garageId = req?.body?.garageId;
+  const plateNumber = req?.body?.plateNumber;
+  const plateState = req?.body?.plateState;
+  const reservationCode = req?.body?.reservationCode;
+
+  // Return early if any arguments are missing
+  if (!(req?.body && garageId && ((plateNumber && plateState) || reservationCode))) {
+    return res.status(400).json({ message: 'Incomplete request.' });
+  }
+
+  // Search for a matching reservation in the DB
+  let reservation;
+  if (reservationCode) {
+    // Search for a match by reservation code
+    reservation = await reservationCodeSearch(garageId, reservationCode);
+  } else {
+    // Search for a match by plate number and plate state
+    reservation = await entryResSearch(garageId, { plateNumber, plateState, reservationCode });
+  }
+
+  // If no match is found, return failure
+  if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
+};
+
 // -------- HELPER FUNCTIONS --------
 
 /**
  * Retrieves a reservation based on a vehicle's license plate
  *
  * @param {Number} garageId - The ID of the garage to check reservations for
- * @param {String} plateNumber - The license plate number of the vehicle attempting entry
- * @param {String} plateState - The license plate issuing authority of the vehicle attempting entry
+ * @param {Object} options - An object containing optional query arguments
+ * {
+ *    @param {String} plateNumber - The license plate number of the vehicle attempting entry
+ *    @param {String} plateState - The license plate issuing authority of the vehicle attempting entry
+ *    @param {String} reservationCode - A reservation code to search by
+ * }
  * @returns {Object} - A matching reservation
  */
-const reservationSearch = async (garageId, plateNumber, plateState) => {
+const entryResSearch = async (garageId, options) => {
   let reservation;
-  try {
-    // TODO consider restricting attributes returned
-    reservation = await Reservation.findOne({
-      where: {
-        // Match garage
-        GARAGE_ID: garageId,
-        // License Plate is a match
-        '$Vehicle.PLATE_NUMBER$': plateNumber,
-        '$Vehicle.PLATE_STATE$': plateState,
-        // Reservation is still valid
-        STATUS_ID: { [Op.in]: [1, 4] },
-        // Check that this is an appropriate time for the reservation
-        START_TIME: { [Op.lte]: Date.now() },
-        END_TIME: { [Op.gt]: Date.now() },
-      },
-      include: {
-        model: Vehicle,
-        attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
-      },
-    });
-  } catch (e) {
-    console.error(e);
+
+  // Both search types share some parameters
+  let query = {
+    where: {
+      // Match garage
+      GARAGE_ID: garageId,
+      // Reservation is still valid
+      STATUS_ID: { [Op.in]: [1, 4] },
+      // Check that this is an appropriate time for the reservation
+      START_TIME: { [Op.lte]: Date.now() },
+      END_TIME: { [Op.gt]: Date.now() },
+    },
+  };
+
+  // Specific fields by search type
+  // Search by either license plate or reservation code
+  if (options.reservationCode) {
+    // Use to searching by reservation code if available
+    query.where.RES_CODE = options.reservationCode;
+  } else {
+    // Otherwise try license plate
+    query.where['$Vehicle.PLATE_NUMBER$'] = options.plateNumber;
+    query.where['$Vehicle.PLATE_STATE$'] = options.plateState;
+    query.include = {
+      model: Vehicle,
+      attributes: ['PLATE_NUMBER', 'PLATE_STATE'],
+    };
   }
-
-  return reservation;
-};
-
-/**
- * Retrieves a reservation based on a reservation code
- *
- * @param {Number} garageId - The ID of the garage to check reservations for
- * @param {String} reservationCode - The reservation code from the user attempting entry
- * @returns {Object} - A matching reservation
- */
-const reservationCodeSearch = async (garageId, reservationCode) => {
-  let reservation;
+  // Search the DB for a matching reservation
   try {
     // TODO consider restricting attributes returned
-    reservation = await Reservation.findOne({
-      where: {
-        // Match garage and reservation code
-        RES_CODE: reservationCode,
-        GARAGE_ID: garageId,
-        // Reservation is still valid
-        STATUS_ID: { [Op.in]: [1, 4] },
-        // Check that this is an appropriate time for the reservation
-        START_TIME: { [Op.lte]: Date.now() },
-        END_TIME: { [Op.gt]: Date.now() },
-      },
-    });
+    reservation = await Reservation.findOne(query);
   } catch (e) {
     console.error(e);
   }
@@ -253,8 +278,8 @@ const callElevator = async (garageId, floorNumber) => {
 // Export functions
 module.exports = {
   enter,
-  reservationSearch,
-  reservationCodeSearch,
+  exit,
+  entryResSearch,
   updateState,
   assignSpace,
   callElevator,

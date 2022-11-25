@@ -8,7 +8,7 @@ const { Reservation, Space } = sequelize.models;
 jest.setTimeout(10000);
 // TODO Ensure spaces are freed if occupied by a test
 describe('Access Controller', () => {
-  describe('reservationSearch', () => {
+  describe('entryResSearch - Plate', () => {
     let reservation;
     const plate = {
       number: 'NOBR8X',
@@ -37,18 +37,24 @@ describe('Access Controller', () => {
     });
 
     test('Valid Plate', async () => {
-      const match = await accessController.reservationSearch(reservation.GARAGE_ID, plate.number, plate.state);
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, {
+        plateNumber: plate.number,
+        plateState: plate.state,
+      });
       expect(match).not.toBeNull();
       expect(match.RESERVATION_ID).toBe(reservation.RESERVATION_ID);
     });
 
     test('Invalid Plate', async () => {
-      const match = await accessController.reservationSearch(reservation.GARAGE_ID, '        ', 'nostate');
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, {
+        plateNumber: '        ',
+        plateState: 'nostate',
+      });
       expect(match).toBeNull();
     });
 
     test('Invalid Garage', async () => {
-      const match = await accessController.reservationSearch(0, plate.number, plate.state);
+      const match = await accessController.entryResSearch(0, { plateNumber: plate.number, plateState: plate.state });
       expect(match).toBeNull();
     });
 
@@ -82,7 +88,10 @@ describe('Access Controller', () => {
       }
 
       // Try to use tomorrow's reservation
-      const match = await accessController.reservationSearch(reservation.GARAGE_ID, plate.number, plate.state);
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, {
+        plateNumber: plate.number,
+        plateState: plate.state,
+      });
       expect(match).toBeNull();
     });
 
@@ -95,7 +104,7 @@ describe('Access Controller', () => {
     });
   });
 
-  describe('reservationCodeSearch', () => {
+  describe('entryResSearch - Reservation Code', () => {
     let reservation;
 
     beforeEach(async () => {
@@ -120,18 +129,20 @@ describe('Access Controller', () => {
     });
 
     test('Valid Code', async () => {
-      const match = await accessController.reservationCodeSearch(reservation.GARAGE_ID, reservation.RES_CODE);
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, {
+        reservationCode: reservation.RES_CODE,
+      });
       expect(match).not.toBeNull();
       expect(match.RESERVATION_ID).toBe(reservation.RESERVATION_ID);
     });
 
     test('Invalid Code', async () => {
-      const match = await accessController.reservationCodeSearch(reservation.GARAGE_ID, 'OIOIOIOI');
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, { reservationCode: 'OIOIOIOI' });
       expect(match).toBeNull();
     });
 
     test('Invalid Garage', async () => {
-      const match = await accessController.reservationCodeSearch(0, reservation.RES_CODE);
+      const match = await accessController.entryResSearch(0, { reservationCode: reservation.RES_CODE });
       expect(match).toBeNull();
     });
 
@@ -165,7 +176,9 @@ describe('Access Controller', () => {
       }
 
       // Try to use tomorrow's reservation
-      const match = await accessController.reservationCodeSearch(reservation.GARAGE_ID, reservation.RES_CODE);
+      const match = await accessController.entryResSearch(reservation.GARAGE_ID, {
+        reservationCode: reservation.RES_CODE,
+      });
       expect(match).toBeNull();
     });
 
