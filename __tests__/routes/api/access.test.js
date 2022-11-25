@@ -4,10 +4,10 @@ const app = require('../../../app');
 // Models for test reservations
 const connectDB = require('../../../config/dbConn');
 const sequelize = connectDB();
-const { Reservation } = sequelize.models;
+const { Reservation, Space } = sequelize.models;
 
 jest.setTimeout(30000);
-
+// TODO Ensure spaces are freed if occupied by a test
 describe('Access Route', () => {
   describe('Enter by license plate', () => {
     const url = '/access/enter';
@@ -40,7 +40,7 @@ describe('Access Route', () => {
         reservationCode: reservation.RES_CODE,
       };
       const results = await request(app).post(url).send(body);
-      console.log(results);
+      //console.log(results);
       expect(results.status).toBe(200);
       expect(results.body.spaceNumber).not.toBeNull();
       expect(results.body.floorNumber).not.toBeNull();
@@ -104,12 +104,24 @@ describe('Access Route', () => {
 
     afterEach(async () => {
       // Remove the reservation
-      if (reservation?.RESERVATION_ID)
+      if (reservation?.RESERVATION_ID) {
+        // Free the space
+        await Space.update(
+          { STATUS_ID: 0 },
+          {
+            where: {
+              GARAGE_ID: reservation.GARAGE_ID,
+              SPACE_ID: reservation.SPACE_ID,
+            },
+          }
+        );
+        // Destroy the reservation
         await Reservation.destroy({
           where: {
             RESERVATION_ID: reservation.RESERVATION_ID,
           },
         });
+      }
     });
   });
 
@@ -144,7 +156,7 @@ describe('Access Route', () => {
         reservationCode: reservation.RES_CODE,
       };
       const results = await request(app).post(url).send(body);
-      console.log(results);
+      //console.log(results);
       expect(results.status).toBe(200);
       expect(results.body.spaceNumber).not.toBeNull();
       expect(results.body.floorNumber).not.toBeNull();
@@ -205,12 +217,24 @@ describe('Access Route', () => {
 
     afterEach(async () => {
       // Remove the reservation
-      if (reservation?.RESERVATION_ID)
+      if (reservation?.RESERVATION_ID) {
+        // Free the space
+        await Space.update(
+          { STATUS_ID: 0 },
+          {
+            where: {
+              GARAGE_ID: reservation.GARAGE_ID,
+              SPACE_ID: reservation.SPACE_ID,
+            },
+          }
+        );
+        // Destroy the reservation
         await Reservation.destroy({
           where: {
             RESERVATION_ID: reservation.RESERVATION_ID,
           },
         });
+      }
     });
   });
 });
