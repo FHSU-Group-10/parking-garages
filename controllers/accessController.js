@@ -48,11 +48,16 @@ const enter = async (req, res) => {
   // If no match is found, return failure
   if (reservation == null) return res.status(404).json({ message: 'No valid reservation found.' });
 
-  // Change reservation state code
-  updateState('entry', reservation);
-
-  // Assign an empty space
+  // Assign an empty space after ensuring there is an open parking space
   const spaceAssigned = await assignSpace(reservation);
+
+  // If assigned space is null, no spaces are free to park in. Communicate the issue to the user and do not allow entry.
+  if (spaceAssigned.spaceNumber == null || spaceAssigned.floorNumber == null) {
+    return res.status(409).json({ message: 'No empty parking spaces at this time.' });
+  }
+
+  // Change reservation state code
+  await updateState('entry', reservation);
 
   // Save updated reservation
   await reservation.save();
@@ -139,7 +144,8 @@ const reservationCodeSearch = async (garageId, reservationCode) => {
  * @param {String} gateType - The type of gate, either entry or exit
  * @param {Reservation} reservation - The reservation to update
  */
-const updateState = (gateType, reservation) => {
+const updateState = async (gateType, reservation) => {
+  console.log(reservation);
   // Current state possibilities: entering one a valid single, entering on a valid monthly, exiting with a single, exiting with a monthly
   // Enter on a valid single or monthly reservation
   if (gateType == 'entry' && (reservation.STATUS_ID == 1 || reservation.STATUS_ID == 4)) {
@@ -148,12 +154,30 @@ const updateState = (gateType, reservation) => {
   // Exit with a single reservation
   else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 1 && reservation.STATUS_ID == 3) {
     reservation.STATUS_ID = 5; // complete
-    // TODO free the space
+    // Free the space
+    await Space.update(
+      { STATUS_ID: 0 },
+      {
+        where: {
+          GARAGE_ID: reservation.GARAGE_ID,
+          SPACE_ID: reservation.SPACE_ID,
+        },
+      }
+    );
   }
   // Exit with a monthly reservation
   else if (gateType == 'exit' && reservation.RESERVATION_TYPE_ID == 2 && reservation.STATUS_ID == 3) {
     reservation.STATUS_ID = 4;
-    // TODO free space
+    // Free the space
+    await Space.update(
+      { STATUS_ID: 0 },
+      {
+        where: {
+          GARAGE_ID: reservation.GARAGE_ID,
+          SPACE_ID: reservation.SPACE_ID,
+        },
+      }
+    );
   } else {
     throw new Error('InvalidStateTransition');
   }
@@ -167,9 +191,7 @@ const updateState = (gateType, reservation) => {
  * @returns {Object} - A spaceNumber and floorNumber for the assigned parking space
  */
 const assignSpace = async (reservation) => {
-  // TODO space assignment
-
-  // Find lowest floor with availability in the garage
+  // Find lowest floor and lowest space number with availability in the garage
   let space;
   try {
     space = await Space.findOne({
@@ -182,7 +204,10 @@ const assignSpace = async (reservation) => {
         model: Floor,
         attributes: ['FLOOR_NUM'],
       },
-      order: [[Floor, 'FLOOR_NUM', 'ASC']],
+      order: [
+        [Floor, 'FLOOR_NUM', 'ASC'],
+        ['SPACE_NUM', 'ASC'],
+      ],
     });
   } catch (e) {
     console.error(e);
@@ -192,7 +217,7 @@ const assignSpace = async (reservation) => {
   if (space) {
     // Update state of space and save
     space.STATUS_ID = 1;
-    space.save();
+    await space.save();
 
     // Assign space to reservation if available
     reservation.SPACE_ID = space.SPACE_ID;
