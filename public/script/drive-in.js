@@ -6,7 +6,7 @@
         }
     
         const URLS = {
-            enter: '/user/login'
+            enter: '/access/enter'
         }
     
         const error_modal = {
@@ -16,7 +16,7 @@
                 $('.modal').modal('hide');
             },
             show: (error) => {
-                error_modal.message = error.data.error;
+                error_modal.message = error.data.message || error.data.error;
                 error_modal.status = error.status;
                 $('#error-modal').modal('show');
             }
@@ -47,19 +47,19 @@
             } else {
                 searchObj = {
                     garageId: sc.garageId,
-                    license: sc.license,
-                    state: sc.state
+                    plateNumber: sc.plateNumber,
+                    plateState: sc.plateState
                 } // use the othe params is no reservationId present
             }
             
             findAndEnter(searchObj);
         }
         
-        function canFind() {
-            let sc = searchCriteria;
-            console.log(!!(searchCriteria.garageId && ((searchCriteria.plateNumber && searchCriteria.plateState) || searchCriteria.reservationCode)))// debug - remove
-            return (!!(sc.garageId && ((sc.plateNumber && sc.plateState) || sc.reservationCode)))
-        }
+        // function canFind() {
+        //     let sc = searchCriteria;
+        //     console.log(!!(searchCriteria.garageId && ((searchCriteria.plateNumber && searchCriteria.plateState) || searchCriteria.reservationCode)))// debug - remove
+        //     return (!!(sc.garageId && ((sc.plateNumber && sc.plateState) || sc.reservationCode)))
+        // }
         
         function findAndEnter(search){
             loading_modal.show(); // show our loading icon
@@ -68,6 +68,7 @@
                     console.dir(resp); // debug - remove
                 }, (reject) => {
                     error_modal.show(reject);
+                    data.foundReservation = false;
                 })
                 .finally(loading_modal.hide)
         }
@@ -81,6 +82,8 @@
             buildAndFind,
             canFind,
             data,
+            error_modal,
+            loading_modal,
             searchCriteria
         }
     }
