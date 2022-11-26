@@ -42,8 +42,8 @@
         function buildAndFind (searchCriteria) {
             let searchObj = {}; // init search obj
             let sc = searchCriteria; // shorthand search criteria
-            if (searchCriteria.reservationId) {
-                searchObj = {reservationId: sc.reservationId}; // if we have a resevationId we need to use that
+            if (searchCriteria.reservationCode) {
+                searchObj = {reservationCode: sc.reservationCode}; // if we have a reservationCode we need to use that
             } else {
                 searchObj = {
                     garageId: sc.garageId,
@@ -80,7 +80,6 @@
     
         return {
             buildAndFind,
-            canFind,
             data,
             error_modal,
             loading_modal,
