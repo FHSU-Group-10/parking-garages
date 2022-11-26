@@ -1,11 +1,10 @@
 (function (window) {
-    function pageCtrl ($scope, $http, $document) {
+    function pageCtrl ($scope, $http, $document, $timeout) {
         
         let data = {
             enter: false,
             foundReservation: true,
-            reservation: {},
-            thankYouMsg: false
+            reservation: {}
         }
         
         const URLS = {
@@ -32,6 +31,16 @@
             },
             show: () => {
                 $('#loading-modal').modal('show');
+            }
+        }
+    
+        const thankyou_modal = {
+            hide: () => {
+                $('#thank-you-modal').modal('hide');
+            
+            },
+            show: () => {
+                $('#thank-you-modal').modal('show');
             }
         }
         
@@ -67,7 +76,10 @@
             $http.post(URLS.enter, search)
                 .then((resp) => {
                     data.reservation = resp.data;
-                    if (data.reservation.floorNumber && data.reservation.spaceNumber) data.enter = true;
+                    if (data.reservation.floorNumber && data.reservation.spaceNumber) {
+                        data.enter = true;
+                        data.foundReservation = true;
+                    }
                 }, (reject) => {
                     error_modal.show(reject);
                     data.foundReservation = false;
@@ -77,9 +89,17 @@
         
         // reset to our default values
         function resetDisplay() {
-            data.enter = false;
-            data.foundReservation = true;
-            data.foundReservation = {};
+            thankyou_modal.show();
+            $timeout(function () {
+                data.enter = false;
+                data.foundReservation = true;
+                data.reservation = {};
+                for (let [key,value] of Object.entries(searchCriteria)) {
+                    searchCriteria[key] = '';
+                } // reset all of the searchCriteria fields.
+    
+                thankyou_modal.hide();
+            }, 5000); // reset after 5 second delay
         } // TODO: finish thank you message after entering, then reset the display data
         
         function init() {
@@ -93,7 +113,8 @@
             error_modal,
             loading_modal,
             resetDisplay,
-            searchCriteria
+            searchCriteria,
+            thankyou_modal
         }
     }
     var app = angular.module('pageApp', []);
@@ -101,5 +122,6 @@
         '$scope' ,
         '$http',
         '$document',
+        '$timeout',
         pageCtrl]);
 })(window)
