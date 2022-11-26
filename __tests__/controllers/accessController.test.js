@@ -238,53 +238,46 @@ describe('Access Controller', () => {
     });
   });
 
-  describe('exitResSearch', () => {
-    describe('By Plate', () => {
-      // TODO
-    });
-
-    describe('By Reservation Code', () => {
-      // TODO
-    });
-  });
-
   describe('updateState', () => {
-    let reservation;
+    let reservation, space;
 
     beforeEach(() => {
       reservation = {};
+      space = {};
     });
 
     test('Entering with valid single reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 1, STATUS_ID: 1 }; // single, created
-      accessController.updateState('entry', reservation);
+      accessController.updateState('entry', reservation, {});
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
     test('Entering with valid guaranteed reservation for the first time', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 1 }; // guaranteed, created
-      accessController.updateState('entry', reservation);
+      accessController.updateState('entry', reservation, {});
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
     test('Entering with valid guaranteed reservation that has been used before', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 4 }; // guaranteed, valid
-      accessController.updateState('entry', reservation);
+      accessController.updateState('entry', reservation, {});
       expect(reservation.STATUS_ID).toBe(3); // inGarage
     });
 
-    // These tests must be updated to pass garageId and spaceId. Should prob make a reservation before each and clean up after
-    /* 
     test('Exiting with single reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 1, STATUS_ID: 3 }; // single, inGarage
-      accessController.updateState('exit', reservation);
+      space = { STATUS_ID: 1 }; // occupied
+      accessController.updateState('exit', reservation, space);
       expect(reservation.STATUS_ID).toBe(5); // complete
+      expect(space.STATUS_ID).toBe(0); // empty
     });
 
     test('Exiting with guaranteed reservation', () => {
       reservation = { RESERVATION_TYPE_ID: 2, STATUS_ID: 3 }; // guaranteed, inGarage
-      accessController.updateState('exit', reservation);
-      expect(reservation.STATUS_ID).toBe(4); // valid 
-    });*/
+      space = { STATUS_ID: 1 }; // occupied
+      accessController.updateState('exit', reservation, space);
+      expect(reservation.STATUS_ID).toBe(4); // valid
+      expect(space.STATUS_ID).toBe(0); // empty
+    });
   });
 });
