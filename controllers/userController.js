@@ -115,7 +115,6 @@ const register = async (req, res) => {
             "last_name": "last name required",
             "email": "email required",
             "phone": "phone number required",
-            "is_operator": "selection required"
         };
 
         // check required fields
