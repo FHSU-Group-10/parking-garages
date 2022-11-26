@@ -2,7 +2,10 @@
     function pageCtrl ($scope, $http, $document) {
         
         let data = {
-            foundReservation: true
+            enter: false,
+            foundReservation: true,
+            reservation: {},
+            thankYouMsg: false
         }
         
         const URLS = {
@@ -63,13 +66,21 @@
             loading_modal.show(); // show our loading icon
             $http.post(URLS.enter, search)
                 .then((resp) => {
-                    console.dir(resp); // debug - remove
+                    data.reservation = resp.data;
+                    if (data.reservation.floorNumber && data.reservation.spaceNumber) data.enter = true;
                 }, (reject) => {
                     error_modal.show(reject);
                     data.foundReservation = false;
                 })
                 .finally(loading_modal.hide)
         }
+        
+        // reset to our default values
+        function resetDisplay() {
+            data.enter = false;
+            data.foundReservation = true;
+            data.foundReservation = {};
+        } // TODO: finish thank you message after entering, then reset the display data
         
         function init() {
         
@@ -81,6 +92,7 @@
             data,
             error_modal,
             loading_modal,
+            resetDisplay,
             searchCriteria
         }
     }
