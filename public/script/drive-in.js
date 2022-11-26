@@ -4,11 +4,11 @@
         let data = {
             foundReservation: true
         }
-    
+        
         const URLS = {
             enter: '/access/enter'
         }
-    
+        
         const error_modal = {
             message: '',
             status: '',
@@ -21,11 +21,11 @@
                 $('#error-modal').modal('show');
             }
         }
-    
+        
         const loading_modal = {
             hide: () => {
                 $('#loading-modal').modal('hide');
-            
+                
             },
             show: () => {
                 $('#loading-modal').modal('show');
@@ -42,15 +42,13 @@
         function buildAndFind (searchCriteria) {
             let searchObj = {}; // init search obj
             let sc = searchCriteria; // shorthand search criteria
-            if (searchCriteria.reservationCode) {
-                searchObj = {reservationCode: sc.reservationCode}; // if we have a reservationCode we need to use that
-            } else {
-                searchObj = {
-                    garageId: sc.garageId,
-                    plateNumber: sc.plateNumber,
-                    plateState: sc.plateState
-                } // use the othe params is no reservationId present
-            }
+            searchObj = {
+                garageId: Number(sc.garageId), // convert to number, has to be an integer
+                plateNumber: sc.plateNumber,
+                plateState: sc.plateState,
+                reservationCode: sc.reservationCode || null
+            } // use the othe params is no reservationId present
+            
             
             findAndEnter(searchObj);
         }
@@ -77,7 +75,7 @@
         
         }
         
-    
+        
         return {
             buildAndFind,
             data,
