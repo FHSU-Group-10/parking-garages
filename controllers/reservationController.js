@@ -316,21 +316,28 @@ const calculatePrice = async (start, end, reservationType) => {
     priceStr = `${rate.getDataValue('COST')} / month`;
   } else {
     // Single or walk-in
-
+    const PERIODS_PER_DAY = 48;
     // DailyMax treated as per 24-hour period, not per calendar day
-    const milliInDay = 86400000; // 24 hours to milliseconds
-    const milliIn30Min = 1800000; // 30 minutes in milliseconds
+    const MILLIS_PER_DAY = 86400000; // 24 hours to milliseconds
+    const MILLIS_PER_PERIOD = MILLIS_PER_DAY / PERIODS_PER_DAY; // 30 minutes in milliseconds
     let resLength = end - start; // Reservation length in milliseconds
 
     // Calculate # of 24-hour periods
-    const days = Math.floor(resLength / milliInDay);
-    resLength = resLength % milliInDay;
+    const days = Math.floor(resLength / MILLIS_PER_DAY);
+    resLength = resLength % MILLIS_PER_DAY;
+
+    // Calculate cost of whole days
+    // 24 hours at the single or walkin rate could theoretically be less than the daily max, so check the daily price
+    const daysCost = days * Math.min(rate.getDataValue('COST') * PERIODS_PER_DAY, rate.getDataValue('DAILY_MAX'));
 
     // Calculate number of half-hour billable periods for desired time period
-    const periods = Math.ceil(resLength / milliIn30Min);
+    const periods = Math.ceil(resLength / MILLIS_PER_PERIOD);
+
+    // Calculate the cost for the remaining billable periods and compare with the daily max
+    const remainCost = Math.min(rate.getDataValue('COST') * periods, rate.getDataValue('DAILY_MAX'));
 
     // Calculate the total price
-    const price = parseFloat(rate.getDataValue('COST')) * periods + parseFloat(rate.getDataValue('DAILY_MAX')) * days;
+    const price = daysCost + remainCost;
     // Convert to a string with two decimal places
     priceStr = price.toFixed(2);
   }
