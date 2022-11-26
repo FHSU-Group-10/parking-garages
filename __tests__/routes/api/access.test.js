@@ -7,7 +7,6 @@ const sequelize = connectDB();
 const { Reservation, Space } = sequelize.models;
 
 jest.setTimeout(30000);
-// TODO Ensure spaces are freed if occupied by a test
 describe('Access Route', () => {
   describe('Enter', () => {
     const url = '/access/enter';
@@ -259,14 +258,261 @@ describe('Access Route', () => {
   });
 
   describe('Exit', () => {
-    const url = '/access/exit';
+    const enterUrl = '/access/enter';
+    const exitUrl = '/access/exit';
 
     describe('By license plate', () => {
-      // TODO
+      let reservation, plateNumber, plateState;
+
+      test('Valid Single Reservation', async () => {
+        // Create a new reservation
+        const startTime = new Date();
+        let endTime = new Date();
+        endTime.setTime(endTime.getTime() + 2 * 60 * 60 * 1000);
+
+        try {
+          reservation = await Reservation.create({
+            START_TIME: startTime,
+            END_TIME: endTime,
+            RES_CODE: 'IJKLMNOP',
+            MEMBER_ID: 16,
+            RESERVATION_TYPE_ID: 1,
+            VEHICLE_ID: 3,
+            STATUS_ID: 1,
+            GARAGE_ID: 1,
+            SPACE_ID: null,
+          });
+
+          plateNumber = '4THEWIN';
+          plateState = 'ME';
+        } catch (e) {
+          console.error(e);
+        }
+
+        // Check that the reservation was successful
+        expect(reservation?.RESERVATION_ID).not.toBeNull();
+
+        // Enter the garage with that reservation
+        const body = {
+          garageId: reservation.GARAGE_ID,
+          plateNumber: plateNumber,
+          plateState: plateState,
+        };
+        const enterResult = await request(app).post(enterUrl).send(body);
+
+        // Check that entry was successful
+        expect(enterResult.status).toBe(200);
+
+        // Attempt to exit with that same reservation
+        const exitResult = await request(app).post(exitUrl).send(body);
+
+        // Reload the reservation after space assignment
+        await reservation.reload();
+
+        expect(exitResult.status).toBe(200);
+        expect(reservation.STATUS_ID).toBe(5);
+        expect(reservation.SPACE_ID).toBeNull();
+
+        // Delete the reservation
+        reservation.destroy();
+      });
+
+      test('Valid Monthly Reservation', async () => {
+        // Create a new reservation
+        const startTime = new Date();
+        let endTime = new Date();
+        endTime.setTime(endTime.getTime() + 2 * 60 * 60 * 1000);
+
+        try {
+          reservation = await Reservation.create({
+            START_TIME: startTime,
+            END_TIME: endTime,
+            RES_CODE: 'QRSTUVWX',
+            MEMBER_ID: 16,
+            RESERVATION_TYPE_ID: 2,
+            VEHICLE_ID: 4,
+            STATUS_ID: 1,
+            GARAGE_ID: 1,
+            SPACE_ID: null,
+          });
+
+          plateNumber = 'FLIPME';
+          plateState = 'CA';
+        } catch (e) {
+          console.error(e);
+        }
+
+        // Check that the reservation was successful
+        expect(reservation?.RESERVATION_ID).not.toBeNull();
+
+        // Enter the garage with that reservation
+        const body = {
+          garageId: reservation.GARAGE_ID,
+          plateNumber: plateNumber,
+          plateState: plateState,
+        };
+        const enterResult = await request(app).post(enterUrl).send(body);
+
+        // Check that entry was successful
+        expect(enterResult.status).toBe(200);
+
+        // Attempt to exit with that same reservation
+        const exitResult = await request(app).post(exitUrl).send(body);
+
+        // Reload the reservation after space assignment
+        await reservation.reload();
+
+        expect(exitResult.status).toBe(200);
+        expect(reservation.STATUS_ID).toBe(4);
+        expect(reservation.SPACE_ID).toBeNull();
+
+        // Delete the reservation
+        reservation.destroy();
+      });
+
+      test('No Reservation', async () => {
+        const body = {
+          garageId: 1,
+          plateNumber: 'NOBR8X',
+          plateState: 'AK',
+        };
+        const results = await request(app).post(exitUrl).send(body);
+        expect(results.status).toBe(404);
+        expect(results.body?.message).toEqual('No valid reservation found.');
+      });
+
+      test('Incomplete request', async () => {
+        const body = {
+          garageId: null,
+          plateNumber: null,
+          plateState: null,
+        };
+        const result = await request(app).post(exitUrl).send(body);
+        expect(result.status).toBe(400);
+        expect(result.body?.message).toEqual('Incomplete request.');
+      });
     });
 
     describe('By reservation code', () => {
-      // TODO
+      let reservation;
+
+      test('Valid Single Reservation', async () => {
+        // Create a new reservation
+        const startTime = new Date();
+        let endTime = new Date();
+        endTime.setTime(endTime.getTime() + 2 * 60 * 60 * 1000);
+
+        try {
+          reservation = await Reservation.create({
+            START_TIME: startTime,
+            END_TIME: endTime,
+            RES_CODE: 'codeA',
+            MEMBER_ID: 16,
+            RESERVATION_TYPE_ID: 1,
+            VEHICLE_ID: null,
+            STATUS_ID: 1,
+            GARAGE_ID: 1,
+            SPACE_ID: null,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+
+        // Check that the reservation was successful
+        expect(reservation?.RESERVATION_ID).not.toBeNull();
+
+        // Enter the garage with that reservation
+        const body = {
+          garageId: reservation.GARAGE_ID,
+          reservationCode: reservation.RES_CODE,
+        };
+        const enterResult = await request(app).post(enterUrl).send(body);
+
+        // Check that entry was successful
+        expect(enterResult.status).toBe(200);
+
+        // Attempt to exit with that same reservation
+        const exitResult = await request(app).post(exitUrl).send(body);
+
+        // Reload the reservation after space assignment
+        await reservation.reload();
+
+        expect(exitResult.status).toBe(200);
+        expect(reservation.STATUS_ID).toBe(5);
+        expect(reservation.SPACE_ID).toBeNull();
+
+        // Delete the reservation
+        reservation.destroy();
+      });
+
+      test('Valid Monthly Reservation', async () => {
+        // Create a new reservation
+        const startTime = new Date();
+        let endTime = new Date();
+        endTime.setTime(endTime.getTime() + 2 * 60 * 60 * 1000);
+
+        try {
+          reservation = await Reservation.create({
+            START_TIME: startTime,
+            END_TIME: endTime,
+            RES_CODE: 'codeB',
+            MEMBER_ID: 16,
+            RESERVATION_TYPE_ID: 2,
+            VEHICLE_ID: null,
+            STATUS_ID: 1,
+            GARAGE_ID: 1,
+            SPACE_ID: null,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+
+        // Check that the reservation was successful
+        expect(reservation?.RESERVATION_ID).not.toBeNull();
+
+        // Enter the garage with that reservation
+        const body = {
+          garageId: reservation.GARAGE_ID,
+          reservationCode: reservation.RES_CODE,
+        };
+        const enterResult = await request(app).post(enterUrl).send(body);
+
+        // Check that entry was successful
+        expect(enterResult.status).toBe(200);
+
+        // Attempt to exit with that same reservation
+        const exitResult = await request(app).post(exitUrl).send(body);
+
+        // Reload the reservation after space assignment
+        await reservation.reload();
+
+        expect(exitResult.status).toBe(200);
+        expect(reservation.STATUS_ID).toBe(4);
+        expect(reservation.SPACE_ID).toBeNull();
+
+        // Delete the reservation
+        reservation.destroy();
+      });
+
+      test('No Reservation', async () => {
+        const body = {
+          garageId: 1,
+          reservationCode: 'IOIOIOIO',
+        };
+        const results = await request(app).post(exitUrl).send(body);
+        expect(results.status).toBe(404);
+        expect(results.body?.message).toEqual('No valid reservation found.');
+      });
+
+      test('Incomplete request', async () => {
+        const body = {
+          garageId: null,
+          reservationCode: null,
+        };
+        const result = await request(app).post(exitUrl).send(body);
+        expect(result.status).toBe(400);
+        expect(result.body?.message).toEqual('Incomplete request.');
+      });
     });
   });
 });

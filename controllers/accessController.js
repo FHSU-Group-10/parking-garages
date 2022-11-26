@@ -98,10 +98,12 @@ const exit = async (req, res) => {
   }
 
   // Search for a matching reservation and space in the DB
-  let reservation = await exitResSearch(garageId, { plateNumber, plateState, reservationCode });
-  let space = await Space.findByPk(reservation.spaceId);
-  // If no matches are found, return failure
+  let reservation;
+  reservation = await exitResSearch(garageId, { plateNumber, plateState, reservationCode });
   if (!reservation) return res.status(404).json({ message: 'No valid reservation found.' });
+
+  // Search for a matching space in the DB
+  let space = await Space.findByPk(reservation.SPACE_ID);
   if (!space) return res.status(400).json({ message: 'Failed to find the space assigned to the reservation.' });
 
   // Change reservation state code and space assignments
@@ -293,11 +295,12 @@ const exitResSearch = async (garageId, options) => {
   try {
     // TODO consider restricting attributes returned
     reservation = await Reservation.findOne(query);
+    return reservation;
   } catch (e) {
     console.error(e);
   }
 
-  return reservation;
+  return null;
 };
 
 /**
