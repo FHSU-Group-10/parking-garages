@@ -223,7 +223,7 @@ const entryResSearch = async (garageId, options) => {
       STATUS_ID: { [Op.in]: [1, 4] },
       // Check that this is an appropriate time for the reservation
       START_TIME: { [Op.lte]: Date.now() },
-      END_TIME: { [Op.gt]: Date.now() },
+      END_TIME: { [Op.or]: [{ [Op.gt]: Date.now() }, { [Op.is]: null }] },
     },
   };
 
@@ -324,8 +324,8 @@ const updateState = async (gateType, reservation, space) => {
     space.STATUS_ID = 0;
     reservation.SPACE_ID = null;
 
-    // Leaving late should adjust the exit time, but leaving early should not
-    if (reservation.END_TIME < Date.now()) {
+    // Leaving late should adjust the exit time, but leaving early should not. Only applies to single reservations where end-time is not null
+    if (reservation.END_TIME && reservation.END_TIME < Date.now()) {
       reservation.END_TIME = Date.now();
     }
 
