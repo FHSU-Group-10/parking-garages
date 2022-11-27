@@ -23,7 +23,7 @@
                 $('.modal').modal('hide');
             },
             show: (error) => {
-                error_modal.message = error.data.error;
+                error_modal.message = error.data;
                 error_modal.status = error.status;
                 $('#error-modal').modal('show');
             }
@@ -39,16 +39,23 @@
             }
         };
 
+        const success_modal = {
+            hide: () => {
+                $('#success-modal').modal('hide');
 
+            },
+            show: () => {
+                $('#success-modal').modal('show');
+            }
+        };
 
         let loading = 0;
 
         function submitNewUser() {
-            console.log("inside submitNewUser", newUser);
             loading_modal.show(); // show our loading icon
             $http.post(URLS.register, { newUser })
                 .then((resp) => {
-                    loading_modal.hide();
+                    success_modal.show();
                 }, (reject) => {
                     error_modal.show(reject);
                 });
@@ -59,6 +66,7 @@
             error_modal,
             loading,
             newUser,
+            success_modal,
             submitNewUser,
         };
     }
