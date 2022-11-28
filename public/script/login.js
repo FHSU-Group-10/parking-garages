@@ -42,6 +42,7 @@
             $http.post(URLS.login, {Login})
                 .then((resp) => {
                     if (resp.data.is_operator) window.location.href = "./operator?user=" + resp.data.username // TODO: replace with our final real URL
+                    else window.location.href = "./locator";
                 }, (reject) => {
                     error_modal.show(reject);
                 })
