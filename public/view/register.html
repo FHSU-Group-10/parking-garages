@@ -68,6 +68,45 @@
 </style>
 
 <body class="background" ng-app="pageApp" ng-controller="pageCtrl as vm">
+
+  <!-- Error Modal -->
+  <div class="modal fade" id="error-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="error_modal_label">Error {{vm.error_modal.status}}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {{vm.error_modal.message}}
+        </div>
+        <div class="modal-footer">
+          <button ng-click="vm.error_modal.close()" type="button" class="btn btn-secondary"
+            data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="modal fade" aria-hidden="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="success-modal-label">Registration Sucessful!</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Click 'Login' to start reserving!
+        </div>
+        <div class="modal-footer"><a href="./login">login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Registration Form -->
   <div>
     <div class="row m-5">
       <div class="col-6 register-car">
@@ -77,7 +116,7 @@
         <div class="row temp-border h-25"></div>
 
         <div class="row ">
-          <form class="mx-auto" action="/action_page.php">
+          <form name="registration" class="mx-auto">
             <h3 class="register-text">Join our list of active users</h3>
             <p class="register-text">Reserve your parking spot with ease.</p>
             <p class="register-text">Parking can be time consuming, and frustrating.</p>
@@ -86,36 +125,38 @@
               <div class="input-group mt-3 mb-3">
                 <span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
                 <input type="text" class="form-control" placeholder="First Name" ng-model="vm.newUser.first_name"
-                  aria-required="true">
-                <input type="text" class="form-control" placeholder="Last Name" ng-model="vm.newUser.last_name">
+                  required>
+                <input type="text" class="form-control" placeholder="Last Name" ng-model="vm.newUser.last_name"
+                  required>
               </div>
             </div>
             <div class="col-xs-6 col-md-10">
               <div class="input-group mb-3">
                 <span class="input-group-text">@</span>
-                <input type="text" class="form-control" placeholder="Username" ng-model="vm.newUser.username">
+                <input type="text" class="form-control" placeholder="Username" ng-model="vm.newUser.username" required>
               </div>
             </div>
             <div class="col-xs-6 col-md-10">
               <div class="input-group mb-3">
                 <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
-                <input type="password" class="form-control" placeholder="Password" ng-model="vm.newUser.password">
+                <input type="password" class="form-control" placeholder="Password" ng-model="vm.newUser.password"
+                  required>
               </div>
             </div>
             <div class="col-xs-6 col-md-10">
               <div class="input-group mb-3">
                 <span class="input-group-text"><i class="fa fa-envelope" aria-hidden="true"></i></span>
-                <input type="text" class="form-control" placeholder="Email" ng-model="vm.newUser.email">
+                <input type="text" class="form-control" placeholder="Email" ng-model="vm.newUser.email" required>
               </div>
             </div>
             <div class="col-xs-6 col-md-10">
               <div class="input-group mb-3">
                 <span class="input-group-text"><i class="fa fa-phone" aria-hidden="true"></i></span>
-                <input type="text" class="form-control" placeholder="phone number" ng-model="vm.newUser.phone">
+                <input type="text" class="form-control" placeholder="Phone Number" ng-model="vm.newUser.phone" required>
               </div>
             </div>
             <div class="d-grid col-xs-4 col-md-10">
-              <button ng-click="vm.submitNewUser()" type="button" class="btn btn-primary btn-block">Start Reserving
+              <button ng-click="vm.submitNewUser()" type="submit" class="btn btn-primary btn-block">Start Reserving
                 Now!</button>
             </div>
           </form>
