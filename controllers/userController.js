@@ -17,10 +17,22 @@ const jwt = require('jsonwebtoken');
 const { token } = require("morgan");
 const Users = Db.models.Users;
 
+// ---------- REGISTRATION ----------
+
+/**
+ * 
+ * @param {object} obj - Initialized with the username and password values enetered by the user 
+ * 
+ * Precondition:
+ * - User has entered a username and password
+ * Postcondition:
+ * - User is validated
+ */
+
 const login = async (req, res) => {
     try {
         // setup params
-        let obj = {
+        const obj = {
             username: req.body?.Login?.username,
             password: req.body?.Login?.password
         };
@@ -76,43 +88,27 @@ const login = async (req, res) => {
     }
 };
 
-const test = async (req, res) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // fetch DB models, connect to DB
-            let { Users } = await getModels();
 
-            let [created_user, created] = await Users.findOrCreate({
-                where: {
-                    USERNAME: req.body.username,
-                    PW: await bcrypt.hash(req.body.password),
-                    FIRST_NAME: req.body.first_name,
-                    LAST_NAME: req.body.last_name,
-                    EMAIL: req.body.email,
-                    PHONE: req.body.phone,
-                    IS_OPERATOR: req.body.is_operator
-                }
-            });
-            // separating dataValues from return set
-            created_user = (created_user || {}).dataValues;
-            // cleanup PW, do not want to send this back to the UI
-            delete created_user.PW;
-            resolve((200).json(created_user));
-        } catch (ex) {
-            console.dir(ex); // log error
-            reject((400).json(ex));
-        }
-    });
-};
+// ---------- REGISTRATION ----------
 
+/**
+ * 
+ * @returns {object} - Status code message
+ * 
+ * Precondition: 
+ * - The username does not already exist in the DB
+ * - All registration fields have been filled
+ * Postcondition:
+ * - A new user is created and added to the DB
+ */
 const register = async (req, res) => {
     try {
-        // our required fields for a new account
+        // Our required fields for a new account. Object is used for error handling
         let required_fields = {
-            "username": "username required",
-            "password": "password required",
             "first_name": "first name required",
             "last_name": "last name required",
+            "username": "username required",
+            "password": "password required",
             "email": "email required",
             "phone": "phone number required",
         };
@@ -120,14 +116,15 @@ const register = async (req, res) => {
         // check required fields
         // make sure the param is there and has a value
         // for (let param in required_fields) {
-        //     if (!req?.body.newUser[param] && !req?.body.newUser.hasOwnProperty(param)) throw required_fields[param];
+        //     if (!req?.body ? [param] && !req?.body?.hasOwnProperty(param)) throw required_fields[param];
         // }
 
-        //check required fields
-        // make sure the param is there and is not an emptry string
+        // Check required fields
+        // Make sure the param is there and is not an emptry string
         for (let param in required_fields) {
             if (!req?.body.newUser[param] && req?.body.newUser[param] == '') throw required_fields[param];
         }
+        // Search the DB for a username matching the value entered by the user
         let existing_user = await Users.findOne({
             where: {
                 USERNAME: {
@@ -142,6 +139,7 @@ const register = async (req, res) => {
 
         const hashed_pw = await bcrypt.hash(req.body.newUser.password, salt);
 
+        // Create new user in Users table
         let created_user = await Users.create({
             USERNAME: req.body.newUser.username,
             PW: hashed_pw,
@@ -151,7 +149,7 @@ const register = async (req, res) => {
             PHONE: req.body.newUser.phone,
             IS_OPERATOR: req.body.is_operator || false
         });
-        // separating dataValues from return set
+        // Separating dataValues from return set
         created_user = (created_user || {}).dataValues;
 
         // delete PW since we do not want to send this back to the UI.

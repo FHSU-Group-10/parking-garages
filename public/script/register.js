@@ -4,7 +4,7 @@
         const URLS = {
             register: '/user/register'
         };
-
+        // Object to hold values passed in by the user
         const newUser = {
             username: '',
             password: '',
@@ -15,7 +15,7 @@
             is_operator: false
         };
 
-
+        // Displays a dialogue box with an error message and description
         const error_modal = {
             message: '',
             status: '',
@@ -38,7 +38,7 @@
                 $('#loading-modal').modal('show');
             }
         };
-
+        // Displays a dialogue box indicating successful registration
         const success_modal = {
             hide: () => {
                 $('#success-modal').modal('hide');
@@ -50,7 +50,12 @@
         };
 
         let loading = 0;
-
+        /**
+         * Precondition:
+         * - All object values are passed in to newUser
+         * Postcondition:
+         * - A new user object is passed to the controller to be added to the User DB table
+         */
         function submitNewUser() {
             loading_modal.show(); // show our loading icon
             $http.post(URLS.register, { newUser })
@@ -62,6 +67,7 @@
 
             loading_modal.hide();
         }
+
         return {
             error_modal,
             loading,
