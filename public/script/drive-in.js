@@ -2,6 +2,7 @@
     function pageCtrl ($scope, $http, $document, $timeout) {
         
         let data = {
+            failure: 0,
             enter: false,
             foundReservation: true,
             reservation: {}
@@ -33,11 +34,11 @@
                 $('#loading-modal').modal('show');
             }
         }
-    
+        
         const thankyou_modal = {
             hide: () => {
                 $('#thank-you-modal').modal('hide');
-            
+                
             },
             show: () => {
                 $('#thank-you-modal').modal('show');
@@ -73,6 +74,7 @@
         
         function findAndEnter(search){
             loading_modal.show(); // show our loading icon
+            console.dir(data); // debug - remove
             $http.post(URLS.enter, search)
                 .then((resp) => {
                     data.reservation = resp.data;
@@ -97,7 +99,7 @@
                 for (let [key,value] of Object.entries(searchCriteria)) {
                     searchCriteria[key] = '';
                 } // reset all of the searchCriteria fields.
-    
+                
                 thankyou_modal.hide();
             }, 5000); // reset after 5 second delay
         } // TODO: finish thank you message after entering, then reset the display data
@@ -105,6 +107,22 @@
         function init() {
         
         }
+        
+        // init the page
+        angular.element(document).ready(async function () {
+            const params = new Proxy(new URLSearchParams(window.location.search), {
+                get: (searchParams, prop) => searchParams.get(prop),
+            });
+            
+            if (params.state == 'exit') {
+                console.log('setting exit'); // debug - remove
+                $timeout(function () {
+                    data.exit = true;
+                }, 0);
+            }
+            
+            console.dir(data); // debug - remove
+        });
         
         
         return {
