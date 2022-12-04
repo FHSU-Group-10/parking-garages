@@ -406,7 +406,7 @@ describe('Access Route', () => {
           reservation = await Reservation.create({
             START_TIME: startTime,
             END_TIME: endTime,
-            RES_CODE: 'codeA',
+            RES_CODE: 'CODEA',
             MEMBER_ID: 16,
             RESERVATION_TYPE_ID: 1,
             VEHICLE_ID: null,
@@ -455,7 +455,7 @@ describe('Access Route', () => {
           reservation = await Reservation.create({
             START_TIME: startTime,
             END_TIME: endTime,
-            RES_CODE: 'codeB',
+            RES_CODE: 'CODEB',
             MEMBER_ID: 16,
             RESERVATION_TYPE_ID: 2,
             VEHICLE_ID: null,
@@ -475,8 +475,9 @@ describe('Access Route', () => {
           garageId: reservation.GARAGE_ID,
           reservationCode: reservation.RES_CODE,
         };
+        console.log('***', body);
         const enterResult = await request(app).post(enterUrl).send(body);
-
+        console.log(enterResult);
         // Check that entry was successful
         expect(enterResult.status).toBe(200);
 
