@@ -76,7 +76,7 @@
         
         function findAndEnter(search){
             loading_modal.show(); // show our loading icon
-            console.dir(data); // debug - remove
+            
             $http.post(URLS.enter, search)
                 .then((resp) => {
                     data.reservation = resp.data;
@@ -87,6 +87,7 @@
                 }, (reject) => {
                     error_modal.show(reject);
                     data.foundReservation = false;
+                    data.failure++;
                 })
                 .finally(loading_modal.hide)
         }
@@ -99,7 +100,16 @@
             loading_modal.show();
             $http.post(URLS.exit, search)
                 .then((resp) => {
-                    console.dir(resp); // debug - remove d
+                    thankyou_modal.show();
+                    if (resp.data == "OK") {
+                        $timeout(function () {
+                            for (let [key,value] of Object.entries(searchCriteria)) {
+                                searchCriteria[key] = '';
+                            } // reset all of the searchCriteria fields.
+        
+                            thankyou_modal.hide();
+                        }, 5000);
+                    } // reset after 5 second delay
                 }, (reject) => {
                     error_modal.show(reject);
                 })
@@ -114,6 +124,7 @@
                 data.enter = false;
                 data.foundReservation = true;
                 data.reservation = {};
+                data.failure = 0;
                 for (let [key,value] of Object.entries(searchCriteria)) {
                     searchCriteria[key] = '';
                 } // reset all of the searchCriteria fields.
@@ -133,13 +144,11 @@
             });
             
             if (params.state == 'exit') {
-                console.log('setting exit'); // debug - remove
                 $timeout(function () {
                     data.exit = true;
                 }, 0);
             }
             
-            console.dir(data); // debug - remove
         });
         
         

@@ -149,6 +149,8 @@
         <div class="card bg-dark text-white" style="border-radius: 1rem;">
           <div class="card-body p-5 text-center">
             <div class="mb-md-5 mt-md-4 pb-5">
+              <h3><em>Welcome to the Park-Lite Network!</em></h3>
+              <br>
               <div class="form-outline form-white mb-4">
                 <div class="input-group mb-3">
                   <span class="input-group-text park-lite-form-style">#</span>
@@ -178,7 +180,7 @@
   </div>
 </section>
 
-<section ng-if="!vm.data.foundReservation && !vm.data.enter"  class="vh-100 gradient-custom">
+<section ng-if="!vm.data.foundReservation && !vm.data.enter && (vm.data.failure < 2)"  class="vh-100 gradient-custom">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -266,6 +268,30 @@
                 </div>
                 <div class="d-grid">
                   <button type="button" class="btn btn-primary btn-block" ng-click="vm.exitGarage(vm.searchCriteria)">Exit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section ng-if="(vm.data.failure > 1) && !vm.data.enter"  class="vh-100 gradient-custom">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card bg-dark text-white" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
+            <div class="mb-md-5 mt-md-4 pb-5">
+              <div class="form-outline form-white mb-4">
+                <div class="input-group mb-3">
+                  <h3><em>You have attempted to find a reservation too many times.</em></h3>
+                  <h5>Please select exit and exit the garage, or try again.</h5>
+                </div>
+                <div class="d-grid">
+                  <button type="button" class="btn btn-primary btn-block" ng-click="vm.resetDisplay()">Exit</button>
                 </div>
               </div>
             </div>
