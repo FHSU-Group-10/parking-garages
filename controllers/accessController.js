@@ -26,9 +26,9 @@ const { Space, Floor, Reservation, Vehicle } = sequelize.models;
 const enter = async (req, res) => {
   // Get arguments from POST request body
   const garageId = req?.body?.garageId;
-  const plateNumber = req?.body?.plateNumber;
-  const plateState = req?.body?.plateState;
-  const reservationCode = req?.body?.reservationCode;
+  const plateNumber = req?.body?.plateNumber?.toUpperCase();
+  const plateState = req?.body?.plateState?.toUpperCase();
+  const reservationCode = req?.body?.reservationCode?.toUpperCase();
 
   // Return early if any arguments are missing
   if (!(req?.body && garageId && ((plateNumber && plateState) || reservationCode))) {
@@ -88,9 +88,9 @@ const enter = async (req, res) => {
 const exit = async (req, res) => {
   // Get arguments from POST request body
   const garageId = req?.body?.garageId;
-  const plateNumber = req?.body?.plateNumber;
-  const plateState = req?.body?.plateState;
-  const reservationCode = req?.body?.reservationCode;
+  const plateNumber = req?.body?.plateNumber?.toUpperCase();
+  const plateState = req?.body?.plateState?.toUpperCase();
+  const reservationCode = req?.body?.reservationCode?.toUpperCase();
 
   // Return early if any arguments are missing
   if (!(req?.body && garageId && ((plateNumber && plateState) || reservationCode))) {
