@@ -4,12 +4,14 @@
         let data = {
             failure: 0,
             enter: false,
+            exit: false,
             foundReservation: true,
             reservation: {}
         }
         
         const URLS = {
-            enter: '/access/enter'
+            enter: '/access/enter',
+            exit: '/access/exit',
         }
         
         const error_modal = {
@@ -88,6 +90,22 @@
                 })
                 .finally(loading_modal.hide)
         }
+        /*
+            The function to call when the user is exiting the garage.
+            
+            Search will be the whole search object.
+         */
+        function exitGarage (search) {
+            loading_modal.show();
+            $http.post(URLS.exit, search)
+                .then((resp) => {
+                    console.dir(resp); // debug - remove d
+                }, (reject) => {
+                    error_modal.show(reject);
+                })
+                .finally(loading_modal.hide)
+            
+        }
         
         // reset to our default values
         function resetDisplay() {
@@ -129,6 +147,7 @@
             buildAndFind,
             data,
             error_modal,
+            exitGarage,
             loading_modal,
             resetDisplay,
             searchCriteria,

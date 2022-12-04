@@ -142,7 +142,7 @@
 
 
 
-<section ng-if="(!vm.data.foundReservation && !vm.data.enter && !vm.data.exit)" class="vh-100 gradient-custom">
+<section ng-if="(vm.data.foundReservation && !vm.data.enter && !vm.data.exit)" class="vh-100 gradient-custom">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -240,13 +240,32 @@
           <div class="card-body p-5 text-center">
             <div class="mb-md-5 mt-md-4 pb-5">
               <div class="form-outline form-white mb-4">
-                <div class="input-group mb-3">
-                  <p>EXIT</p>
-                  <span class="input-group-text park-lite-form-style">#</span>
-                  <input type="text" ng-model="vm.searchCriteria.reservationCode" class="form-control park-lite-form-style" placeholder="Reservation Code">
+                <div class="form-outline form-white mb-4">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text park-lite-form-style">#</span>
+                    <input type="text" ng-model="vm.searchCriteria.plateNumber" class="form-control park-lite-form-style" placeholder="License Plate" >
+                  </div>
+                </div>
+                <div class="form-outline form-white mb-4">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text park-lite-form-style">#</span>
+                    <input type="text" ng-model="vm.searchCriteria.garageId" class="form-control park-lite-form-style" placeholder="Garage Id" >
+                  </div>
+                </div>
+                <div class="form-outline form-white mb-4">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text park-lite-form-style"><i class="fa fa-map" aria-hidden="true"></i></span>
+                    <input type="text" ng-model="vm.searchCriteria.plateState" class="form-control park-lite-form-style" placeholder="State" >
+                  </div>
+                </div>
+                <div class="form-outline form-white mb-4">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text park-lite-form-style">#</span>
+                    <input type="text" ng-model="vm.searchCriteria.reservationCode" class="form-control park-lite-form-style" placeholder="Reservation Code">
+                  </div>
                 </div>
                 <div class="d-grid">
-                  <button type="button" class="btn btn-primary btn-block" ng-click="vm.buildAndFind(vm.searchCriteria)">Find Reservation</button>
+                  <button type="button" class="btn btn-primary btn-block" ng-click="vm.exitGarage(vm.searchCriteria)">Exit</button>
                 </div>
               </div>
             </div>
