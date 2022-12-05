@@ -57,7 +57,6 @@
          * - A new user object is passed to the controller to be added to the User DB table
          */
         function submitNewUser() {
-            console.log("****", newUser);
             if (!newUser.username || !newUser.email || !newUser.first_name || !newUser.last_name || !newUser.password || !newUser.phone) {
                 return;
             }

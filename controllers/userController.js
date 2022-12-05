@@ -113,7 +113,6 @@ const register = async (req, res) => {
             "email": "email required",
             "phone": "phone number required",
         };
-        console.log('*****', req.body.password);
 
         // check required fields
         // make sure the param is there and has a value
