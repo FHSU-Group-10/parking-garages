@@ -57,8 +57,12 @@
          * - A new user object is passed to the controller to be added to the User DB table
          */
         function submitNewUser() {
+            console.log("****", newUser);
+            if (!newUser.username || !newUser.email || !newUser.first_name || !newUser.last_name || !newUser.password || !newUser.phone) {
+                return;
+            }
             loading_modal.show(); // show our loading icon
-            $http.post(URLS.register, { newUser })
+            $http.post(URLS.register, newUser)
                 .then((resp) => {
                     success_modal.show();
                 }, (reject) => {
