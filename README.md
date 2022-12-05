@@ -18,9 +18,12 @@ To run on your machine locally:
 The project may be found running live at https://parking-garages.onrender.com/ if you do not wish to run it locally. Please be patient if the page is initially slow to load, free servers have their downsides!
 
 **Links to specific use cases:**
-
+- **UC-01**, User Registration
+  - https://parking-garages.onrender.com/view/register
 - **UC-2a & UC-2b**, Requesting a Single or Guaranteed (continuous) Parking Spot Reservation
-  - https://parking-garages.onrender.com/view/locator
+  - https://parking-garages.onrender.com/view/drive-in 
+- **UC-10a & 11**, Entering and Exiting a Garage with a Reservation
+  - https://parking-garages.onrender.com/view/operator
 - **UC-15**, Adding a Garage to a Customer’s Network
   - https://parking-garages.onrender.com/view/operator
 - **UC-16**, Adjusting Prices for a Garage
