@@ -114,12 +114,6 @@ const register = async (req, res) => {
             "phone": "phone number required",
         };
 
-        // check required fields
-        // make sure the param is there and has a value
-        // for (let param in required_fields) {
-        //     if (!req?.body ? [param] && !req?.body?.hasOwnProperty(param)) throw required_fields[param];
-        // }
-
         // Check required fields
         // Make sure the param is there and is not an emptry string
         for (let param in required_fields) {
@@ -135,9 +129,10 @@ const register = async (req, res) => {
         });
 
         if (existing_user) throw 'Username already in use.';
-
+        // Generate saltRounds(cost)
         const salt = await bcrypt.genSalt(10);
 
+        // Assign hasshed password to be pushed to DB with new user details
         const hashed_pw = await bcrypt.hash(req?.body?.password, salt);
 
         // Create new user in Users table
@@ -150,6 +145,7 @@ const register = async (req, res) => {
             PHONE: req.body.phone,
             IS_OPERATOR: req.body.is_operator || false
         });
+
         // Separating dataValues from return set
         created_user = (created_user || {}).dataValues;
 
