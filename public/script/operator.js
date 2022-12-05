@@ -197,7 +197,7 @@
             // TODO: use JStoken to verify if user looking at this page is an admin
             // force user to leave page if they are not coming there through the login page.
             if (!params.user) {
-                window.location.href = "http://localhost:3500/view/not-found";
+                window.location.href = "/view/login";
             }
 
             // Get the value of "some_key" in eg "https://example.com/?some_key=some_value"
