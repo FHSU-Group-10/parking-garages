@@ -1,6 +1,6 @@
 # Unit and Integration Testing with Jest
 
-This project uses [JestJS](https://jestjs.io/) for automated testing. Tests are run from the repository root in the console. Jest is automatically installed with the rest of the project code when you run `npm install` after cloning the repository. Of the two test scripts, `npm run test-silent` is preferred for succintness.
+This project uses [JestJS](https://jestjs.io/) for automated testing. Tests are run from the repository root in the console. Jest is automatically installed with the rest of the project code when you run `npm install` after cloning the repository. Of the two test scripts, `npm run test-silent` is preferred for succinctness.
 
 ## Running Tests
 
