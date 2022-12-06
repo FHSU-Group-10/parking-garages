@@ -52,6 +52,7 @@ const login = async (req, res) => {
         // separating dataValues from return set
         user = (user || {}).dataValues;
 
+        // Building user return object
         const jwt = require('jsonwebtoken');
 
         if (user) {
@@ -113,42 +114,38 @@ const register = async (req, res) => {
             "phone": "phone number required",
         };
 
-        // check required fields
-        // make sure the param is there and has a value
-        // for (let param in required_fields) {
-        //     if (!req?.body ? [param] && !req?.body?.hasOwnProperty(param)) throw required_fields[param];
-        // }
-
         // Check required fields
         // Make sure the param is there and is not an emptry string
         for (let param in required_fields) {
-            if (!req?.body.newUser[param] && req?.body.newUser[param] == '') throw required_fields[param];
+            if (!req?.body[param] && req?.body[param] == '') throw required_fields[param];
         }
         // Search the DB for a username matching the value entered by the user
         let existing_user = await Users.findOne({
             where: {
                 USERNAME: {
-                    [Op.like]: req.body.newUser.username
+                    [Op.like]: req.body.username
                 }
             }
         });
 
         if (existing_user) throw 'Username already in use.';
-
+        // Generate saltRounds(cost)
         const salt = await bcrypt.genSalt(10);
 
-        const hashed_pw = await bcrypt.hash(req.body.newUser.password, salt);
+        // Assign hasshed password to be pushed to DB with new user details
+        const hashed_pw = await bcrypt.hash(req?.body?.password, salt);
 
         // Create new user in Users table
         let created_user = await Users.create({
-            USERNAME: req.body.newUser.username,
+            USERNAME: req.body.username,
             PW: hashed_pw,
-            FIRST_NAME: req.body.newUser.first_name,
-            LAST_NAME: req.body.newUser.last_name,
-            EMAIL: req.body.newUser.email,
-            PHONE: req.body.newUser.phone,
+            FIRST_NAME: req.body.first_name,
+            LAST_NAME: req.body.last_name,
+            EMAIL: req.body.email,
+            PHONE: req.body.phone,
             IS_OPERATOR: req.body.is_operator || false
         });
+
         // Separating dataValues from return set
         created_user = (created_user || {}).dataValues;
 
