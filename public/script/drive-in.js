@@ -38,11 +38,15 @@
         }
         
         const thankyou_modal = {
+            message: '',
+            status: '',
             hide: () => {
                 $('#thank-you-modal').modal('hide');
                 
             },
-            show: () => {
+            show: (message,title) => {
+                thankyou_modal.message = message;
+                thankyou_modal.title = title;
                 $('#thank-you-modal').modal('show');
             }
         }
@@ -100,7 +104,7 @@
             loading_modal.show();
             $http.post(URLS.exit, search)
                 .then((resp) => {
-                    thankyou_modal.show();
+                    thankyou_modal.show('Reservation completed successfully', 'Thank you!');
                     if (resp.data == "OK") {
                         $timeout(function () {
                             for (let [key,value] of Object.entries(searchCriteria)) {
@@ -119,7 +123,7 @@
         
         // reset to our default values
         function resetDisplay() {
-            thankyou_modal.show();
+            if (data.failure < 2) thankyou_modal.show('Thank you for using our garage!', 'Enter Now');
             $timeout(function () {
                 data.enter = false;
                 data.foundReservation = true;
