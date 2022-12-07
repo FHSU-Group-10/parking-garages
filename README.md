@@ -22,8 +22,10 @@ The project may be found running live at https://parking-garages.onrender.com/ i
   - https://parking-garages.onrender.com/view/register
 - **UC-2a & UC-2b**, Requesting a Single or Guaranteed (continuous) Parking Spot Reservation
   - https://parking-garages.onrender.com/view/locator 
-- **UC-10a & 11**, Entering and Exiting a Garage with a Reservation
+- **UC-10a**, Entering a Garage with a Reservation
   - https://parking-garages.onrender.com/view/drive-in
+- **UC-11**, Exiting a Garage with a Reservation
+  - http://localhost:3500/view/drive-in?state=exit
 - **UC-15**, Adding a Garage to a Customer’s Network
   - https://parking-garages.onrender.com/view/operator
 - **UC-16**, Adjusting Prices for a Garage
