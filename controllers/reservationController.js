@@ -2,6 +2,9 @@
 const luxon = require('luxon');
 const haversine = require('haversine-distance');
 const { Op } = require('sequelize');
+const { customAlphabet } = require('nanoid');
+// Create custom nanoid definition for short, easy reservation ids
+const nanoid = customAlphabet('ABCDEFGHJKMNPQRSTUVWXYZ', 8);
 // MODELS
 const connectDB = require('../config/dbConn');
 const sequelize = connectDB();
@@ -165,6 +168,9 @@ const reserveSpace = async (req, res) => {
     // Set default status
     if (!reservationStatusId) reservationStatusId = 1;
 
+    // Generate a unique reservation code
+    const resCode = nanoid();
+
     // Create the reservation
     const reservation = await Reservation.create({
       GARAGE_ID: garageId,
@@ -174,6 +180,7 @@ const reserveSpace = async (req, res) => {
       RESERVATION_TYPE_ID: reservationTypeId,
       VEHICLE_ID: vehicleId,
       STATUS_ID: reservationStatusId,
+      RES_CODE: resCode,
     });
 
     // Return the reservation details after successful creation
@@ -309,21 +316,28 @@ const calculatePrice = async (start, end, reservationType) => {
     priceStr = `${rate.getDataValue('COST')} / month`;
   } else {
     // Single or walk-in
-
+    const PERIODS_PER_DAY = 48;
     // DailyMax treated as per 24-hour period, not per calendar day
-    const milliInDay = 86400000; // 24 hours to milliseconds
-    const milliIn30Min = 1800000; // 30 minutes in milliseconds
+    const MILLIS_PER_DAY = 86400000; // 24 hours to milliseconds
+    const MILLIS_PER_PERIOD = MILLIS_PER_DAY / PERIODS_PER_DAY; // 30 minutes in milliseconds
     let resLength = end - start; // Reservation length in milliseconds
 
     // Calculate # of 24-hour periods
-    const days = Math.floor(resLength / milliInDay);
-    resLength = resLength % milliInDay;
+    const days = Math.floor(resLength / MILLIS_PER_DAY);
+    resLength = resLength % MILLIS_PER_DAY;
+
+    // Calculate cost of whole days
+    // 24 hours at the single or walkin rate could theoretically be less than the daily max, so check the daily price
+    const daysCost = days * Math.min(rate.getDataValue('COST') * PERIODS_PER_DAY, rate.getDataValue('DAILY_MAX'));
 
     // Calculate number of half-hour billable periods for desired time period
-    const periods = Math.ceil(resLength / milliIn30Min);
+    const periods = Math.ceil(resLength / MILLIS_PER_PERIOD);
+
+    // Calculate the cost for the remaining billable periods and compare with the daily max
+    const remainCost = Math.min(rate.getDataValue('COST') * periods, rate.getDataValue('DAILY_MAX'));
 
     // Calculate the total price
-    const price = parseFloat(rate.getDataValue('COST')) * periods + parseFloat(rate.getDataValue('DAILY_MAX')) * days;
+    const price = daysCost + remainCost;
     // Convert to a string with two decimal places
     priceStr = price.toFixed(2);
   }

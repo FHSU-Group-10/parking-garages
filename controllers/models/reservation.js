@@ -31,6 +31,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         field: 'EXTRA_GRACE',
       },
+      RES_CODE: {
+        type: DataTypes.STRING(8),
+        allowNull: false,
+        field: 'RES_CODE',
+        unique: true,
+      },
     },
     {
       tableName: 'RESERVATIONS',
@@ -63,6 +69,12 @@ Reservation.belongsTo(ReservationStatus, {
   foreignKey: {
     name: 'STATUS_ID',
     allowNull: false,
+  },
+});
+Reservation.belongsTo(Space, {
+  foreignKey: {
+    name: 'SPACE_ID',
+    allowNull: true,
   },
 });
  */

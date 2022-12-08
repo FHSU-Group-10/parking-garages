@@ -47,26 +47,28 @@ describe('User Route', () => {
 
   describe('Register', () => {
     let body = {
-      username: 'User' + Math.random(),
-      password: 'aaaa',
-      first_name: 'People',
-      last_name: 'Person',
-      email: 'user@domain.com',
-      phone: '1234561212',
-      is_operator: false,
+      newUser: {
+        username: 'User' + Math.random(),
+        password: 'aaaa',
+        first_name: 'People',
+        last_name: 'Person',
+        email: 'user@domain.com',
+        phone: '1234561212',
+        is_operator: false,
+      }
     };
 
     test('Valid query', async () => {
       let result = await request(app).post('/user/register').send(body);
 
       expect(result.status).toBe(200);
-      expect(result.body.FIRST_NAME).toEqual(body.first_name);
+      expect(result.body.FIRST_NAME).toEqual(body.newUser.first_name);
     });
 
     test('Duplicate user', async () => {
       let result = await request(app)
         .post('/user/register')
-        .send({ ...body, username: 'Do Not Delete' });
+        .send({ newUser: {...body.newUser, username: 'Do Not Delete' }});
 
       expect(result.status).toBe(400);
       expect(result.body).toEqual('Username already in use.');
@@ -74,16 +76,18 @@ describe('User Route', () => {
 
     test('Missing username', async () => {
       let result = await request(app).post('/user/register').send({
-        password: 'aaaa',
-        first_name: 'People',
-        last_name: 'Person',
-        email: 'user@domain.com',
-        phone: '1234561212',
-        is_operator: false,
+        newUser: {
+          password: 'aaaa',
+          first_name: 'People',
+          last_name: 'Person',
+          email: 'user@domain.com',
+          phone: '1234561212',
+          is_operator: false,
+        }
       });
-
+      console.log(result.body);
       expect(result.status).toBe(400);
-      expect(result.body).toEqual('username required');
+      expect(result.body.errors[0].message).toEqual('Users.USERNAME cannot be null');
     });
   });
 });

@@ -1,125 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Register</title>
+  <title>Park Lite Register</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Latest compiled and minified CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
-  
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
   <!-- Latest compiled JavaScript -->
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js" integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous"></script>
-  
-  
-  
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
+    integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular.js"></script>
+
   <script src="https://use.fontawesome.com/da8f2a3609.js"></script>
-  
-  
   <script src="../script/register.js"></script>
-  <style>
-    .background {
-      background-color: black;
-    }
-    
-    .col-one {
-      background-color: aqua;
-    }
-    
-    .col-two {
-      background-color: chartreuse;
-    }
-    
-    .register-car {
-      background-image:
-          linear-gradient(90deg, rgba(94,78,167,0.6418768190870099) 18%, rgba(9,9,121,0.7903362028405112) 77%),
-          url("../images/register-car.jpg");
-      background-size: cover;
-    }
-    
-    .register-text {
-      color: #B0C4DE
-    }
-    
-    /*body {*/
-    /*  margin-top: 5rem;*/
-    /*  background-color: black;*/
-    /*  overflow-x: hidden !important;*/
-    /*  height: 80vh;*/
-    /*}*/
-    /*.custom-container {*/
-    /*  height: 100%;*/
-    
-    /*border: 1px solid cyan;*/
-    /*  box-sizing: border-box;*/
-    /*}*/
-    /*.temp-border {*/
-    /*  border-style: outset;*/
-    /*}*/
-  </style>
+
 </head>
-<body class="background">
-<div>
-  <div class="row m-5">
-    <div class="col-6 register-car">
-      <div class="row temp-border">
-      
-      </div>
-    </div>
-    <div class="col-6 background" style="height: 80vh">
-      <div class="row temp-border h-25">
-      
-        
-      </div>
-      
-      <div class="row ">
-        <form class="mx-auto" action="/action_page.php">
-          <h3 class="register-text">Join our list of active users</h3>
-          <p class="register-text">Reserve your parking spot with ease.</p>
-          <p class="register-text">Parking can be time consuming, and frustrating.</p>
-          <p class="register-text">Save time by reserving your spot with us today!</p>
-          <div class="col-xs-6 col-md-10">
-            <div class="input-group mt-3 mb-3">
-              <span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
-              <input type="text" class="form-control" placeholder="First Name">
-              <input type="text" class="form-control" placeholder="Last Name">
-            </div>
-          </div>
-          <div class="col-xs-6 col-md-10">
-            <div class="input-group mb-3">
-              <span class="input-group-text">@</span>
-              <input type="text" class="form-control" placeholder="Username">
-            </div>
-          </div>
-          <div class="col-xs-6 col-md-10">
-            <div class="input-group mb-3">
-              <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
-              <input type="text" class="form-control" placeholder="Password">
-            </div>
-          </div>
-          <div class="col-xs-6 col-md-10">
-            <div class="input-group mb-3">
-              <span class="input-group-text"><i class="fa fa-envelope" aria-hidden="true"></i></span>
-              <input type="text" class="form-control" placeholder="Email">
-            </div>
-          </div>
-          <div class="d-grid col-xs-4 col-md-10">
-            <button type="button" class="btn btn-primary btn-block">Start Reserving Now!</button>
-          </div>
-        </form>
-      </div>
-      <div class="row temp-border">
-        <div class="mx-auto">
-          <h3><em><span class="register-text">Already a member?</span> <a href="#">Login</a></em></h3>
+
+<style>
+  .background {
+    background-color: black;
+  }
+
+  .col-one {
+    background-color: aqua;
+  }
+
+  .col-two {
+    background-color: chartreuse;
+  }
+
+  .register-car {
+    background-image:
+      linear-gradient(90deg, rgba(94, 78, 167, 0.6418768190870099) 18%, rgba(9, 9, 121, 0.7903362028405112) 77%),
+      url("../images/register-car.jpg");
+    background-size: cover;
+  }
+
+  .register-text {
+    color: #B0C4DE
+  }
+
+  /*body {*/
+  /*  margin-top: 5rem;*/
+  /*  background-color: black;*/
+  /*  overflow-x: hidden !important;*/
+  /*  height: 80vh;*/
+  /*}*/
+  /*.custom-container {*/
+  /*  height: 100%;*/
+
+  /*border: 1px solid cyan;*/
+  /*  box-sizing: border-box;*/
+  /*}*/
+  /*.temp-border {*/
+  /*  border-style: outset;*/
+  /*}*/
+</style>
+
+<body class="background" ng-app="pageApp" ng-controller="pageCtrl as vm">
+
+  <!-- Error Modal -->
+  <div class="modal fade" id="error-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="error_modal_label">Error {{vm.error_modal.status}}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {{vm.error_modal.message}}
+        </div>
+        <div class="modal-footer">
+          <button ng-click="vm.error_modal.close()" type="button" class="btn btn-secondary"
+            data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- Success Modal -->
+  <div id="success-modal" class="modal fade" aria-hidden="false">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="success-modal-label">Registration Sucessful!</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Click 'Login' to start reserving!
+        </div>
+        <div class="modal-footer"><a href="./login">login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Registration Form -->
+  <div>
+    <div class="row m-5">
+      <div class="col-6 register-car">
+        <div class="row temp-border"></div>
+      </div>
+      <div class="col-6 background" style="height: 80vh">
+        <div class="row temp-border h-25"></div>
+
+        <div class="row ">
+          <form name="registration" class="mx-auto">
+            <h3 class="register-text">Join our list of active users</h3>
+            <p class="register-text">Reserve your parking spot with ease.</p>
+            <p class="register-text">Parking can be time consuming, and frustrating.</p>
+            <p class="register-text">Save time by reserving your spot with us today!</p>
+            <div class="col-xs-6 col-md-10">
+              <div class="input-group mt-3 mb-3">
+                <span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
+                <input type="text" class="form-control" placeholder="First Name" ng-model="vm.newUser.first_name"
+                  required>
+                <input type="text" class="form-control" placeholder="Last Name" ng-model="vm.newUser.last_name"
+                  required>
+              </div>
+            </div>
+            <div class="col-xs-6 col-md-10">
+              <div class="input-group mb-3">
+                <span class="input-group-text">@</span>
+                <input type="text" class="form-control" placeholder="Username" ng-model="vm.newUser.username" required>
+              </div>
+            </div>
+            <div class="col-xs-6 col-md-10">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                <input type="password" class="form-control" placeholder="Password" ng-model="vm.newUser.password"
+                  required>
+              </div>
+            </div>
+            <div class="col-xs-6 col-md-10">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope" aria-hidden="true"></i></span>
+                <input type="text" class="form-control" placeholder="Email" ng-model="vm.newUser.email" required>
+              </div>
+            </div>
+            <div class="col-xs-6 col-md-10">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-phone" aria-hidden="true"></i></span>
+                <input type="text" class="form-control" placeholder="Phone Number" ng-model="vm.newUser.phone" required>
+              </div>
+            </div>
+            <div class="d-grid col-xs-4 col-md-10">
+              <button ng-click="vm.submitNewUser()" type="submit" class="btn btn-primary btn-block">Start Reserving
+                Now!</button>
+            </div>
+          </form>
+        </div>
+        <div class="row temp-border">
+          <div class="mx-auto">
+            <h3><em><span class="register-text">Already a member?</span> <a href="./login">Login</a></em></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 </body>
+
 </html>

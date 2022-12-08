@@ -75,6 +75,11 @@
       useFakeLocations: true, // Flag to generate fake locations
     };
 
+    // Reservation results
+    const reservation = {
+      resCode: null,
+    };
+
     // -------- DEBOUNCE --------
     function debounce(func, timeout = 300) {
       let timer;
@@ -152,8 +157,11 @@
           isMonthly: reserveOptions.isMonthly,
         },
       })
-        .then(() => {
+        .then((res) => {
           // Reservation modal is closed automatically by html
+          // Store reservation code
+          console.log(res.data.RES_CODE);
+          reservation.resCode = res.data.RES_CODE;
           // Show success modal
           successModal.modal.show();
         })
@@ -375,6 +383,7 @@
       checkType,
       handleReserveBtn,
       reserveOptions,
+      reservation,
       isFormValid,
       handleSubmitReservation,
       debouncedSearch,

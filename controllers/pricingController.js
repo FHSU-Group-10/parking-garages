@@ -47,13 +47,13 @@ const getPricing = async (req, res) => {
 const updatePricing = async (req, res) => {
   // TODO
   // Get arguments from request url query
-  const singleRes = req?.body?.price.singleRes;
-  const singleCost = req.body.price.singleCost;
-  const guaranteedRes = req?.body?.price.guaranteedRes;
-  const guaranteedCost = req.body.price.guaranteedCost;
-  const walkInRes = req?.body?.price.walkInRes;
-  const walkInCost = req.body.price.walkInCost;
-  const newDailyMax = req?.body?.price.dailyMax;
+  const singleRes = req?.body?.singleRes;
+  const singleCost = req.body.singleCost;
+  const guaranteedRes = req?.body?.guaranteedRes;
+  const guaranteedCost = req.body.guaranteedCost;
+  const walkInRes = req?.body?.walkInRes;
+  const walkInCost = req.body.walkInCost;
+  const newDailyMax = req?.body?.dailyMax;
 
   try {
     // check each reservation/cost combo and update price

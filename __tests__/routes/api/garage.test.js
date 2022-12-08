@@ -1,5 +1,9 @@
 const request = require('supertest');
 const app = require('../../../app');
+// DB and Models for cleanup
+const Db = require('../../../config/dbConn')();
+const { Op } = require('sequelize');
+const { Garage, Floor, Space } = Db.models;
 
 jest.setTimeout(30000);
 
@@ -20,19 +24,38 @@ describe('Garage Route', () => {
       const body = {
         name: 'UnitTestGarage' + Math.random(),
         numFloors: 3,
-        spotsPerFloor: [5, 5, 5],
+        spotsPerFloor: [2, 2, 2],
         location: [10, 10],
         overbookRate: 1.5,
         isActive: false,
       };
       const result = await request(app).post(url).send(body);
-      console.log(result.body, result.status);
+      //console.log(result.body, result.status);
 
       expect(result.body.IS_ACTIVE).toEqual(body.isActive);
       expect(result.body.FLOOR_COUNT).toEqual(body.numFloors);
       expect(result.body.LAT).toEqual(`${body.location[0]}`);
       expect(result.body.LONG).toEqual(`${body.location[1]}`);
       expect(result.status).toBe(200);
+
+      // Cleanup created garage
+      if (result?.body?.GARAGE_ID) {
+        Space.destroy({
+          where: {
+            GARAGE_ID: result.body.GARAGE_ID,
+          },
+        });
+        Floor.destroy({
+          where: {
+            GARAGE_ID: result.body.GARAGE_ID,
+          },
+        });
+        Garage.destroy({
+          where: {
+            GARAGE_ID: result.body.GARAGE_ID,
+          },
+        });
+      }
     });
 
     test('Incomplete request', async () => {
@@ -109,16 +132,14 @@ describe('Garage Route', () => {
       description: 'Spotula',
       overbookRate: 1.5,
       numFloors: 3,
-      spotsPerFloor: 10,
+      spotsPerFloor: 3,
       location: [1, 1],
       isActive: true,
-
     };
-    
+
     test('Valid request', async () => {
-      
       const result = await request(app).post(url).send(body);
-      console.log(result.body);
+      //console.log(result.body);
       expect(result.status).toBe(200);
       expect(result.body.GARAGE_ID).toEqual(body.id);
       expect(result.body.DESCRIPTION).toEqual(body.description);

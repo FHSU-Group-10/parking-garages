@@ -3,15 +3,14 @@
  * GET request
  * @returns {[Object]} - An array of existing garages
  */
-const _ = require("lodash");
+const _ = require('lodash');
 const Db = require('../config/dbConn')();
-const { Sequelize, Op } = require("sequelize");
+const { Sequelize, Op } = require('sequelize');
 // const getModels = Db.getModels;
 // const bcrypt = require("bcrypt");
 // const jwt = require('jsonwebtoken');
 // const {token} = require("morgan");
-const Garage = Db.models.Garage;
-const Floor = Db.models.Floor;
+const { Garage, Floor, Space } = Db.models;
 
 /*
   Add the number of floors for each garage.
@@ -22,15 +21,15 @@ const Floor = Db.models.Floor;
   
   
  */
-const addFloors = async (garage,floors,spotsPerFloor) => {
+const addFloors = async (garage, floors, spotsPerFloor) => {
   try {
     let garageFloors = [];
-    
+
     // // check if we have existing floors for this garage
     let existingFloors = await Floor.findAll({
       where: {
-        GARAGE_ID: garage.GARAGE_ID
-      }
+        GARAGE_ID: garage.GARAGE_ID,
+      },
     });
 
     existingFloors = (existingFloors || []).map((ef) => ef.dataValues);
@@ -41,29 +40,44 @@ const addFloors = async (garage,floors,spotsPerFloor) => {
           FLOOR_ID: ef.FLOOR_ID,
           GARAGE_ID: garage.GARAGE_ID,
           FLOOR_NUM: ef.FLOOR_NUM,
-          SPACE_COUNT: spotsPerFloor
+          SPACE_COUNT: spotsPerFloor,
         });
       }
     }
-    
+
     // decrease our number of floors for existing floors we already updated
     // Eg. the garage had 3 floors, but they added a 4th floor. We update the 3 existing floors, then create a new floor.
     // floors will be an integer for number of floors so in the above example of having 4(total) - 3(existing) = 1(new floor)
-    
+
     for (let i = existingFloors.length || 0; i < floors; i++) {
       garageFloors.push({
         GARAGE_ID: garage.GARAGE_ID,
         FLOOR_NUM: i + 1,
-        SPACE_COUNT: spotsPerFloor
+        SPACE_COUNT: spotsPerFloor,
       });
     }
     // pass our array of floors to create
     // if we have a duplicate, we ONLY want to updat the SPACE_COUNT
-    let assigned_floors = await Floor.bulkCreate(garageFloors, {updateOnDuplicate: ['SPACE_COUNT']});
+    let assigned_floors = await Floor.bulkCreate(garageFloors, { updateOnDuplicate: ['SPACE_COUNT'] });
 
     // remove our data values
     // using .map since the returned floors is an array of object with dataValues on each object
     assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
+
+    // Remove any floors numbered above the current number of floors
+    if (assigned_floors.length > floors) {
+      await Floor.destroy({
+        where: {
+          GARAGE_ID: garage.GARAGE_ID,
+          FLOOR_NUM: {
+            [Op.gt]: floors,
+          },
+        },
+      });
+    }
+
+    // Update the spaces for the floors
+    await updateSpaces(assigned_floors);
 
     return [assigned_floors, spotsPerFloor];
   } catch (err) {
@@ -71,16 +85,92 @@ const addFloors = async (garage,floors,spotsPerFloor) => {
   }
 };
 
+/**
+ * Update parking spaces when updating garages
+ * WARNING - will remove parking spaces, even if they are currently occupied! Do not update garages that are "in use"
+ *
+ * @param {[Object]} floors - An array of floor records to update spaces for
+ * @returns {[Object]} - An array of space data objects
+ */
+const updateSpaces = async (floors) => {
+  // Track all floor IDs for final delete operation
+  let floorIds = [];
+
+  // Iterate over each floor
+  for (let i = 0; i < floors.length; i++) {
+    // Store this floor ID
+    floorIds.push(floors[i].FLOOR_ID);
+
+    // Retrieve a count of all existing spaces
+    let existingSpaces = await Space.count({
+      where: {
+        GARAGE_ID: floors[i].GARAGE_ID,
+        FLOOR_ID: floors[i].FLOOR_ID,
+      },
+    });
+
+    // Decide to add, remove, or leave the existing spaces
+    // Skip this floor if it is unchanged
+    if (existingSpaces == floors[i].SPACE_COUNT) continue;
+    else if (existingSpaces < floors[i].SPACE_COUNT) {
+      // Need to add spaces
+      let newSpaces = [];
+
+      // Iterate over each new space needed for this floor
+      for (let j = existingSpaces + 1; j <= floors[i].SPACE_COUNT; j++) {
+        newSpaces.push({
+          WALK_IN: false,
+          SPACE_NUM: j,
+          GARAGE_ID: floors[i].GARAGE_ID,
+          FLOOR_ID: floors[i].FLOOR_ID,
+        });
+      }
+
+      // Bulk create the spaces for this floor
+      try {
+        await Space.bulkCreate(newSpaces);
+      } catch (e) {
+        console.error(e);
+      }
+      // Finished, continue to the next floor
+      continue;
+    } else {
+      // Need to remove spaces
+      await Space.destroy({
+        where: {
+          GARAGE_ID: floors[i].GARAGE_ID,
+          FLOOR_ID: floors[i].FLOOR_ID,
+          SPACE_NUM: {
+            [Op.gt]: floors[i].SPACE_COUNT,
+          },
+        },
+      });
+    }
+  }
+
+  // Delete all spaces for any floors that were removed from this garage
+  await Space.destroy({
+    where: {
+      GARAGE_ID: floors[0].GARAGE_ID,
+      FLOOR_ID: {
+        [Op.notIn]: [...floorIds],
+      },
+    },
+  });
+};
+
 const getSpotNumber = async () => {
   try {
-    let floors = await Floor.findAll({attributes: [
+    let floors = await Floor.findAll({
+      attributes: [
         // specify an array where the first element is the SQL function and the second is the alias
-        [Sequelize.fn('DISTINCT', Sequelize.col('GARAGE_ID')) ,'GARAGE_ID'],
-          'SPACE_COUNT'
-      ]});
-  
+        [Sequelize.fn('DISTINCT', Sequelize.col('GARAGE_ID')), 'GARAGE_ID'],
+        'SPACE_COUNT',
+      ],
+    });
+
     floors = (floors || []).map((f) => f.dataValues);
-    
+
     let formattedFloors = new Map();
     for (let f of floors) {
       formattedFloors.set(f.GARAGE_ID, f.SPACE_COUNT);
@@ -90,25 +180,26 @@ const getSpotNumber = async () => {
   } catch (err) {
     throw err;
   }
-}
+};
 
 const listGarages = async (req, res) => {
   try {
     // Find pricing for the specified garage
     let garages = await Garage.findAll();
-  
+
     garages = (garages || []).map((g) => g.dataValues);
-    
+
     let garageSpots = await getSpotNumber();
-    
+
     for (let g of garages) {
       g.spotsPerFloor = garageSpots.get(g.GARAGE_ID);
     }
-    
+
     // Return results
     return res.status(200).json(garages);
   } catch (err) {
     console.error('Garage controller failed.');
+    console.error(err);
     return res.status(500).send();
   }
 };
@@ -142,15 +233,15 @@ const updateGarage = async (req, res) => {
   const floors = req?.body?.numFloors;
   const spotsPerFloor = req?.body?.spotsPerFloor;
   const location = req?.body?.location;
-  const isActive = req?.body?.isActive;
-  
+  const isActive = req?.body?.isActive || true; // Missing on front end, default here to true
+
   // Return early if any arguments are missing
   if (overbookRate < 1.0) {
     return res.status(400).json({ message: 'Overbook rate must be at least 100%.' });
   }
- 
+
   try {
-    let [garage,created] = await Garage.upsert({
+    let [garage, created] = await Garage.upsert({
       DESCRIPTION: garageName,
       OVERBOOK_RATE: overbookRate,
       FLOOR_COUNT: floors,
@@ -160,9 +251,9 @@ const updateGarage = async (req, res) => {
     });
     // separating dataValues from return set
     garage = (garage || {}).dataValues;
-  
-    [garage.floors, garage.spotsPerFloor] = await addFloors(garage,floors,spotsPerFloor);
-    
+
+    [garage.floors, garage.spotsPerFloor] = await addFloors(garage, floors, spotsPerFloor);
+
     // Return the result
     return res.status(200).json(garage);
   } catch (err) {
@@ -186,7 +277,7 @@ const updateGarage = async (req, res) => {
 const deleteGarage = async (req, res) => {
   // Get arguments from request body
   const garageId = req.body.garageId;
-  
+
   // Return early if garageId was not sent
   if (!garageId) {
     return res.status(400).json({ message: 'garageId is required.' });
@@ -199,15 +290,16 @@ const deleteGarage = async (req, res) => {
   try {
     await Garage.destroy({
       where: {
-        GARAGE_ID: garageId
+        GARAGE_ID: garageId,
       },
-      force: true
+      force: true,
     });
     const result = { message: 'Garage deleted.' };
-    
+
     return res.status(200).json(result);
   } catch (err) {
     console.error('Garage controller failed.');
+    console.error(err);
     return res.status(500).send();
   }
 };
@@ -239,7 +331,7 @@ const addGarage = async (req, res) => {
   const location = req?.body?.location;
   const overbookRate = req?.body?.overbookRate;
   const isActive = req?.body?.isActive;
-  
+
   // Return early if any arguments are missing
   if (!(garageName && floors && spotsPerFloor && location)) {
     return res.status(400).json({ message: 'Incomplete request' });
@@ -258,7 +350,6 @@ const addGarage = async (req, res) => {
     return res.status(400).json({ message: 'Overbook rate must be at least 100%.' });
   }
   try {
-    
     //not sure how this works. Do we need to set garage?
     let garage = await Garage.create({
       DESCRIPTION: garageName,
@@ -267,9 +358,8 @@ const addGarage = async (req, res) => {
       LONG: location[1],
       OVERBOOK_RATE: overbookRate,
       IS_ACTIVE: isActive,
-      
     });
-    
+
     // separating dataValues from return set
     garage = (garage || {}).dataValues;
     // init our array
@@ -280,43 +370,69 @@ const addGarage = async (req, res) => {
         garage_floors.push({
           GARAGE_ID: garage.GARAGE_ID,
           FLOOR_NUM: i + 1,
-          SPACE_COUNT: spotsPerFloor[i]
+          SPACE_COUNT: spotsPerFloor[i],
         });
       }
       // pass our array of floors to create
       let assigned_floors = await Floor.bulkCreate(garage_floors);
-      
+
       // remove our data values
       // using .map since the returned floors is an array of object with dataValues on each object
       assigned_floors = (assigned_floors || []).map((af) => af.dataValues);
       garage.floors = assigned_floors;
+
+      // Create new spaces for the floors
+      let assignedSpaces = await addSpaces(spotsPerFloor, garage.floors);
     }
-    
+
     // Return the result
     return res.status(200).json(garage);
   } catch (err) {
     console.error('Garage controller failed.');
+    console.error(err);
     return res.status(500).send();
   }
 };
+
 /**
- * updates a specified garage
+ * Create the spaces for the garage, linked to their floors
  *
- * @param {number} id - garageId
- * @param {string} name - The name of the garage to delete
- * @param {number} numFloors  -floors in the garage
- * @param {[number]} spotsPerFloor -number of spots on each floor
- * @param {[string]} location - [latitude, longitude]
- * @param {number} overbookRate - if null then 0
- * @param {boolean} isActive - if true then garage is active
- * @returns {Object} - Signals whether the garage was successfully created
- *
- * Preconditions:
- *  - Garage does exist in the database
- * Postconditions:
- *  - Garage is updated
+ * @param {[Number]} spotsPerFloor - An array with the space for each floor
+ * @param {[Obect]} floors - The floors
+ * @returns {[Object]} - An array of space objects after creation
  */
+const addSpaces = async (floors) => {
+  // A two-dimensional array of created spaces
+  let spaces = [];
 
+  for (let i = 0; i < floors.length; i++) {
+    let floorSpaces = [];
 
+    // Create each space object for bulk creation
+    for (let j = 1; j <= floors[i].FLOOR_COUNT; j++) {
+      floorSpaces.push({
+        WALK_IN: false,
+        SPACE_NUM: j,
+        GARAGE_ID: floors[i].GARAGE_ID,
+        FLOOR_ID: floors[i].FLOOR_ID,
+      });
+    }
+
+    // Bulk create this floor's spaces in DB
+    let assignedSpaces;
+    try {
+      assignedSpaces = await Space.bulkCreate(floorSpaces);
+    } catch (e) {
+      console.error(e);
+    }
+    // Keep only the data values of each sequelize object
+    assignedSpaces = (assignedSpaces || []).map((space) => space.dataValues);
+
+    // Push data values to the return array
+    spaces.push[assignedSpaces];
+  }
+
+  return spaces;
+};
 
 module.exports = { listGarages, addGarage, updateGarage, deleteGarage };
