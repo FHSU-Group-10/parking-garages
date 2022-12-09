@@ -3,6 +3,7 @@ const luxon = require('luxon');
 const haversine = require('haversine-distance');
 const { Op } = require('sequelize');
 const { customAlphabet } = require('nanoid');
+const fetch = require('node-fetch');
 // Create custom nanoid definition for short, easy reservation ids
 const nanoid = customAlphabet('ABCDEFGHJKMNPQRSTUVWXYZ', 8);
 // MODELS
