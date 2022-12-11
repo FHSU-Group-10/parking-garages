@@ -13,6 +13,10 @@ To run on your machine locally:
 - Check your email for the `.env` file with the database password and place the file according to the email
 - To run locally, use "npm run dev" and open localhost:3500 in your browser
 
+## Rebuilding the Database
+
+If necessary, use the files in the Database directory to rebuild the database tables with sample data.
+
 ## Online Use
 
 The project may be found running live at https://parking-garages.onrender.com/ if you do not wish to run it locally. Please be patient if the page is initially slow to load, free servers have their downsides!
@@ -42,8 +46,3 @@ The project may be found running live at https://parking-garages.onrender.com/ i
 - Justin Henley
 - Victor Munoz
 - ~~Hannah Carr~~
-
-## Dev Branch
-
-- Dev Branch Site: https://dev-garages.onrender.com/
-  Note: Deploys are automatic but slow (~5 minutes)

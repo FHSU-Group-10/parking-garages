@@ -1,0 +1,1 @@
+Use these files to rebuild the database and populate with sample values. The ReservationType, ReservationStatus, SpaceStatus, and Pricing tables must use the same values as the examples for the software to function.
